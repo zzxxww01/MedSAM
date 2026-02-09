@@ -22,9 +22,23 @@ modality = "CT"
 anatomy = "AMOS"
 prefix = modality + "_" + anatomy + "_"
 
-# AMOS22 数据集路径
-nii_path = "data/AMOS22/imagesTr"
-gt_path = "data/AMOS22/labelsTr"
+# 自动检测AMOS22数据集目录
+def find_amos_dir():
+    """自动查找AMOS22数据集目录"""
+    possible_names = ["AMOS22", "amos22", "amos", "AMOS"]
+    for name in possible_names:
+        test_path = f"data/{name}/imagesTr"
+        if os.path.exists(test_path):
+            print(f"找到数据集目录: data/{name}/")
+            return f"data/{name}"
+    raise FileNotFoundError(
+        "未找到AMOS22数据集！请确保已解压 amos22.zip\n"
+        "预期目录: data/AMOS22/ 或 data/amos22/"
+    )
+
+amos_base = find_amos_dir()
+nii_path = join(amos_base, "imagesTr")
+gt_path = join(amos_base, "labelsTr")
 npy_path = "data/npy/CT_AMOS"
 
 # 创建输出目录
