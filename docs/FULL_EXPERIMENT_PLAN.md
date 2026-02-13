@@ -1,5 +1,80 @@
 # MedSAM Balance Loss 完整实验计划
 
+## 0. 执行模式声明（必须遵守）
+
+- 项目执行模式：**本地开发，远程服务器运行**。
+- 本地目录状态不能用于推断远程训练状态；远程状态以服务器命令输出为准。
+- 若需要判断进度，优先使用以下方式：
+  1. 由你在服务器执行命令并回传结果。
+  2. 直接提供服务器命令清单用于启动与排查。
+- 每次实验至少记录 3 项远程证据：`train.log` 最新片段、`nvidia-smi` 截图/文本、`work_dir` 产物列表。
+
+---
+
+## 0.1 服务器运行画像（固定）
+
+- 服务器项目目录：`~/chengang/zxw/MedSAM`
+- 运行环境：`conda activate medsam`
+- 硬件：`4 x V100`
+- 默认并行策略：常规训练/推理使用 2 张 GPU（`CUDA_VISIBLE_DEVICES=0,1`），必要时可扩展到 3-4 张。
+- 代码同步策略：默认服务器代码已最新；如未确认，实验前先执行 `git pull`。
+- 启动目录约束：统一在项目根目录 `~/chengang/zxw/MedSAM` 执行训练脚本，避免在 `work_dir` 下触发相对路径错误。
+
+### 已有远程训练痕迹（2026-02-09）
+
+`work_dir` 已存在多次 FLARE22 Baseline 训练目录：
+
+- `MedSAM-Baseline-20260208-1844`
+- `MedSAM-Baseline-20260208-1908`
+- `MedSAM-Baseline-20260208-1919`
+- `MedSAM-Baseline-20260208-1924`
+- `MedSAM-Baseline-20260208-1935`
+- `MedSAM-Baseline-20260208-1940`
+- `MedSAM-Baseline-20260208-1953`
+
+同时存在：
+
+- `baseline_train.log`
+- `medsam_vit_b.pth`
+
+结论：Baseline 已运行过，下一步重点转为结果核验与后续实验排程。
+
+补充核验（2026-02-09）：
+- 在当前已回传信息中，`MedSAM-Baseline-20260208-1953` 为唯一已明确包含 `medsam_model_best.pth` 的目录。
+- 因此后续 A1/A2/A3 对比默认以该目录作为 Baseline 候选基线（待日志指标回填后最终确认）。
+
+补充进度（2026-02-12）：
+- A1 `Inter-CBL`：已完成200 epochs
+  - 日志：`work_dir/A1_20260209-2026.log`
+  - 产物目录：`work_dir/MedSAM-FLARE22-A1-InterCBL-20260209-2026-20260209-2027`
+- A2 `Intra-CBL`：已完成200 epochs
+  - 日志：`work_dir/A2_20260210-2309.log`
+  - 产物目录：`work_dir/MedSAM-FLARE22-A2-IntraCBL-20260210-2309-20260210-2309`
+- A3 `Balance Loss`：首轮启动失败（OOM）
+  - 日志：`work_dir/A3_20260212-0010.log`
+  - 调整策略：保持2卡，`batch_size` 从 `2` 调整为 `1` 后重跑。
+- A3 二次重启失败（命令环境变量缺失）
+  - 现象：`MASTER_ADDR expected, but not set`，且进程显示 `Rank 0~3`（误用4卡）
+  - 调整策略：采用固定启动模板（先 `export` 环境变量，再执行 `nohup python`）。
+
+补充进度（2026-02-13）：
+- A3 `Balance Loss`（`batch_size=1`）重跑成功，已完成 200 epochs
+  - 成功日志：`work_dir/A3_20260212-002344_bs1.log`
+  - 完成时间：`20260213-0501`（`Epoch 199`）
+  - 产物目录：`work_dir/MedSAM-FLARE22-A3-BalanceLoss-20260212-002344-20260212-0023`
+  - 关键权重：`medsam_model_best.pth`、`medsam_model_latest.pth`
+- A1/A2/A3 评估结果（40例，CT_Abd，同口径）：
+  - A1 Inter-CBL：DSC=`0.940596`，HD95=`4.790533`，ASD=`0.531697`
+  - A2 Intra-CBL：DSC=`0.952554`，HD95=`3.368403`，ASD=`0.374899`
+  - A3 Balance Loss：DSC=`0.903470`，HD95=`7.922879`，ASD=`0.886811`
+- 当前阶段结论：Baseline + A1 + A2 + A3 训练与阶段评估已完成，A2 当前最优，A3 需参数修正后复验。
+- 紧接执行项：
+  1. 补跑 Baseline 同口径评估，补齐 ΔBaseline；
+  2. 启动 A3 修正实验（优先改 `stage_switch_epoch` 与 α/β）并复验；
+  3. 开始 Attention 模块（EXP-005）最小可运行验证并准备训练脚本。
+
+---
+
 ## 一、研究背景与目标
 
 ### 1.1 研究问题

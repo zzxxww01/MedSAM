@@ -7,6 +7,96 @@
 
 ---
 
+## 协作模式（固定约束）
+
+- 开发模式固定为：**本地开发 + 远程服务器运行**。
+- 本地仓库用于：代码编写、脚本准备、文档更新，不用于判断远程训练是否已运行/完成。
+- 训练、预处理、评估进度以服务器端日志和产物为准。
+- 当无法直接访问服务器状态时，默认采用两种方式之一：
+  1. 向你确认当前服务器进度。
+  2. 直接给出可执行的服务器命令（启动/检查/回传）。
+- 每个阶段开始前，先提供“服务器执行清单”，避免重复遗漏该模式。
+
+---
+
+## 服务器固定信息（2026-02-09 更新）
+
+- 服务器路径：`~/chengang/zxw/MedSAM`
+- Conda环境：`medsam`
+- GPU资源：`4 x NVIDIA V100`
+- 默认资源策略：训练/推理默认使用2张GPU；无特殊冲突时保持该配置，必要时可扩展到更多GPU。
+- 代码状态：默认以“服务器代码已是最新（已 `git pull`）”为前提执行实验。
+- 启动规则：训练命令必须在项目根目录 `~/chengang/zxw/MedSAM` 执行，不在 `work_dir` 下直接启动脚本。
+
+### 当前远程产物快照（来自用户回传）
+
+```text
+work_dir/
+baseline_train.log
+MedSAM
+MedSAM-Baseline-20260208-1844
+MedSAM-Baseline-20260208-1908
+MedSAM-Baseline-20260208-1919
+MedSAM-Baseline-20260208-1924
+MedSAM-Baseline-20260208-1935
+MedSAM-Baseline-20260208-1940
+MedSAM-Baseline-20260208-1953
+medsam_vit_b.pth
+```
+
+### 2026-02-09 追加核验（目录级）
+
+- Baseline目录按时间排序（新→旧）：
+  - `MedSAM-Baseline-20260208-1953`
+  - `MedSAM-Baseline-20260208-1940`
+  - `MedSAM-Baseline-20260208-1935`
+  - `MedSAM-Baseline-20260208-1924`
+  - `MedSAM-Baseline-20260208-1919`
+  - `MedSAM-Baseline-20260208-1908`
+  - `MedSAM-Baseline-20260208-1844`
+- 目前已确认：仅 `MedSAM-Baseline-20260208-1953` 目录可见
+  - `medsam_model_best.pth`
+  - `MedSAM-Baselinetrain_loss.png`
+- `baseline_train.log` 出现过一次失败启动记录：在 `work_dir` 下执行导致找不到 `train_multi_gpus.py`。
+- 判定：`20260208-1953` 为当前最优 Baseline 候选目录（待日志与指标最终核验）。
+
+### 2026-02-12 进度更新（Ablation实跑）
+
+- A1 `Inter-CBL` 已完成（200 epochs）
+  - 日志: `work_dir/A1_20260209-2026.log`
+  - 目录: `work_dir/MedSAM-FLARE22-A1-InterCBL-20260209-2026-20260209-2027`
+- A2 `Intra-CBL` 已完成（200 epochs）
+  - 日志: `work_dir/A2_20260210-2309.log`
+  - 目录: `work_dir/MedSAM-FLARE22-A2-IntraCBL-20260210-2309-20260210-2309`
+- A3 `Balance Loss` 首轮失败（OOM）
+  - 日志: `work_dir/A3_20260212-0010.log`
+  - 结论: 维持2卡策略下，将 A3 重跑参数改为 `-batch_size 1`。
+- A3 二次重启失败（命令环境变量缺失）
+  - 现象: `MASTER_ADDR expected, but not set`，并出现 `Rank 0~3`（误触发4卡）
+  - 结论: A3 重跑必须使用标准化命令模板，先显式 `export` 关键环境变量。
+
+### 2026-02-13 进度更新（A3重跑完成）
+
+- A3 `Balance Loss`（`batch_size=1`）已完成 200 epochs
+  - 成功日志: `work_dir/A3_20260212-002344_bs1.log`
+  - 完成标记: `[Rank 0/1] Epoch 199: 100%`，时间 `20260213-0501`
+  - 产物目录: `work_dir/MedSAM-FLARE22-A3-BalanceLoss-20260212-002344-20260212-0023`
+  - 关键文件: `medsam_model_best.pth`、`medsam_model_latest.pth`、`*_train_loss.png`
+- A1/A2/A3 评估回填（40例，CT_Abd，同口径）
+  - A1 Inter-CBL: DSC=`0.940596`，HD95=`4.790533`，ASD=`0.531697`
+  - A2 Intra-CBL: DSC=`0.952554`，HD95=`3.368403`，ASD=`0.374899`
+  - A3 Balance: DSC=`0.903470`，HD95=`7.922879`，ASD=`0.886811`
+- 训练资源侧证据：运行中 `medsam` 进程稳定占用2卡（GPU1/GPU3），无新增 OOM 迹象。
+- 当前节奏：A1/A2/A3 指标已回填，A2 当前最优；下一步先补 Baseline 同口径评估，再启动 A3 修正实验与 Attention 模块准备。
+- 当前完成度（实验主线）：`Baseline + A1 + A2 + A3` 已完成训练与阶段评估，进入“修正优化 + 下一阶段实验”。
+
+### 进度判定规则（补充）
+
+- 只要 `work_dir` 下已出现对应实验目录和日志，即判定为“已启动/已运行过”。
+- 是否“已完成”必须再看：`train.log` 末尾、最佳模型文件、评估指标。
+
+---
+
 ## 时间总览
 
 ```
@@ -274,7 +364,6 @@
 □ 格式规范的终稿
 □ 查重报告 (<15%)
 ```
-
 ---
 
 ## 实验总表
