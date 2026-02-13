@@ -48,6 +48,15 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--data_root", type=str, required=True, help="Directory with *.npz volumes.")
     parser.add_argument("--checkpoint", type=str, required=True, help="Path to medsam_model_best.pth.")
+    parser.add_argument(
+        "--sam_base_checkpoint",
+        type=str,
+        default="",
+        help=(
+            "Optional SAM base checkpoint for model init. "
+            "If empty, script will auto search common paths."
+        ),
+    )
     parser.add_argument("--exp_name", type=str, required=True, help="Experiment name (A1/A2/A3...).")
     parser.add_argument("--device", type=str, default="cuda:0", help="Inference device, e.g. cuda:0.")
     parser.add_argument("--bbox_shift", type=int, default=20, help="BBox expansion in pixels.")
@@ -84,10 +93,32 @@ def load_checkpoint_state(ckpt_path: str) -> Dict[str, torch.Tensor]:
     return clean_state
 
 
-def load_medsam_model(ckpt_path: str, device: torch.device) -> torch.nn.Module:
+def resolve_sam_base_checkpoint(user_path: str = "") -> str:
+    candidates: List[str] = []
+    if user_path:
+        candidates.append(user_path)
+    candidates.extend(
+        [
+            "work_dir/SAM/sam_vit_b_01ec64.pth",
+            "work_dir/medsam_vit_b.pth",
+            "sam_vit_b_01ec64.pth",
+        ]
+    )
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    raise FileNotFoundError(
+        "No SAM base checkpoint found. Provide --sam_base_checkpoint, "
+        "or place checkpoint at one of: "
+        "work_dir/SAM/sam_vit_b_01ec64.pth, work_dir/medsam_vit_b.pth, sam_vit_b_01ec64.pth"
+    )
+
+
+def load_medsam_model(ckpt_path: str, sam_base_ckpt: str, device: torch.device) -> torch.nn.Module:
     state_dict = load_checkpoint_state(ckpt_path)
-    model = sam_model_registry["vit_b"](checkpoint=None)
+    model = sam_model_registry["vit_b"](checkpoint=sam_base_ckpt)
     missing, unexpected = model.load_state_dict(state_dict, strict=False)
+    print(f"[load] base checkpoint: {sam_base_ckpt}")
     print(f"[load] missing keys: {len(missing)}, unexpected keys: {len(unexpected)}")
     model = model.to(device)
     model.eval()
@@ -247,7 +278,8 @@ def main() -> None:
         os.makedirs(args.save_pred_dir, exist_ok=True)
 
     device = torch.device(args.device)
-    model = load_medsam_model(args.checkpoint, device)
+    sam_base_ckpt = resolve_sam_base_checkpoint(args.sam_base_checkpoint)
+    model = load_medsam_model(args.checkpoint, sam_base_ckpt, device)
 
     npz_files = sorted(glob.glob(join(args.data_root, "*.npz")))
     if args.max_cases > 0:
