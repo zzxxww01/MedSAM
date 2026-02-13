@@ -146,6 +146,45 @@ parser.add_argument(
     help="损失函数类型"
 )
 parser.add_argument("-stage1_epochs", type=int, default=50, help="Balance Loss第一阶段epoch数")
+parser.add_argument("--inter_neg_ratio", "-inter_neg_ratio", type=float, default=3.0, help="Inter-CBL负样本比例")
+parser.add_argument(
+    "--intra_threshold",
+    "-intra_threshold",
+    type=float,
+    default=0.9,
+    help="Intra-CBL困难样本阈值",
+)
+parser.add_argument(
+    "--intra_hard_weight",
+    "-intra_hard_weight",
+    type=float,
+    default=2.0,
+    help="Intra-CBL困难样本权重",
+)
+parser.add_argument("--balance_alpha", "-balance_alpha", type=float, default=1.0, help="BalanceLoss中Inter-CBL权重")
+parser.add_argument("--balance_beta", "-balance_beta", type=float, default=1.0, help="BalanceLoss中Intra-CBL权重")
+parser.add_argument("--balance_gamma", "-balance_gamma", type=float, default=1.0, help="BalanceLoss中Dice权重")
+parser.add_argument(
+    "--balance_neg_ratio",
+    "-balance_neg_ratio",
+    type=float,
+    default=3.0,
+    help="BalanceLoss中Inter-CBL负样本比例",
+)
+parser.add_argument(
+    "--balance_hard_threshold",
+    "-balance_hard_threshold",
+    type=float,
+    default=0.9,
+    help="BalanceLoss中Intra-CBL困难样本阈值",
+)
+parser.add_argument(
+    "--balance_hard_weight",
+    "-balance_hard_weight",
+    type=float,
+    default=2.0,
+    help="BalanceLoss中Intra-CBL困难样本权重",
+)
 
 args = parser.parse_args()
 
@@ -160,6 +199,16 @@ if args.use_wandb:
             "data_path": args.tr_npy_path,
             "model_type": args.model_type,
             "loss_type": args.loss_type,
+            "stage1_epochs": args.stage1_epochs,
+            "inter_neg_ratio": args.inter_neg_ratio,
+            "intra_threshold": args.intra_threshold,
+            "intra_hard_weight": args.intra_hard_weight,
+            "balance_alpha": args.balance_alpha,
+            "balance_beta": args.balance_beta,
+            "balance_gamma": args.balance_gamma,
+            "balance_neg_ratio": args.balance_neg_ratio,
+            "balance_hard_threshold": args.balance_hard_threshold,
+            "balance_hard_weight": args.balance_hard_weight,
         },
     )
 
@@ -260,14 +309,31 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # 根据loss_type选择损失函数
     if args.loss_type == "inter_cbl":
-        custom_loss = InterClassBalanceLoss()
-        print("Using Inter-CBL + Dice Loss")
+        custom_loss = InterClassBalanceLoss(neg_ratio=args.inter_neg_ratio)
+        print(f"Using Inter-CBL + Dice Loss (neg_ratio={args.inter_neg_ratio})")
     elif args.loss_type == "intra_cbl":
-        custom_loss = IntraClassBalanceLoss()
-        print("Using Intra-CBL + Dice Loss")
+        custom_loss = IntraClassBalanceLoss(
+            hard_threshold=args.intra_threshold, hard_weight=args.intra_hard_weight
+        )
+        print(
+            f"Using Intra-CBL + Dice Loss (threshold={args.intra_threshold}, hard_weight={args.intra_hard_weight})"
+        )
     elif args.loss_type == "balance":
-        custom_loss = BalanceLoss(stage1_epochs=args.stage1_epochs)
-        print("Using Balance Loss (full)")
+        custom_loss = BalanceLoss(
+            alpha=args.balance_alpha,
+            beta=args.balance_beta,
+            gamma=args.balance_gamma,
+            stage1_epochs=args.stage1_epochs,
+            neg_ratio=args.balance_neg_ratio,
+            hard_threshold=args.balance_hard_threshold,
+            hard_weight=args.balance_hard_weight,
+        )
+        print(
+            "Using Balance Loss (full): "
+            f"alpha={args.balance_alpha}, beta={args.balance_beta}, gamma={args.balance_gamma}, "
+            f"stage1_epochs={args.stage1_epochs}, neg_ratio={args.balance_neg_ratio}, "
+            f"hard_threshold={args.balance_hard_threshold}, hard_weight={args.balance_hard_weight}"
+        )
     else:
         custom_loss = None
         print("Using Baseline (Dice + CE Loss)")
