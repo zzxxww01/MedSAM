@@ -1,508 +1,246 @@
-# 实验记录模板
+# 实验事实库（标准化卡片）
 
-> 本文档用于记录所有实验的详细信息，包括配置、结果和分析
+> 更新时间：2026-02-14  
+> 作用：作为论文与答辩的“唯一实验事实来源”。  
+> 总控入口：`docs/THESIS_MASTER_GUIDE.md`
 
 ---
 
-## 运行环境与协作方式（固定）
+## 0. 评估口径定义（统一）
 
-- 固定模式：**本地开发 + 远程服务器运行**。
-- 本地目录仅用于代码和文档，不作为实验运行进度依据。
-- 进度判定必须基于远程服务器证据（日志/GPU/产物）。
-- 服务器固定信息：`~/chengang/zxw/MedSAM`、`conda: medsam`、`4 x V100`、默认2卡运行。
+1. 数据：`data/npy/CT_Abd`（40 例）。
+2. 指标：DSC / HD95 / ASD。
+3. 评估脚本：`eval_medsam_npz.py`。
+4. 设备：默认 `cuda:0`。
+5. 结论引用规则：必须来自 `work_dir/eval_metrics/*_summary.json`。
 
-### 远程进度最小回传模板（每次实验都填）
+---
 
-```text
-实验ID:
-服务器时间:
-执行命令:
-最新日志(末尾20行):
-GPU状态(nvidia-smi):
-产物列表(work_dir相关目录):
-当前结论: 待运行 / 运行中 / 已完成 / 失败
-```
+## 1. 状态总览
 
-### 远程检查命令（可直接执行）
+| ID | 实验 | 状态 | 结果摘要 | 产物 |
+|---|---|---|---|---|
+| EXP-001 | A0 Baseline | 完成 | 稳定基线 | `A0_summary.json` |
+| EXP-002 | A1 Inter-CBL | 完成 | 与 A0 接近 | `A1_summary.json` |
+| EXP-003 | A2 Intra-CBL | 完成 | 当前最优 | `A2_summary.json` |
+| EXP-004 | A3 Balance(原始) | 完成 | 明显退化 | `A3_summary.json` |
+| EXP-007 | A3R1 修正 | 进行中 | 等待评估 | `A3R1_summary.json`(待) |
+| EXP-008 | A3R2 修正对照 | 未启动 | 待决策 | - |
+| EXP-009 | A3R3 修正对照 | 未启动 | 待决策 | - |
 
+---
+
+## 2. 统一结果表（同口径）
+
+| 实验 | DSC | HD95 | ASD | 对比结论 |
+|---|---:|---:|---:|---|
+| A0 | 0.940741 | 4.830503 | 0.537757 | 基线 |
+| A1 | 0.940596 | 4.790533 | 0.531697 | 与 A0 近似 |
+| A2 | 0.952554 | 3.368403 | 0.374899 | 最优 |
+| A3 | 0.903470 | 7.922879 | 0.886811 | 退化 |
+| A3R1 | 待回填 | 待回填 | 待回填 | 验证中 |
+
+---
+
+## 3. 标准化实验卡片
+
+## 3.1 EXP-001：A0 Baseline
+
+### Objective
+- 建立同口径可比基线。
+
+### Hypothesis
+- 预训练 MedSAM 在 CT_Abd 上应提供稳定起点。
+
+### Config
+- Checkpoint：`work_dir/MedSAM-Baseline-20260208-1953/medsam_model_best.pth`
+- Eval 输出：`work_dir/eval_metrics/A0_summary.json`
+
+### Evidence
+- 评估日志：`work_dir/eval_metrics/logs/A0_eval.log`
+- 汇总 JSON：`work_dir/eval_metrics/A0_summary.json`
+
+### Result
+- DSC=0.940741, HD95=4.830503, ASD=0.537757
+
+### Decision
+- 作为全部后续实验统一参照。
+
+---
+
+## 3.2 EXP-002：A1 Inter-CBL
+
+### Objective
+- 验证“仅类别间平衡”收益。
+
+### Hypothesis
+- Inter-CBL 可降低假阳性并带来小幅提升。
+
+### Config
+- 日志：`work_dir/A1_20260209-2026.log`
+- 权重：`work_dir/MedSAM-FLARE22-A1-InterCBL-20260209-2026-20260209-2027/medsam_model_best.pth`
+- Eval 输出：`work_dir/eval_metrics/A1_summary.json`
+
+### Evidence
+- 训练终点：Epoch 199 完成，无 Traceback。
+- 汇总 JSON：`work_dir/eval_metrics/A1_summary.json`
+
+### Result
+- DSC=0.940596, HD95=4.790533, ASD=0.531697
+
+### Comparison
+- 与 A0 基本持平。
+
+### Decision
+- Inter 单独不是主增益项。
+
+---
+
+## 3.3 EXP-003：A2 Intra-CBL
+
+### Objective
+- 验证“类内难样本加权”收益。
+
+### Hypothesis
+- Intra-CBL 可显著改善边界和困难样本表现。
+
+### Config
+- 日志：`work_dir/A2_20260210-2309.log`
+- 权重：`work_dir/MedSAM-FLARE22-A2-IntraCBL-20260210-2309-20260210-2309/medsam_model_best.pth`
+- Eval 输出：`work_dir/eval_metrics/A2_summary.json`
+
+### Evidence
+- 训练终点：Epoch 199 完成，无 Traceback。
+- 汇总 JSON：`work_dir/eval_metrics/A2_summary.json`
+
+### Result
+- DSC=0.952554, HD95=3.368403, ASD=0.374899
+
+### Comparison
+- 明显优于 A0/A1/A3。
+
+### Decision
+- 作为当前默认最优模型与后续基准。
+
+---
+
+## 3.4 EXP-004：A3 Balance（原始配置）
+
+### Objective
+- 验证完整 Balance 组合收益。
+
+### Hypothesis
+- Inter + Intra + Dice 应优于单项损失。
+
+### Config
+- 成功日志：`work_dir/A3_20260212-002344_bs1.log`
+- 权重：`work_dir/MedSAM-FLARE22-A3-BalanceLoss-20260212-002344-20260212-0023/medsam_model_best.pth`
+- Eval 输出：`work_dir/eval_metrics/A3_summary.json`
+
+### Failure Analysis
+1. 首轮曾 OOM（batch_size=2）。
+2. 修复后（batch_size=1）训练完成，但评估明显退化。
+3. 说明“可训练完成”不等于“配置有效”。
+
+### Result
+- DSC=0.903470, HD95=7.922879, ASD=0.886811
+
+### Decision
+- 进入修正实验（R1/R2/R3），不直接进入 Attention。
+
+---
+
+## 3.5 EXP-007：A3R1 修正实验（运行中）
+
+### Objective
+- 验证“弱化 Inter + 延后切换”是否恢复性能。
+
+### Hypothesis
+- 原 A3 退化主要由 Inter 权重过强与阶段切换过早导致。
+
+### Config
+- `loss_type=balance`
+- `balance_alpha=0.5`
+- `balance_beta=1.0`
+- `balance_gamma=1.0`
+- `stage1_epochs=70`
+- `balance_hard_threshold=0.9`
+- `balance_hard_weight=2.0`
+- `balance_neg_ratio=3.0`
+
+### Run Command（记录）
 ```bash
+nohup bash -lc '
+set -e
 cd ~/chengang/zxw/MedSAM
 conda activate medsam
-nvidia-smi
-tail -n 20 work_dir/<task_name>/train.log
-ls -lah work_dir/<task_name>/
-```
-
----
-
-## 当前状态快照（2026-02-13，含评估回填）
-
-| 模块 | 状态 | 服务器证据 | 下一动作 |
-|------|------|------------|----------|
-| Baseline | 已完成 | `MedSAM-Baseline-20260208-1953`，含 `medsam_model_best.pth` | 补跑同口径评估（用于ΔBaseline） |
-| A1 Inter-CBL | 已完成 | `A1_20260209-2026.log` 结束于 `Epoch 199` | 已回填指标，保留为对照 |
-| A2 Intra-CBL | 已完成 | `A2_20260210-2309.log` 结束于 `Epoch 199` | 当前最优，作为后续默认候选 |
-| A3 Balance Loss | 已完成 | `A3_20260212-002344_bs1.log` 结束于 `Epoch 199`，best/latest 权重已生成 | 排查性能退化原因并做超参修正 |
-| A5 超参数 | 未启动 | - | 优先围绕 A3（α/β/stage 切换）做修正实验 |
-| EXP-005 Attention | 未启动 | - | 先做模块最小可运行验证 |
-| EXP-006 Full | 未启动 | - | 待 Attention 实验稳定后启动 |
-
----
-
-## 实验索引
-
-| 实验ID | 日期 | 类型 | 描述 | 状态 | 结果摘要 |
-|--------|------|------|------|------|----------|
-| EXP-001 | 2026-02-08 | Baseline | MedSAM原始模型 | 已运行（可用基线） | 目录: MedSAM-Baseline-20260208-1953 |
-| EXP-002 | 2026-02-09 ~ 2026-02-10 | Ablation | Inter-CBL only | 已完成 | 200 epoch完成，best/latest权重已保存 |
-| EXP-003 | 2026-02-10 ~ 2026-02-11 | Ablation | Intra-CBL only | 已完成 | 200 epoch完成，best/latest权重已保存 |
-| EXP-004 | 2026-02-12 ~ 2026-02-13 | Ablation | Balance Loss (完整) | 已完成 | 首轮OOM后改batch_size=1重跑完成（200 epochs） |
-| EXP-005 | - | Ablation | AttentionCrossBlock only | 待运行 | - |
-| EXP-006 | - | Full | Balance Loss + Attention | 待运行 | - |
-
----
-
-## 实验详细记录
-
-### EXP-001: Baseline (MedSAM原始模型)
-
-#### 基本信息
-- **日期**: 2026-02-08
-- **运行时长**: -
-- **GPU**: V100 (默认2卡策略)
-- **状态**: 已运行（可用基线）
-
-#### 配置
-```yaml
-model:
-  type: vit_b
-  checkpoint: work_dir/SAM/sam_vit_b_01ec64.pth
-
-training:
-  epochs: 200
-  batch_size: 4
-  learning_rate: 0.0001
-  weight_decay: 0.01
-
-loss:
-  type: dice_ce
-  # Dice Loss + BCE Loss
-
-data:
-  train_path: data/npy/CT_Abd
-  num_workers: 4
-```
-
-#### 运行命令
-```bash
-python train_one_gpu.py \
-    -i data/npy/CT_Abd \
-    -task_name MedSAM-Baseline \
-    -model_type vit_b \
-    -checkpoint work_dir/SAM/sam_vit_b_01ec64.pth \
-    -num_epochs 200 \
-    -batch_size 4 \
-    -lr 0.0001 \
-    --use_wandb True
-```
-
-#### 结果
-
-| 数据集 | DSC (%) | HD95 (mm) | ASD (mm) |
-|--------|---------|-----------|----------|
-| FLARE22 (val) | - | - | - |
-| KiTS19 | - | - | - |
-| NIH | - | - | - |
-
-#### 当前证据（2026-02-09）
-- Baseline运行目录共7个。
-- `MedSAM-Baseline-20260208-1953` 已确认存在 `medsam_model_best.pth` 与 `MedSAM-Baselinetrain_loss.png`。
-- `baseline_train.log` 当前内容对应一次失败启动（路径错误）：在 `~/chengang/zxw/MedSAM/work_dir` 下调用 `train_multi_gpus.py`，报错 `No such file or directory`。
-- 其余目录是否完成需进一步查看日志/模型文件。
-
-#### 训练曲线
-- Loss曲线: `results/EXP-001/loss_curve.png`
-- DSC曲线: `results/EXP-001/dice_curve.png`
-
-#### 分析
-- 收敛情况:
-- 过拟合情况:
-- 其他观察:
-
----
-
-### EXP-002: Inter-CBL Only
-
-#### 基本信息
-- **日期**: 2026-02-09 ~ 2026-02-10
-- **运行时长**: 约23小时
-- **GPU**: V100 x2 (CUDA_VISIBLE_DEVICES=0,1)
-- **状态**: 已完成（200 epochs）
-
-#### 配置
-```yaml
-loss:
-  type: inter_cbl
-  # 仅使用Inter-CBL + Dice
-
-training:
-  epochs: 200
-  batch_size: 2
-  learning_rate: 0.0001
-```
-
-#### 运行命令
-```bash
+export CUDA_VISIBLE_DEVICES=0,1
+export MASTER_ADDR=localhost
+export MASTER_PORT=12355
+export MPLBACKEND=Agg
 python train_multi_gpus_balance.py \
-    -i data/npy/CT_Abd \
-    -task_name MedSAM-FLARE22-A1-InterCBL-<timestamp> \
-    -loss_type inter_cbl \
-    -num_epochs 200 \
-    -batch_size 2 \
-    --world_size 2 \
-    -use_amp
+  -i data/npy/CT_Abd \
+  -task_name MedSAM-FLARE22-A3R1-Balance-a0.5-b1.0-s70 \
+  -model_type vit_b \
+  -checkpoint work_dir/medsam_vit_b.pth \
+  -num_epochs 200 \
+  -batch_size 1 \
+  -lr 0.0001 \
+  --world_size 2 \
+  -use_amp \
+  -loss_type balance \
+  -balance_alpha 0.5 \
+  -balance_beta 1.0 \
+  -balance_gamma 1.0 \
+  -stage1_epochs 70 \
+  -balance_hard_threshold 0.9 \
+  -balance_hard_weight 2.0 \
+  -balance_neg_ratio 3.0
+' > work_dir/exp_logs/A3R1_train.log 2>&1 < /dev/null &
+echo $! > work_dir/exp_logs/A3R1_train.pid
 ```
 
-#### 结果
+### Evidence（当前）
+- PID：`work_dir/exp_logs/A3R1_train.pid`
+- 日志：`work_dir/exp_logs/A3R1_train.log`
+- 状态：Rank0/1 已启动并进入训练。
 
-| 数据集 | DSC (%) | HD95 (mm) | ΔBaseline |
-|--------|---------|-----------|-----------|
-| FLARE22 (val) | 94.06 | 4.79 | 待Baseline评估 |
-
-#### 当前证据（2026-02-10）
-- 日志文件: `work_dir/A1_20260209-2026.log`
-- 产物目录: `work_dir/MedSAM-FLARE22-A1-InterCBL-20260209-2026-20260209-2027`
-- 关键文件: `medsam_model_best.pth`, `medsam_model_latest.pth`, `MedSAM-FLARE22-A1-InterCBL-20260209-2026_train_loss.png`
-- 结束日志: `Epoch 199`，无 `Traceback`
-- 末轮损失（日志）: `0.0211279581` / `0.0211373862`（rank1/rank0）
-- 评估汇总（服务器）: `work_dir/eval_metrics/A1_summary.json`
-- 指标（40例）: DSC=`0.940596`，HD95=`4.790533`，ASD=`0.531697`
-
-#### 对比分析
-- 相比Baseline的提升/下降: 待Baseline同口径评估后补齐Δ值
-- 对小目标的效果: 暂无器官级拆分结论（待case-level分析）
-- 训练稳定性: 训练与评估过程稳定，结果可复现
-
----
-
-### EXP-003: Intra-CBL Only
-
-#### 基本信息
-- **日期**: 2026-02-10 ~ 2026-02-11
-- **运行时长**: 约23小时
-- **GPU**: V100 x2 (CUDA_VISIBLE_DEVICES=0,1)
-- **状态**: 已完成（200 epochs）
-
-#### 配置
-```yaml
-loss:
-  type: intra_cbl
-  threshold: 0.9
-  hard_weight: 2.0
-  easy_weight: 1.0
-```
-
-#### 运行命令
+### Post-Train Evaluation（待执行）
 ```bash
-python train_balance_loss.py \
-    -i data/npy/CT_Abd \
-    -task_name MedSAM-IntraCBL \
-    -loss_type intra_cbl \
-    -intra_threshold 0.9 \
-    --use_wandb True
+mkdir -p work_dir/eval_metrics/logs
+PY=/home/chengang/anaconda3/envs/medsam/bin/python
+A3R1_CKPT=$(ls -dt work_dir/MedSAM-FLARE22-A3R1-Balance-a0.5-b1.0-s70-*/medsam_model_best.pth | head -n1)
+
+nohup $PY eval_medsam_npz.py \
+  --data_root data/npy/CT_Abd \
+  --checkpoint "$A3R1_CKPT" \
+  --exp_name A3R1 \
+  --out_csv work_dir/eval_metrics/A3R1_case_metrics.csv \
+  --out_json work_dir/eval_metrics/A3R1_summary.json \
+  > work_dir/eval_metrics/logs/A3R1_eval.log 2>&1 < /dev/null &
+echo $! > work_dir/eval_metrics/logs/A3R1_eval.pid
 ```
 
-#### 结果
-
-| 数据集 | DSC (%) | HD95 (mm) | ΔBaseline |
-|--------|---------|-----------|-----------|
-| FLARE22 (val) | 95.26 | 3.37 | 待Baseline评估 |
-
-#### 当前证据（2026-02-11）
-- 日志文件: `work_dir/A2_20260210-2309.log`
-- 产物目录: `work_dir/MedSAM-FLARE22-A2-IntraCBL-20260210-2309-20260210-2309`
-- 关键文件: `medsam_model_best.pth`, `medsam_model_latest.pth`, `MedSAM-FLARE22-A2-IntraCBL-20260210-2309_train_loss.png`
-- 结束日志: `Epoch 199`，无 `Traceback`
-- 末轮损失（日志）: `0.0089820238` / `0.0088780716`（rank0/rank1）
-- 评估汇总（服务器）: `work_dir/eval_metrics/A2_summary.json`
-- 指标（40例）: DSC=`0.952554`，HD95=`3.368403`，ASD=`0.374899`
+### Decision Rule
+1. 若 A3R1 明显优于 A3 且接近/超过 A2：锁定 R1，进入 Attention。
+2. 若 A3R1 仅部分恢复：继续 R2/R3 做变量剥离。
 
 ---
 
-### EXP-004: Balance Loss (完整)
+## 4. 下一批实验（待激活）
 
-#### 基本信息
-- **日期**: 2026-02-12 ~ 2026-02-13
-- **运行时长**: 首轮失败后重跑，完整训练至Epoch 199
-- **GPU**: V100 x2（实际训练进程在GPU1/GPU3）
-- **状态**: 已完成（200 epochs，batch_size=1重跑成功）
+## 4.1 EXP-008：A3R2（只改切换时机）
+- 目的：验证 stage1 延后是否是主因。
+- 条件：A3R1 未达到预期时启动。
 
-#### 配置
-```yaml
-loss:
-  type: balance
-  alpha: 1.0      # Inter-CBL权重
-  beta: 1.0       # Intra-CBL权重
-  gamma: 1.0      # Dice权重
-  threshold: 0.9
-  stage_switch_epoch: 50
-```
-
-#### 运行命令
-```bash
-python train_balance_loss.py \
-    -i data/npy/CT_Abd \
-    -task_name MedSAM-BalanceLoss \
-    -loss_type balance \
-    -balance_alpha 1.0 \
-    -balance_beta 1.0 \
-    -balance_gamma 1.0 \
-    -stage_switch_epoch 50 \
-    --use_wandb True
-```
-
-#### 结果
-
-| 数据集 | DSC (%) | HD95 (mm) | ΔBaseline |
-|--------|---------|-----------|-----------|
-| FLARE22 (val) | 90.35 | 7.92 | 待Baseline评估 |
-
-#### 当前证据（2026-02-13）
-- 首轮失败日志: `work_dir/A3_20260212-0010.log`
-- 首轮错误类型: `torch.cuda.OutOfMemoryError`（`image_encoder` 注意力计算阶段）
-- 二次失败日志: `work_dir/A3_20260212-001844_bs1.log`
-- 二次失败现象: `MASTER_ADDR expected, but not set`，并出现 `Rank 0~3`（环境变量缺失导致误触发4卡）
-- 成功重跑日志: `work_dir/A3_20260212-002344_bs1.log`
-- 结束日志证据: `[Rank 0/1] Epoch 199: 100%`，`Time: 20260213-0501, Epoch: 199`
-- 末轮损失（日志）: `0.0339833474` / `0.0338141891`（rank1/rank0）
-- 错误检索结果: `grep -E "Epoch 199|OutOfMemory|MASTER_ADDR|Traceback"` 仅命中 `Epoch 199`，未出现 OOM/Traceback
-- 成功产物目录: `work_dir/MedSAM-FLARE22-A3-BalanceLoss-20260212-002344-20260212-0023`
-- 关键文件: `medsam_model_best.pth`, `medsam_model_latest.pth`, `medsam_model_latest_step.pth`, `*_train_loss.png`
-- 资源侧证据（训练中）: `nvidia-smi` 显示 `medsam` 两个训练进程位于 GPU1/GPU3，显存占用约 12GB/卡
-- 评估汇总（服务器）: `work_dir/eval_metrics/A3_summary.json`
-- 指标（40例）: DSC=`0.903470`，HD95=`7.922879`，ASD=`0.886811`
-
-#### 阶段分析
-- Stage 1 (Epoch 0-49) 表现: 训练稳定，未见中断报错（待结合指标判断早期收敛质量）
-- Stage 2 (Epoch 50+) 表现: 完整跑通至 Epoch 199，loss持续下降
-- 切换时机是否合适: 当前配置下整体指标劣于 A1/A2，需复查 `stage_switch_epoch` 与 α/β 权重设置
+## 4.2 EXP-009：A3R3（只改 Inter 权重）
+- 目的：验证 alpha 调低是否是主因。
+- 条件：A3R1 未达到预期时启动。
 
 ---
 
-### EXP-005: AttentionCrossBlock Only
+## 5. 引用规范（论文写作）
 
-#### 基本信息
-- **日期**: YYYY-MM-DD
-- **状态**: 待运行
-
-#### 配置
-```yaml
-model:
-  type: medsam_fss
-  use_attention: true
-  num_support: 5
-
-loss:
-  type: dice_ce  # 使用原始损失
-
-attention:
-  embed_dim: 256
-  num_heads: 8
-```
-
-#### 运行命令
-```bash
-python train_fss.py \
-    -i data/npy/CT_Abd \
-    -task_name MedSAM-Attention \
-    -num_support 5 \
-    -use_attention True \
-    --use_wandb True
-```
-
-#### 结果
-
-| 数据集 | DSC (%) | HD95 (mm) | ΔBaseline |
-|--------|---------|-----------|-----------|
-| FLARE22 (val) | - | - | - |
-
-#### 注意力可视化
-- 权重分布: `results/EXP-005/attention_weights.png`
-- 特征图对比: `results/EXP-005/feature_comparison.png`
-
----
-
-### EXP-006: 完整方案 (Balance Loss + Attention)
-
-#### 基本信息
-- **日期**: YYYY-MM-DD
-- **状态**: 待运行
-
-#### 配置
-```yaml
-model:
-  type: medsam_fss
-  use_attention: true
-  num_support: 5
-
-loss:
-  type: balance
-  alpha: 1.0
-  beta: 1.0
-  gamma: 1.0
-  stage_switch_epoch: 50
-```
-
-#### 运行命令
-```bash
-python train_fss.py \
-    -i data/npy/CT_Abd \
-    -task_name MedSAM-Full \
-    -num_support 5 \
-    -use_attention True \
-    -loss_type balance \
-    -balance_alpha 1.0 \
-    -balance_beta 1.0 \
-    -balance_gamma 1.0 \
-    --use_wandb True
-```
-
-#### 结果
-
-| 数据集 | DSC (%) | HD95 (mm) | ΔBaseline |
-|--------|---------|-----------|-----------|
-| FLARE22 (val) | - | - | - |
-| KiTS19 | - | - | - |
-| NIH | - | - | - |
-| BUSI | - | - | - |
-| CVC-ClinicDB | - | - | - |
-
----
-
-## 超参数搜索记录
-
-### Balance Loss 超参数
-
-| α | β | γ | threshold | DSC (%) | 备注 |
-|---|---|---|-----------|---------|------|
-| 1.0 | 1.0 | 1.0 | 0.9 | - | 默认 |
-| 0.5 | 1.0 | 1.0 | 0.9 | - | 降低Inter-CBL |
-| 1.0 | 2.0 | 1.0 | 0.9 | - | 增强Intra-CBL |
-| 1.0 | 1.0 | 0.5 | 0.9 | - | 降低Dice |
-| 1.0 | 1.0 | 1.0 | 0.8 | - | 降低阈值 |
-| 1.0 | 1.0 | 1.0 | 0.95 | - | 提高阈值 |
-
-### Stage切换时机
-
-| switch_epoch | 最终DSC (%) | 收敛速度 | 备注 |
-|--------------|-------------|----------|------|
-| 30 | - | - | 较早切换 |
-| 50 | - | - | 默认 |
-| 70 | - | - | 较晚切换 |
-| 100 | - | - | 很晚切换 |
-
-### Attention模块参数
-
-| num_heads | embed_dim | num_support | DSC (%) | 显存 (GB) |
-|-----------|-----------|-------------|---------|-----------|
-| 4 | 256 | 3 | - | - |
-| 8 | 256 | 5 | - | - |
-| 8 | 256 | 7 | - | - |
-| 16 | 256 | 5 | - | - |
-
----
-
-## 结果汇总表
-
-### 主实验结果
-
-| 方法 | FLARE22 DSC | FLARE22 HD95 | KiTS19 DSC | NIH DSC |
-|------|-------------|--------------|------------|---------|
-| MedSAM (Baseline) | - | - | - | - |
-| + Inter-CBL | 0.9406 | 4.7905 | - | - |
-| + Intra-CBL | 0.9526 | 3.3684 | - | - |
-| + Balance Loss | 0.9035 | 7.9229 | - | - |
-| + Attention | - | - | - | - |
-| **Ours (Full)** | - | - | - | - |
-
-### 对比方法结果
-
-| 方法 | FLARE22 DSC | FLARE22 HD95 | 参数量 | 推理时间 |
-|------|-------------|--------------|--------|----------|
-| MedSAM (Baseline) | - | - | 93.7M | - |
-| MedSAM (Ours) | - | - | ~95M | - |
-| SAM | - | - | 308M | - |
-| UniverSeg | - | - | - | - |
-| nnU-Net | - | - | - | - |
-| DeepLabV3+ | - | - | - | - |
-
----
-
-## 可视化结果
-
-### 分割结果对比
-
-```
-results/
-├── visualization/
-│   ├── comparison_flare22/
-│   │   ├── case_001_baseline.png
-│   │   ├── case_001_ours.png
-│   │   └── ...
-│   ├── comparison_kits19/
-│   └── comparison_nih/
-```
-
-### 注意力权重可视化
-
-```
-results/
-├── attention_maps/
-│   ├── case_001_attn.png
-│   └── ...
-```
-
-### 损失曲线对比
-
-```
-results/
-├── loss_curves/
-│   ├── all_methods_comparison.png
-│   ├── balance_loss_components.png
-│   └── ...
-```
-
----
-
-## 问题记录
-
-### 问题1: A3 首轮训练 OOM
-- **日期**: 2026-02-12
-- **现象**: `torch.cuda.OutOfMemoryError`，注意力计算阶段显存不足
-- **原因分析**: A3 完整 Balance Loss 组合下，默认 `batch_size=2` 显存峰值超限
-- **解决方案**: 将 A3 重跑参数调整为 `-batch_size 1`，其余超参保持不变
-- **状态**: 已解决
-
-### 问题2: A3 重启时分布式环境变量缺失
-- **日期**: 2026-02-12
-- **现象**: 日志报错 `MASTER_ADDR expected, but not set`，并出现 `Rank 0~3`
-- **原因分析**: 启动命令拼接不规范，关键环境变量未显式设置，导致进程组配置错误
-- **解决方案**: 使用标准化模板启动（先设置 `MASTER_ADDR/MASTER_PORT/CUDA_VISIBLE_DEVICES`，再 `nohup python ...`）
-- **状态**: 已解决
-
----
-
-## 下一步计划
-
-- [x] 回填 A1/A2/A3 的 DSC/HD95/ASD（以服务器评估结果为准）
-- [x] 输出 A1/A2/A3 对比表并补齐 `主实验结果` 表
-- [ ] 补跑 Baseline 同口径评估（用于计算 A1/A2/A3 的 ΔBaseline）
-- [ ] 启动 A3 修正实验（优先: `stage_switch_epoch`、α/β 比例、阈值）
-- [ ] 启动 EXP-005（AttentionCrossBlock only）并建立日志与产物索引
-- [ ] 在 EXP-006 启动前完成 Attention 模块的最小可运行验证（小规模试跑）
-
----
-
-**文档结束**
-
-> 最后更新: 2026-02-13
+1. 章节中给出的数值必须与本文件表格一致。
+2. 每个结论至少对应一个 `summary.json` 和一个训练日志来源。
+3. 未完成实验只能写“进行中/待验证”，不能写确定结论。

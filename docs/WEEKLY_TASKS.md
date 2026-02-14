@@ -1,709 +1,104 @@
-# 每周任务清单与进度追踪
+# 本周执行面板（实验 + 论文联动）
 
-> 按周分解的具体可执行任务，每完成一项打勾
-
----
-
-## 执行模式（固定）
-
-- 固定模式：**本地开发 + 远程服务器运行**。
-- 周任务中的“训练启动/监控/评估”均指在服务器执行。
-- 若需确认进度，先看服务器日志与产物，不以本地目录状态下结论。
-- 默认回传信息：执行命令、日志末尾、GPU状态、产物目录。
+> 周期：2026-02-14 ~ 2026-02-21  
+> 主线：先完成 A3R1，再决定 R2/R3 或进入 Attention
 
 ---
 
-## 最新进展（2026-02-13）
+## 1. 本周目标
 
-- [x] Baseline 可用基线已确认（`MedSAM-Baseline-20260208-1953`）
-- [x] A1 Inter-CBL 已完成200 epochs
-- [x] A2 Intra-CBL 已完成200 epochs
-- [x] A3 Balance Loss 已完成200 epochs（`A3_20260212-002344_bs1.log`，结束于 `20260213-0501`）
-- [x] A1/A2/A3 指标汇总表（DSC/HD95/ASD）已回填
-- [x] A1/A2/A3 初步消融结论已形成（A2 当前最优，A3 需修正）
-- [ ] Baseline 同口径评估待补跑（用于计算ΔBaseline）
+1. 完成 A3R1 训练与评估回填。
+2. 输出 A0/A1/A2/A3/A3R1 同口径对比表。
+3. 完成论文第3章初稿（含失败机制解释与修正策略）。
 
 ---
 
-## 本周收尾重点（2026-02-13 ~ 2026-02-14）
+## 2. 已完成
 
-- [x] 从服务器回传 A1/A2/A3 评估指标并填入 `docs/EXPERIMENT_LOG.md`
-- [ ] 完成 A1/A2/A3 对比图表（至少：主结果表 + loss 对比）
-- [ ] 固化 A3 标准启动命令（含分布式环境变量）到操作文档
-- [ ] 启动 A3 修正实验（优先改 `stage_switch_epoch` 与 α/β）
-- [ ] 开始 Week 5：AttentionCrossBlock 代码实现与最小可运行测试
-
----
-
-## Week 1 (1月13日-1月19日): 环境搭建与Baseline
-
-### 本周目标
-- [ ] 环境配置完成
-- [ ] MedSAM Baseline训练成功
-- [ ] 获得FLARE22数据集上的Baseline结果
-
-### 每日任务
-
-**Day 1 (周一): 环境准备**
-```
-上午:
-- [ ] 创建conda环境: conda create -n medsam python=3.10
-- [ ] 安装PyTorch: pip install torch torchvision
-- [ ] 验证CUDA可用: python -c "import torch; print(torch.cuda.is_available())"
-
-下午:
-- [ ] 安装其他依赖: pip install monai scikit-image matplotlib tqdm wandb
-- [ ] 克隆/准备MedSAM代码
-- [ ] 运行: pip install -e .
-```
-
-**Day 2 (周二): 数据与权重**
-```
-上午:
-- [ ] 下载SAM预训练权重 (sam_vit_b_01ec64.pth)
-- [ ] 创建目录结构: mkdir -p work_dir/SAM data/npy
-
-下午:
-- [ ] 准备FLARE22数据集
-- [ ] 转换为npy格式 (如需要)
-- [ ] 验证数据格式正确
-```
-
-**Day 3 (周三): 验证流程**
-```
-上午:
-- [ ] 运行数据sanity check
-- [ ] 检查生成的data_sanitycheck.png
-- [ ] 确认图像和标签显示正确
-
-下午:
-- [ ] 理解train_one_gpu.py代码结构
-- [ ] 阅读MedSAM模型定义
-- [ ] 理解训练流程
-```
-
-**Day 4 (周四): Baseline训练启动**
-```
-上午:
-- [ ] 配置wandb账号 (可选)
-- [ ] 设置训练参数
-
-下午:
-- [ ] 启动Baseline训练:
-      python train_one_gpu.py -i data/npy/CT_Abd -task_name Baseline -num_epochs 200
-- [ ] 监控训练过程
-- [ ] 检查loss是否下降
-```
-
-**Day 5-6 (周五-周六): 训练监控**
-```
-- [ ] 持续监控训练状态
-- [ ] 记录训练曲线
-- [ ] 如有问题及时调试
-```
-
-**Day 7 (周日): 结果记录**
-```
-- [ ] 评估模型性能
-- [ ] 记录DSC, HD95到EXPERIMENT_LOG.md
-- [ ] 保存最佳模型权重
-- [ ] 生成可视化结果
-```
-
-### 本周产出清单
-```
-□ 可运行的开发环境
-□ work_dir/Baseline/medsam_model_best.pth
-□ Baseline性能数据 (填入下表)
-□ 训练曲线截图
-```
-
-**Baseline结果记录**:
-| 器官 | DSC (%) | HD95 (mm) |
-|------|---------|-----------|
-| 肝脏 | | |
-| 脾脏 | | |
-| 胰腺 | | |
-| 肾脏 | | |
-| 平均 | | |
+- [x] A0 同口径评估回填。
+- [x] A1/A2/A3 同口径评估回填。
+- [x] A3R1 训练任务已启动（nohup + PID）。
+- [x] 建立主控文档：`docs/THESIS_MASTER_GUIDE.md`
+- [x] 建立技术报告：`docs/THESIS_TECHNICAL_REPORT.md`
 
 ---
 
-## Week 2 (1月20日-1月26日): 文献调研与论文1-2章
+## 3. 进行中
 
-### 本周目标
-- [ ] 完成40+篇文献阅读
-- [ ] 完成论文第1章初稿
-- [ ] 完成论文第2章初稿
+- [ ] A3R1 训练监控（日志/GPU/进程）。
+- [ ] A3R1 评估执行与 `A3R1_summary.json` 生成。
+- [ ] 第3章写作（方法、实验、机制解释）。
 
-### 每日任务
+---
 
-**Day 1-2: 医学图像分割文献**
-```
-必读论文:
-- [ ] U-Net (2015) - 理解基础架构
-- [ ] nnU-Net (2021) - 理解自动配置
-- [ ] TransUNet (2021) - 理解Transformer应用
-- [ ] Swin-UNet (2021) - 理解层次化Transformer
-- [ ] 其他5-10篇相关论文
+## 4. 待决策事项（依赖 A3R1 结果）
 
-阅读要点:
-- 方法核心思想
-- 实验数据集
-- 性能指标
-- 优缺点分析
-```
+1. 若 A3R1 接近或超过 A2：直接进入 Attention。
+2. 若 A3R1 仅部分恢复：执行 A3R2/A3R3。
+3. 若 A3R1 仍明显弱于 A2：以 A2 作为后续主干。
 
-**Day 3: SAM相关文献**
-```
-必读论文:
-- [ ] SAM (2023) - 核心论文，重点理解
-- [ ] MedSAM (2024) - 基础模型论文
-- [ ] SAM-Med2D (2023)
-- [ ] 其他SAM医学应用论文
+---
 
-阅读要点:
-- SAM的训练策略
-- prompt机制设计
-- 医学领域适配方法
-```
+## 5. 每日检查命令
 
-**Day 4: 类别不平衡文献**
-```
-必读论文:
-- [ ] Focal Loss (2017)
-- [ ] Class-Balanced Loss (2019)
-- [ ] OHEM (2016)
-- [ ] Dice Loss分析论文
-- [ ] 其他5篇类别不平衡论文
-
-阅读要点:
-- 问题定义
-- 解决方案对比
-- 医学图像特殊性
-```
-
-**Day 5: 注意力机制文献**
-```
-必读论文:
-- [ ] Attention Is All You Need (2017)
-- [ ] CBAM (2018)
-- [ ] Non-local Networks (2018)
-- [ ] UniverSeg (2023) - 重点参考
-- [ ] 其他Few-Shot分割论文
-
-阅读要点:
-- 注意力类型
-- 特征融合方法
-- Few-Shot设计
-```
-
-**Day 6: 撰写第1章**
-```
-第1章结构 (5000字):
-
-1.1 研究背景与意义 (1500字)
-- [ ] 医学图像分割的重要性
-- [ ] 深度学习在医学影像中的应用
-- [ ] 当前面临的挑战
-
-1.2 国内外研究现状 (2000字)
-- [ ] 传统分割方法回顾
-- [ ] 深度学习方法发展
-- [ ] SAM及其医学应用
-- [ ] 现有方法的局限性
-
-1.3 本文研究内容与创新点 (1000字)
-- [ ] 研究目标
-- [ ] 创新点1: Balance Loss
-- [ ] 创新点2: Attention融合
-
-1.4 论文组织结构 (500字)
-- [ ] 各章内容概述
-```
-
-**Day 7: 撰写第2章**
-```
-第2章结构 (6000字):
-
-2.1 医学图像分割概述 (1000字)
-- [ ] 任务定义
-- [ ] 常用数据集
-- [ ] 评价指标
-
-2.2 深度学习分割方法 (1500字)
-- [ ] FCN到U-Net的发展
-- [ ] Transformer架构
-- [ ] 混合架构
-
-2.3 Segment Anything Model (1500字)
-- [ ] 模型架构
-- [ ] 训练策略
-- [ ] prompt机制
-
-2.4 类别不平衡问题 (1000字)
-- [ ] 问题定义
-- [ ] 现有解决方案
-
-2.5 注意力机制 (1000字)
-- [ ] 自注意力
-- [ ] 交叉注意力
-- [ ] 在分割中的应用
-```
-
-### 本周产出清单
-```
-□ 文献阅读笔记 (docs/literature_notes/)
-□ 第1章初稿 (thesis/chapter1.docx)
-□ 第2章初稿 (thesis/chapter2.docx)
-□ 参考文献列表 (初步整理)
+```bash
+cd ~/chengang/zxw/MedSAM
+conda activate medsam
+ps -fp $(cat work_dir/exp_logs/A3R1_train.pid)
+tail -n 30 work_dir/exp_logs/A3R1_train.log
+nvidia-smi
 ```
 
 ---
 
-## Week 3 (1月27日-2月2日): Balance Loss实现
+## 6. A3R1 完成后的立即动作
 
-### 本周目标
-- [ ] 完成Balance Loss代码实现
-- [ ] 通过单元测试
-- [ ] 集成到训练脚本
+1. 后台评估：
+```bash
+mkdir -p work_dir/eval_metrics/logs
+PY=/home/chengang/anaconda3/envs/medsam/bin/python
+A3R1_CKPT=$(ls -dt work_dir/MedSAM-FLARE22-A3R1-Balance-a0.5-b1.0-s70-*/medsam_model_best.pth | head -n1)
 
-### 每日任务
-
-**Day 1: Inter-CBL实现**
-```
-任务:
-- [ ] 创建 losses/ 目录
-- [ ] 创建 losses/__init__.py
-- [ ] 实现 InterClassBalanceLoss 类
-
-测试:
-- [ ] 测试正常输入
-- [ ] 测试全背景情况
-- [ ] 测试全前景情况
-- [ ] 测试梯度流动
+nohup $PY eval_medsam_npz.py \
+  --data_root data/npy/CT_Abd \
+  --checkpoint "$A3R1_CKPT" \
+  --exp_name A3R1 \
+  --out_csv work_dir/eval_metrics/A3R1_case_metrics.csv \
+  --out_json work_dir/eval_metrics/A3R1_summary.json \
+  > work_dir/eval_metrics/logs/A3R1_eval.log 2>&1 < /dev/null &
+echo $! > work_dir/eval_metrics/logs/A3R1_eval.pid
 ```
 
-**Day 2: Intra-CBL实现**
-```
-任务:
-- [ ] 实现 IntraClassBalanceLoss 类
-- [ ] 实现置信度计算
-- [ ] 实现难易样本划分
-
-测试:
-- [ ] 测试不同阈值
-- [ ] 测试权重效果
-- [ ] 测试边界情况
-```
-
-**Day 3: 完整BalanceLoss**
-```
-任务:
-- [ ] 实现 BalanceLoss 类
-- [ ] 实现 Dice Loss 组件
-- [ ] 实现 set_stage() 方法
-- [ ] 实现 loss_dict 返回
-
-测试:
-- [ ] 测试Stage 1模式
-- [ ] 测试Stage 2模式
-- [ ] 测试阶段切换
-```
-
-**Day 4: 训练脚本集成**
-```
-任务:
-- [ ] 修改 train_one_gpu.py 或创建 train_balance_loss.py
-- [ ] 添加命令行参数
-- [ ] 实现阶段自动切换
-- [ ] 添加wandb日志记录
-
-验证:
-- [ ] 小数据集试跑
-- [ ] 检查loss记录正确
-- [ ] 检查模型保存正确
-```
-
-**Day 5-7: 调试与文档**
-```
-- [ ] 修复发现的bug
-- [ ] 优化代码效率
-- [ ] 添加代码注释
-- [ ] 编写使用文档
-- [ ] 启动消融实验A2
-```
-
-### 本周产出清单
-```
-□ losses/balance_loss.py (完整实现)
-□ losses/__init__.py
-□ train_balance_loss.py (或修改版train_one_gpu.py)
-□ tests/test_balance_loss.py (单元测试)
-□ 消融实验A2开始运行
+2. 汇总查看：
+```bash
+python - <<'PY'
+import json
+files = [
+  "work_dir/eval_metrics/A0_summary.json",
+  "work_dir/eval_metrics/A1_summary.json",
+  "work_dir/eval_metrics/A2_summary.json",
+  "work_dir/eval_metrics/A3_summary.json",
+  "work_dir/eval_metrics/A3R1_summary.json",
+]
+for p in files:
+    d = json.load(open(p, "r", encoding="utf-8"))
+    print(f"{d['exp_name']}: DSC={d['dice_mean']:.6f}, HD95={d['hd95_mean']:.6f}, ASD={d['asd_mean']:.6f}")
+PY
 ```
 
 ---
 
-## Week 4 (2月3日-2月9日): Balance Loss实验
+## 7. 论文写作联动任务
 
-### 本周目标
-- [ ] 完成消融实验A1-A6
-- [ ] 完成第3章初稿
-- [ ] 生成实验可视化
-
-### 每日任务
-
-**Day 1-2: 运行实验A2-A4**
-```
-实验运行:
-- [ ] A2: Inter-CBL only
-      python train_balance_loss.py -loss_type balance -balance_alpha 1.0 -balance_beta 0.0
-- [ ] A3: Intra-CBL only
-      python train_balance_loss.py -loss_type balance -balance_alpha 0.0 -balance_beta 1.0
-- [ ] A4: Full Balance Loss
-      python train_balance_loss.py -loss_type balance -balance_alpha 1.0 -balance_beta 1.0
-
-(可并行运行多个实验)
-```
-
-**Day 3: 超参数实验A5**
-```
-参数组合:
-- [ ] α=0.5, β=1.0, γ=1.0
-- [ ] α=1.0, β=0.5, γ=1.0
-- [ ] α=1.0, β=2.0, γ=1.0
-- [ ] α=1.0, β=1.0, γ=0.5
-- [ ] 记录所有结果
-```
-
-**Day 4: 切换时机实验A6**
-```
-切换时机:
-- [ ] epoch 30
-- [ ] epoch 50 (default)
-- [ ] epoch 70
-- [ ] epoch 100
-- [ ] 分析最优切换点
-```
-
-**Day 5-6: 结果分析与可视化**
-```
-- [ ] 整理所有实验数据
-- [ ] 制作消融实验表格
-- [ ] 绘制loss曲线对比图
-- [ ] 生成分割结果对比图
-- [ ] 分析各组件贡献
-```
-
-**Day 7: 撰写第3章**
-```
-第3章内容:
-- [ ] 3.1 问题分析
-- [ ] 3.2 Inter-CBL设计
-- [ ] 3.3 Intra-CBL设计
-- [ ] 3.4 两阶段策略
-- [ ] 3.5 实验验证
-- [ ] 3.6 本章小结
-```
-
-### 本周产出清单
-```
-□ 实验A1-A6完整结果
-□ 消融实验表格
-□ 可视化图表 (loss曲线、分割对比)
-□ 第3章初稿 (8000字)
-```
-
-**消融实验结果表**:
-| 实验 | 方法 | DSC (%) | HD95 (mm) | ΔBaseline |
-|------|------|---------|-----------|-----------|
-| A1 | Baseline | | | - |
-| A2 | +Inter-CBL | | | |
-| A3 | +Intra-CBL | | | |
-| A4 | +Balance Loss | | | |
+- [ ] 第3章 3.2/3.3 节：Inter/Intra 公式与动机补齐。
+- [ ] 第3章 3.5 节：A0-A3 结果表与 A3 退化机制解释。
+- [ ] 第3章 3.6 节：A3R1 结果回填与决策结论。
+- [ ] 第1章 1.4 节：根据实证更新“创新点陈述”。
 
 ---
 
-## Week 5 (2月10日-2月16日): Attention模块实现
+## 8. 交付清单（本周末）
 
-### 本周目标
-- [ ] 完成AttentionCrossBlock实现
-- [ ] 完成Few-Shot数据加载器
-- [ ] 完成MedSAM_FSS模型
-
-### 每日任务
-
-**Day 1-2: AttentionCrossBlock**
-```
-任务:
-- [ ] 创建 modules/ 目录
-- [ ] 实现多头交叉注意力
-- [ ] 实现残差连接和LayerNorm
-- [ ] 实现MLP层
-
-测试:
-- [ ] 测试不同输入尺寸
-- [ ] 测试单/多支持样本
-- [ ] 测试内存使用
-```
-
-**Day 3: Few-Shot数据加载器**
-```
-任务:
-- [ ] 创建 datasets/ 目录
-- [ ] 实现 FewShotNpyDataset
-- [ ] 实现支持集采样策略
-- [ ] 处理同类别采样逻辑
-
-测试:
-- [ ] 测试数据加载
-- [ ] 测试支持集正确性
-- [ ] 测试batch处理
-```
-
-**Day 4: MedSAM_FSS模型**
-```
-任务:
-- [ ] 创建 models/ 目录
-- [ ] 实现 MedSAM_FSS 类
-- [ ] 集成注意力融合
-- [ ] 实现forward流程
-
-测试:
-- [ ] 测试前向传播
-- [ ] 测试有/无支持集
-- [ ] 测试输出形状
-```
-
-**Day 5-6: 训练脚本**
-```
-任务:
-- [ ] 创建 train_fss.py
-- [ ] 集成Few-Shot数据加载
-- [ ] 集成MedSAM_FSS模型
-- [ ] 添加支持集相关参数
-
-验证:
-- [ ] 小规模训练测试
-- [ ] 检查内存使用
-- [ ] 检查训练速度
-```
-
-**Day 7: 代码整理**
-```
-- [ ] 代码review和优化
-- [ ] 添加注释和文档
-- [ ] 提交git commit
-- [ ] 准备下周实验
-```
-
-### 本周产出清单
-```
-□ modules/attention_cross_block.py
-□ modules/__init__.py
-□ datasets/fewshot_dataset.py
-□ datasets/__init__.py
-□ models/medsam_fss.py
-□ models/__init__.py
-□ train_fss.py
-```
-
----
-
-## Week 6 (2月17日-2月23日): Attention实验
-
-### 本周目标
-- [ ] 完成实验B1-B5
-- [ ] 完成第4章初稿
-
-### 每日任务
-
-**Day 1-3: 运行实验B1-B3**
-```
-- [ ] B1: N=1 (单支持样本)
-- [ ] B2: N=5 (默认)
-- [ ] B3: N=10 (更多样本)
-```
-
-**Day 4: 超参数实验B4-B5**
-```
-- [ ] B4: 不同注意力头数 (4, 8, 16)
-- [ ] B5: 有/无mask加权对比
-```
-
-**Day 5-6: 分析与可视化**
-```
-- [ ] 整理实验数据
-- [ ] 生成注意力权重可视化
-- [ ] 分析不同配置的效果
-- [ ] 计算效率分析
-```
-
-**Day 7: 撰写第4章**
-```
-- [ ] 4.1 问题分析
-- [ ] 4.2 模块设计
-- [ ] 4.3 支持集机制
-- [ ] 4.4 实验验证
-- [ ] 4.5 本章小结
-```
-
-### 本周产出清单
-```
-□ 实验B1-B5完整结果
-□ 注意力可视化图
-□ 第4章初稿 (6000字)
-```
-
----
-
-## Week 7 (2月24日-3月2日): 综合实验
-
-### 本周目标
-- [ ] 完成消融实验C1
-- [ ] 完成对比实验C2-C4
-- [ ] 开始跨数据集实验C5
-
-### 每日任务
-
-**Day 1-2: 完整消融实验C1**
-```
-完整模型训练:
-- [ ] Balance Loss + Attention
-- [ ] 比较各种组合
-```
-
-**Day 3-4: 对比实验C2-C4**
-```
-- [ ] C2: 与MedSAM原始对比
-- [ ] C3: 与nnU-Net对比 (如有预训练模型)
-- [ ] C4: 与其他方法对比
-```
-
-**Day 5-7: 跨数据集实验C5**
-```
-- [ ] 准备KiTS19数据
-- [ ] 准备BUSI数据
-- [ ] 运行泛化测试
-- [ ] 记录结果
-```
-
-### 本周产出清单
-```
-□ 完整消融实验表
-□ 对比实验表
-□ 跨数据集初步结果
-```
-
----
-
-## Week 8 (3月3日-3月9日): 论文整合
-
-### 本周目标
-- [ ] 完成第5章
-- [ ] 完成第6章
-- [ ] 整合全文初稿
-
-### 每日任务
-
-**Day 1-3: 第5章撰写**
-```
-- [ ] 5.1 实验设置
-- [ ] 5.2 消融实验
-- [ ] 5.3 对比实验
-- [ ] 5.4 泛化实验
-- [ ] 5.5 可视化分析
-```
-
-**Day 4: 第6章撰写**
-```
-- [ ] 6.1 工作总结
-- [ ] 6.2 研究不足
-- [ ] 6.3 未来展望
-```
-
-**Day 5-6: 摘要与整合**
-```
-- [ ] 撰写中文摘要
-- [ ] 撰写英文摘要
-- [ ] 整合所有章节
-- [ ] 统一格式
-```
-
-**Day 7: 初稿检查**
-```
-- [ ] 通读全文
-- [ ] 检查逻辑连贯性
-- [ ] 检查图表引用
-- [ ] 准备提交导师
-```
-
-### 本周产出清单
-```
-□ 第5章 (8000字)
-□ 第6章 (2000字)
-□ 摘要 (中英文)
-□ 完整论文初稿
-```
-
----
-
-## Week 9-12: 修改与定稿
-
-### Week 9 (3月10日-3月16日)
-```
-- [ ] 提交导师初审
-- [ ] 收集反馈意见
-- [ ] 列出修改清单
-```
-
-### Week 10 (3月17日-3月23日)
-```
-- [ ] 按反馈修改内容
-- [ ] 补充实验数据
-- [ ] 完善图表质量
-```
-
-### Week 11 (3月24日-3月30日)
-```
-- [ ] 格式规范化
-- [ ] 参考文献整理
-- [ ] 自查查重
-```
-
-### Week 12 (3月31日-4月6日)
-```
-- [ ] 导师复审
-- [ ] 最终修改
-- [ ] 准备送审
-```
-
----
-
-## 进度追踪表
-
-在下表中记录每周实际完成情况:
-
-| 周次 | 计划任务 | 完成情况 | 遇到的问题 | 下周调整 |
-|------|----------|----------|------------|----------|
-| Week 1 | | | | |
-| Week 2 | | | | |
-| Week 3 | | | | |
-| Week 4 | | | | |
-| Week 5 | | | | |
-| Week 6 | | | | |
-| Week 7 | | | | |
-| Week 8 | | | | |
-| Week 9 | | | | |
-| Week 10 | | | | |
-| Week 11 | | | | |
-| Week 12 | | | | |
-
----
-
-**使用说明**:
-1. 每天开始前查看当日任务
-2. 完成后在 `[ ]` 中打勾变为 `[x]`
-3. 每周末review完成情况
-4. 未完成任务顺延到下周并调整计划
+1. `work_dir/eval_metrics/A3R1_summary.json`
+2. 更新后的 `docs/EXPERIMENT_LOG.md`
+3. 第3章初稿（可直接进入整稿）
