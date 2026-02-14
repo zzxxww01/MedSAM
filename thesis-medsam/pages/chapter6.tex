@@ -1,0 +1,31 @@
+\chapter{总结与展望}
+
+\section{工作总结}
+
+本文围绕 MedSAM 在医学图像分割中的两类关键问题展开研究：双重类别不平衡与跨病例先验利用不足。主要工作总结如下：
+
+\begin{enumerate}
+  \item 构建 Balance Loss 框架，通过 Inter-CBL 与 Intra-CBL 联合建模类间与类内不平衡，并引入两阶段训练机制。
+  \item 完成 A0-A3 消融实验并形成同口径结果，确认 Intra-CBL 在当前任务中的主贡献地位。
+  \item 针对原始 Balance 配置退化问题提出 A3R1 修正路径，为后续模块实验建立机制化决策流程。
+  \item 给出跨病例 Attention Cross Block 的设计方案与验证计划，建立从损失优化到特征融合的完整研究链路。
+\end{enumerate}
+
+\section{研究不足}
+
+\begin{enumerate}
+  \item 当前阶段 Attention 模块结果尚未完整回填，综合模型结论仍在形成中。
+  \item 跨数据集泛化实验尚未系统展开，后续需补充更大范围验证。
+  \item 对部分小器官的细粒度器官级统计仍需加强。
+\end{enumerate}
+
+\section{未来展望}
+
+后续可从以下方向继续推进：
+
+\begin{enumerate}
+  \item 完成 A3R1/R2/R3 与 Attention 模块的全链路实验，形成完整方法闭环；
+  \item 扩展多数据集、多模态评估，验证方法的跨域稳健性；
+  \item 引入更精细的案例解释与不确定性分析，提升临床可解释性；
+  \item 在保证效果的前提下优化推理效率，增强工程部署可行性。
+\end{enumerate}

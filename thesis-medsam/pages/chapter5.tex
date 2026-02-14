@@ -1,0 +1,63 @@
+\chapter{综合实验设计与结果组织}
+
+\section{实验目标}
+
+本章目标是构建“可复现、可解释、可答辩”的综合实验体系，用于验证本文方法在性能、稳定性与泛化上的表现，并形成最终论文图表与结论链。
+
+\section{实验分层设计}
+
+\subsection{层级一：损失机制验证}
+
+\begin{itemize}
+  \item A0：Baseline；
+  \item A1：Inter-CBL；
+  \item A2：Intra-CBL；
+  \item A3：原始 Balance；
+  \item A3R1/R2/R3：修正与变量剥离。
+\end{itemize}
+
+\subsection{层级二：特征融合验证}
+
+\begin{itemize}
+  \item Attention Cross Block 单模块增益；
+  \item 与 A2 或修正后 Balance 组合增益；
+  \item support 数量与质量敏感性。
+\end{itemize}
+
+\subsection{层级三：综合模型验证}
+
+\begin{itemize}
+  \item 完整方法（Balance + Attention）；
+  \item 与基线及核心对照模型比较；
+  \item 典型可视化案例分析。
+\end{itemize}
+
+\section{评价指标与统计策略}
+
+\begin{itemize}
+  \item 主指标：DSC、HD95、ASD；
+  \item 统计方式：均值、标准差，并记录 case-level 结果；
+  \item 结论要求：每条结论对应可追溯日志与 summary 文件。
+\end{itemize}
+
+\section{当前阶段结果与决策门槛}
+
+当前已完成 A0-A3，同口径结果表见第3章表\ref{tab:balance_results}。A3R1 结果回填后，按以下门槛决策：
+\begin{enumerate}
+  \item 若 A3R1 明显优于 A3 且接近/超过 A2：进入 Attention 主线；
+  \item 若 A3R1 仅部分恢复：执行 R2/R3；
+  \item 若均未达标：以 A2 作为后续主干。
+\end{enumerate}
+
+\section{图表清单（写作阶段约束）}
+
+\begin{enumerate}
+  \item 主结果表：A0/A1/A2/A3/A3R1；
+  \item 消融表：R1/R2/R3；
+  \item 可视化图：成功样例、失败样例、边界放大图；
+  \item 流程图：训练与评估管线。
+\end{enumerate}
+
+\section{本章小结}
+
+本章给出综合实验的组织原则与决策门槛，确保后续结果填充时能够直接形成可用于论文正文和答辩展示的高一致性证据链。

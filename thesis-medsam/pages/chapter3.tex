@@ -1,0 +1,110 @@
+\chapter{基于 Balance Loss 的医学图像分割方法}
+
+\section{问题定义与总体思路}
+
+在 MedSAM 的提示式分割框架下，模型输出本质是前景/背景二分类掩码。医学场景中前景像素通常显著少于背景像素，同时困难像素（边界、低对比区域）比例也偏低。为解决该双重不平衡问题，本文设计 Balance Loss，将类别间平衡与类别内难度加权联合建模。
+
+\section{Inter-CBL：类别间平衡损失}
+
+\subsection{设计动机}
+
+多数背景像素属于易分类样本，若全部参与反向传播，会在梯度层面压制前景信号。为此，本文仅选择与前景数量对齐的困难背景样本参与计算，避免背景梯度主导。
+
+\subsection{形式化表达}
+
+设前景像素集合为 \(F\)，背景中挖掘得到的困难样本集合为 \(H_B\)，像素级损失为 \(\ell_i\)，则：
+\begin{equation}
+L_{inter}=\frac{1}{2}\left(\frac{1}{|F|}\sum_{i\in F}\ell_i+\frac{1}{|H_B|}\sum_{j\in H_B}\ell_j\right)
+\end{equation}
+
+该策略与 OHEM 在思想上同源\cite{shrivastava2016ohem}，并与有效样本数重加权方向一致\cite{cui2019classbalanced}。
+
+\section{Intra-CBL：类别内难度加权损失}
+
+\subsection{设计动机}
+
+同一类别内部，易样本多而难样本少。若等权训练，模型可能优先优化易样本而忽略关键边界。本文引入阈值划分机制，对难样本赋予更高权重。
+
+\subsection{形式化表达}
+
+将像素集合按置信度划分为易样本 \(E\) 与难样本 \(H\)，对应权重 \(w_e\)、\(w_h\)：
+\begin{equation}
+L_{intra}=w_e\cdot \frac{1}{|E|}\sum_{i\in E}\ell_i + w_h\cdot \frac{1}{|H|}\sum_{j\in H}\ell_j
+\end{equation}
+
+该策略可视为一种可解释的软困难样本挖掘，与 Focal Loss 的“关注困难样本”目标一致\cite{lin2017focal}。
+
+\section{完整 Balance Loss 与两阶段训练}
+
+\subsection{损失组合}
+
+本文最终损失定义为：
+\begin{equation}
+L_{balance}=\alpha L_{inter}+\beta L_{intra}+\gamma L_{dice}
+\end{equation}
+其中 \(\alpha,\beta,\gamma\) 为分量权重。
+
+\subsection{两阶段策略}
+
+\begin{itemize}
+  \item Stage 1：以稳定收敛为目标，先训练基础判别能力；
+  \item Stage 2：引入更强困难样本机制，强化边界和稀有模式学习。
+\end{itemize}
+
+该设计用于缓解冷启动阶段 hard mining 的噪声问题。
+
+\section{实验设置与当前结果}
+
+\subsection{实验口径}
+
+\begin{itemize}
+  \item 数据：CT\_Abd；
+  \item 评估样本：40 例同口径评估；
+  \item 指标：DSC、HD95、ASD；
+  \item 对照组：A0、A1、A2、A3、A3R1。
+\end{itemize}
+
+\subsection{当前结果}
+
+\begin{table}[htbp]
+  \centering
+  \caption{同口径评估结果（CT\_Abd，40例）}
+  \label{tab:balance_results}
+  \begin{tabular}{lccc}
+    \hline
+    实验 & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
+    \hline
+    A0 (Baseline) & 0.940741 & 4.830503 & 0.537757 \\
+    A1 (Inter-CBL) & 0.940596 & 4.790533 & 0.531697 \\
+    A2 (Intra-CBL) & \textbf{0.952554} & \textbf{3.368403} & \textbf{0.374899} \\
+    A3 (Balance, 原始) & 0.903470 & 7.922879 & 0.886811 \\
+    A3R1 (修正) & 待回填 & 待回填 & 待回填 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\section{结果分析与修正策略}
+
+\subsection{分析结论}
+
+\begin{enumerate}
+  \item A2 当前最优，说明 Intra-CBL 对该任务最有效；
+  \item A1 与 A0 接近，说明单独 Inter-CBL 收益有限；
+  \item A3 退化，说明“组件组合参数化”存在问题。
+\end{enumerate}
+
+\subsection{机制解释}
+
+当前结果指向两个高概率原因：
+\begin{itemize}
+  \item Inter 分量过强（\(\alpha\) 过大）；
+  \item 阶段切换过早（stage1\_epochs 过小）。
+\end{itemize}
+
+\subsection{A3R1 修正实验}
+
+本文已启动 A3R1（\(\alpha=0.5\)，stage1\_epochs=70）用于验证上述假设。若 A3R1 恢复并接近/超过 A2，则将修正后的 Balance Loss 作为后续模块（第4章）默认损失底座；若仅部分恢复，则继续执行 R2/R3 做变量剥离。
+
+\section{本章小结}
+
+本章提出了面向医学分割双重不平衡问题的 Balance Loss，并通过 A0-A3 消融实验给出初步结论：Intra-CBL 显著有效，而完整组合策略需要通过参数与阶段机制修正。A3R1 的结果将决定后续特征融合模块的损失底座选择。

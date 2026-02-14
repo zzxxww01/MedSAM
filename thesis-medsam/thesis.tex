@@ -1,0 +1,69 @@
+% 专业硕士学位论文模板
+\documentclass[type = master, class = professional]{whu-thesis}
+
+% 论文信息设置
+\whusetup{
+  info = {
+    title      = {基于平衡损失与跨病例注意力融合的医学图像分割方法研究}, % 中文标题，可使用 \\ 手动换行
+    title*     = {Research on Medical Image Segmentation with Balanced Loss and Cross-Case Attention Fusion}, % 英文标题
+    department  = {计算机学院},
+    department* = {School of Computer Science},
+    author     = {XXX},
+    author*    = {XXX},
+    student-id = {XXXXXXXXXX},
+    supervisor  = {XXX},
+    supervisor* = {XXX},
+    academic-title  = {教授}, % 导师职称
+    academic-title* = {Professor},
+    % supervisor-outer = {校外导师}, % 专业学位可能需要校外导师
+    % academic-title-outer = {高级工程师},
+    major   = {软件工程},
+    major*  = {Software Engineering},
+    research-area  = {医学图像分割},
+    research-area* = {Medical Image Segmentation},
+    year = 2026,
+    month = 2,
+    keywords  = {MedSAM, 类别不平衡, 平衡损失, 交叉注意力, 医学图像分割}, % 中文关键词
+    keywords* = {MedSAM, class imbalance, balanced loss, cross attention, medical image segmentation}, % 英文关键词
+  },
+  style = {
+    % 字体设置
+    font = termes, % 西文字体
+    math-font = termes, % 数学字体
+    cjk-font = fandol, % 中文字体 (Overleaf用fandol, Windows用windows, Mac用mac)
+    
+    % 参考文献设置
+    bib-backend = bibtex,
+    bib-resource = {ref/references.bib}, % 参考文献数据库
+  }
+}
+
+\begin{document}
+
+% 目录
+\tableofcontents
+
+% 正文开始
+\mainmatter
+
+% 引入各章节
+\include{pages/chapter1.tex}
+\include{pages/chapter2.tex}
+\include{pages/chapter3.tex}
+\include{pages/chapter4.tex}
+\include{pages/chapter5.tex}
+\include{pages/chapter6.tex}
+
+% 参考文献
+\printbibliography
+
+% 致谢
+\begin{acknowledgements}
+在此感谢导师的悉心指导，感谢家人和朋友的支持与鼓励。
+\end{acknowledgements}
+
+% 附录
+\appendix
+\include{pages/appendix.tex}
+
+\end{document}

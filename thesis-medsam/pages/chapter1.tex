@@ -1,0 +1,91 @@
+\chapter{绪论}
+
+\section{研究背景与意义}
+
+医学图像分割是计算机辅助诊断、术前规划和放疗勾画中的关键基础能力。高质量分割结果直接影响器官体积估计、病灶边界判读以及下游治疗决策。相比自然图像任务，医学图像分割具有两个长期痛点：第一，器官或病灶前景像素占比低，训练过程容易被大量背景样本主导；第二，边界区域和低对比区域的困难像素对最终临床可用性影响大，但在常规训练中常被简单样本淹没。
+
+Segment Anything Model (SAM) 为统一提示式分割提供了新范式\cite{kirillov2023segment}。在医学领域，MedSAM 将 SAM 迁移并微调到大规模医学数据，显著提升了跨任务可用性\cite{ma2024medsam}。但在当前课题数据口径下，基座模型仍存在“类别不平衡显式建模不足”和“单图推理缺少跨病例先验”两个限制。围绕这两个限制展开改进，具有明确的研究价值与工程价值。
+
+\section{国内外研究现状}
+
+\subsection{医学图像分割模型发展}
+
+医学分割方法经历了从卷积网络到 Transformer，再到视觉基础模型迁移的演进。基于提示的通用分割范式将“一个模型适配多任务”从研究概念推向可用框架\cite{kirillov2023segment}。MedSAM 的提出则验证了该范式在医学场景中的迁移潜力\cite{ma2024medsam}。
+
+\subsection{不平衡学习方法}
+
+针对长尾问题，Class-Balanced Loss 通过有效样本数建模多数类信息冗余，给出了系统化重加权方法\cite{cui2019classbalanced}。针对难样本学习，OHEM 提出在线困难样本挖掘\cite{shrivastava2016ohem}，Focal Loss 通过连续调制因子降低易样本权重\cite{lin2017focal}。这些思想为医学分割中的“前景稀疏 + 难样本稀缺”问题提供了方法学基础。
+
+\subsection{注意力与少样本分割}
+
+Transformer 注意力机制通过 Query-Key-Value 匹配建立全局依赖\cite{vaswani2017attention}。在少样本分割领域，PANet 的 support-query 对齐策略展示了跨样本先验对分割质量的提升潜力\cite{wang2019panet}。将该思想适配到 MedSAM 推理流程，有望缓解单图信息不足造成的边界不确定。
+
+\section{研究问题与挑战}
+
+本文聚焦以下三个核心挑战：
+
+\begin{enumerate}
+  \item \textbf{双重不平衡挑战}：类间不平衡导致前景召回受限，类内不平衡导致边界学习不足。
+  \item \textbf{跨病例先验缺失挑战}：单图提示分割难以充分利用相似病例中的形态与纹理先验。
+  \item \textbf{训练稳定性挑战}：多分量损失在冷启动阶段可能出现梯度冲突，导致性能退化。
+\end{enumerate}
+
+\section{研究目标与评价标准}
+
+围绕上述挑战，本文设定如下研究目标：
+\begin{enumerate}
+  \item 构建可解释的平衡损失框架，缓解类间与类内不平衡；
+  \item 在统一评估口径下验证各损失分量贡献，并分析退化机制；
+  \item 在损失主线稳定后引入跨病例注意力，验证特征融合增益；
+  \item 形成可复现实验链路，支撑论文写作与答辩追溯。
+\end{enumerate}
+
+本文采用 DSC、HD95、ASD 三指标作为主要评价标准，并通过同口径对照保证结论可比性。
+
+\section{技术路线}
+
+本文整体技术路线如表\ref{tab:roadmap} 所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{本文技术路线与阶段目标}
+  \label{tab:roadmap}
+  \begin{tabular}{p{3.2cm}p{5.8cm}p{5.0cm}}
+    \hline
+    阶段 & 核心任务 & 产出 \\
+    \hline
+    阶段一：基线与口径统一 & 完成 A0/A1/A2/A3 同口径评估 & 统一结果表与结论基线 \\
+    阶段二：Balance 修正 & 运行 A3R1 并按门槛决策 R2/R3 & 修正策略与机制解释 \\
+    阶段三：Attention 融合 & 构建 support-query 跨病例融合模块 & 模块增益结论与可视化 \\
+    阶段四：综合收敛 & 汇总消融、对比与失败案例 & 可答辩的完整证据链 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\section{研究内容与创新点}
+
+围绕上述挑战，本文的研究内容与创新点如下：
+
+\begin{enumerate}
+  \item 提出 Balance Loss 框架，将 Inter-CBL 与 Intra-CBL 结合到统一损失表达中，用于同时处理类间与类内不平衡。
+  \item 设计两阶段训练机制，先稳定收敛再强化困难样本，缓解冷启动噪声挖掘问题。
+  \item 构建 A0/A1/A2/A3 消融对比并引入 A3R1 修正实验，以机制可解释方式分析退化成因。
+  \item 在后续阶段引入跨病例 Attention Cross Block，探索 support-query 融合对复杂区域分割的增益。
+\end{enumerate}
+
+\section{论文组织结构}
+
+全文共分六章：
+
+\begin{itemize}
+  \item 第1章为绪论，介绍研究背景、现状、挑战与创新点。
+  \item 第2章介绍相关理论基础，包括 MedSAM 架构、不平衡学习和注意力机制。
+  \item 第3章给出基于 Balance Loss 的方法设计、训练策略与当前实验结果。
+  \item 第4章介绍跨病例注意力融合模块的设计与验证方案。
+  \item 第5章给出综合实验计划、决策门槛与结果组织方式。
+  \item 第6章总结全文并给出未来研究方向。
+\end{itemize}
+
+\section{本章小结}
+
+本章围绕“为什么做、做什么、如何做”给出了完整问题陈述。本文将以 MedSAM 为基座，通过 Balance Loss 解决双重不平衡问题，再引入跨病例注意力机制提升复杂区域分割能力，并以同口径实验与可追溯证据构建完整研究闭环。
