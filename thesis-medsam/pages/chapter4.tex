@@ -1,0 +1,61 @@
+\chapter{基于跨病例注意力的特征融合机制}
+
+\section{研究动机}
+
+MedSAM 标准推理主要依赖“单图 + 提示”模式。当目标边界模糊、器官形态复杂或局部纹理不清晰时，单图特征可能不足以提供稳定判别。为此，本文计划引入跨病例特征融合机制，在推理当前病例时利用支持集（support set）中的已知分割先验。
+
+\section{理论基础}
+
+\subsection{交叉注意力机制}
+
+交叉注意力计算定义为\cite{vaswani2017attention}：
+\begin{equation}
+Attention(Q,K,V)=softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+\end{equation}
+
+在本文场景中：
+\begin{itemize}
+  \item \(Q\)：当前 query 图像特征；
+  \item \(K\)：support 图像特征索引；
+  \item \(V\)：support 图像可迁移语义特征。
+\end{itemize}
+
+\subsection{Few-shot 支持集思想}
+
+PANet 等少样本分割方法证明了 support-query 对齐能够提升分割精度\cite{wang2019panet}。本文将该思想与 MedSAM 的 promptable 分割框架结合，实现跨病例语义补充。
+
+\section{Attention Cross Block 设计}
+
+\subsection{模块输入输出}
+
+\begin{itemize}
+  \item 输入1：query 图像编码特征；
+  \item 输入2：support 集特征与其掩码先验；
+  \item 输出：增强后的 query 特征，用于 mask decoder 预测。
+\end{itemize}
+
+\subsection{关键设计点}
+
+\begin{enumerate}
+  \item 多头交叉注意力：在多个子空间建立匹配；
+  \item 残差融合：保留原始 query 特征稳定性；
+  \item 可控开销：优先在低分辨率特征层融合，避免显存爆炸。
+\end{enumerate}
+
+\section{实验验证计划}
+
+\subsection{准入条件}
+
+为避免变量耦合，第4章实验在第3章损失主线稳定后启动。若 A3R1 未达标，则以 A2 作为损失底座进入本章实验。
+
+\subsection{实验设计}
+
+\begin{itemize}
+  \item B1：Baseline + Attention Cross Block；
+  \item B2：A2(or 修正后 Balance) + Attention Cross Block；
+  \item B3：不同 support 数量（1/3/5）敏感性分析。
+\end{itemize}
+
+\section{本章小结}
+
+本章给出跨病例注意力融合模块的设计原理、结构方案与验证路径。后续将通过控制变量实验评估该模块对边界质量和困难区域分割的增益。
