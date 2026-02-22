@@ -1,6 +1,6 @@
 # 实验事实库（标准化卡片）
 
-> 更新时间：2026-02-14  
+> 更新时间：2026-02-22  
 > 作用：作为论文与答辩的“唯一实验事实来源”。  
 > 总控入口：`docs/THESIS_MASTER_GUIDE.md`
 
@@ -22,11 +22,11 @@
 |---|---|---|---|---|
 | EXP-001 | A0 Baseline | 完成 | 稳定基线 | `A0_summary.json` |
 | EXP-002 | A1 Inter-CBL | 完成 | 与 A0 接近 | `A1_summary.json` |
-| EXP-003 | A2 Intra-CBL | 完成 | 当前最优 | `A2_summary.json` |
+| EXP-003 | A2 Intra-CBL | 完成 | 历史最优（修正前） | `A2_summary.json` |
 | EXP-004 | A3 Balance(原始) | 完成 | 明显退化 | `A3_summary.json` |
-| EXP-007 | A3R1 修正 | 进行中 | 等待评估 | `A3R1_summary.json`(待) |
-| EXP-008 | A3R2 修正对照 | 未启动 | 待决策 | - |
-| EXP-009 | A3R3 修正对照 | 未启动 | 待决策 | - |
+| EXP-007 | A3R1 修正 | 完成 | 相比 A3 恢复，但仍显著落后 A2 | `A3R1_summary.json` |
+| EXP-008 | A3R2 修正对照 | 完成 | 仅改切换时机后仍显著退化 | `A3R2_summary.json` |
+| EXP-009 | A3R3 修正对照 | 完成 | 显著优于 A2，锁定新主干 | `A3R3_summary.json` |
 
 ---
 
@@ -36,9 +36,11 @@
 |---|---:|---:|---:|---|
 | A0 | 0.940741 | 4.830503 | 0.537757 | 基线 |
 | A1 | 0.940596 | 4.790533 | 0.531697 | 与 A0 近似 |
-| A2 | 0.952554 | 3.368403 | 0.374899 | 最优 |
+| A2 | 0.952554 | 3.368403 | 0.374899 | 历史最优 |
 | A3 | 0.903470 | 7.922879 | 0.886811 | 退化 |
-| A3R1 | 待回填 | 待回填 | 待回填 | 验证中 |
+| A3R1 | 0.913660 | 6.638482 | 0.754714 | 部分恢复（未达 A2） |
+| A3R2 | 0.904431 | 6.617903 | 0.801991 | 未恢复（不通过） |
+| A3R3 | 0.959554 | 2.251109 | 0.246323 | 当前全局最优（通过） |
 
 ---
 
@@ -120,7 +122,7 @@
 - 明显优于 A0/A1/A3。
 
 ### Decision
-- 作为当前默认最优模型与后续基准。
+- 修正实验前的默认最优模型与后续基准。
 
 ---
 
@@ -150,7 +152,7 @@
 
 ---
 
-## 3.5 EXP-007：A3R1 修正实验（运行中）
+## 3.5 EXP-007：A3R1 修正实验（已完成）
 
 ### Objective
 - 验证“弱化 Inter + 延后切换”是否恢复性能。
@@ -168,74 +170,101 @@
 - `balance_hard_weight=2.0`
 - `balance_neg_ratio=3.0`
 
-### Run Command（记录）
-```bash
-nohup bash -lc '
-set -e
-cd ~/chengang/zxw/MedSAM
-conda activate medsam
-export CUDA_VISIBLE_DEVICES=0,1
-export MASTER_ADDR=localhost
-export MASTER_PORT=12355
-export MPLBACKEND=Agg
-python train_multi_gpus_balance.py \
-  -i data/npy/CT_Abd \
-  -task_name MedSAM-FLARE22-A3R1-Balance-a0.5-b1.0-s70 \
-  -model_type vit_b \
-  -checkpoint work_dir/medsam_vit_b.pth \
-  -num_epochs 200 \
-  -batch_size 1 \
-  -lr 0.0001 \
-  --world_size 2 \
-  -use_amp \
-  -loss_type balance \
-  -balance_alpha 0.5 \
-  -balance_beta 1.0 \
-  -balance_gamma 1.0 \
-  -stage1_epochs 70 \
-  -balance_hard_threshold 0.9 \
-  -balance_hard_weight 2.0 \
-  -balance_neg_ratio 3.0
-' > work_dir/exp_logs/A3R1_train.log 2>&1 < /dev/null &
-echo $! > work_dir/exp_logs/A3R1_train.pid
-```
-
-### Evidence（当前）
-- PID：`work_dir/exp_logs/A3R1_train.pid`
+### Evidence
 - 日志：`work_dir/exp_logs/A3R1_train.log`
-- 状态：Rank0/1 已启动并进入训练。
+- 评估日志：`work_dir/eval_metrics/logs/A3R1_eval.log`
+- 评估汇总：`work_dir/eval_metrics/A3R1_summary.json`
 
-### Post-Train Evaluation（待执行）
-```bash
-mkdir -p work_dir/eval_metrics/logs
-PY=/home/chengang/anaconda3/envs/medsam/bin/python
-A3R1_CKPT=$(ls -dt work_dir/MedSAM-FLARE22-A3R1-Balance-a0.5-b1.0-s70-*/medsam_model_best.pth | head -n1)
+### Result
+- DSC=0.913660, HD95=6.638482, ASD=0.754714
 
-nohup $PY eval_medsam_npz.py \
-  --data_root data/npy/CT_Abd \
-  --checkpoint "$A3R1_CKPT" \
-  --exp_name A3R1 \
-  --out_csv work_dir/eval_metrics/A3R1_case_metrics.csv \
-  --out_json work_dir/eval_metrics/A3R1_summary.json \
-  > work_dir/eval_metrics/logs/A3R1_eval.log 2>&1 < /dev/null &
-echo $! > work_dir/eval_metrics/logs/A3R1_eval.pid
-```
+### Detailed Comparison（详细对比）
 
-### Decision Rule
-1. 若 A3R1 明显优于 A3 且接近/超过 A2：锁定 R1，进入 Attention。
-2. 若 A3R1 仅部分恢复：继续 R2/R3 做变量剥离。
+| 对比项 | DSC变化 | HD95变化 | ASD变化 | 解读 |
+|---|---:|---:|---:|---|
+| A3R1 vs A3 | +0.010190 | -1.284397 | -0.132097 | 明显恢复，修正方向有效 |
+| A3R1 vs A2 | -0.038894 | +3.270079 | +0.379815 | 与当时最优仍有明显差距 |
+| A3R1 vs A0 | -0.027081 | +1.807979 | +0.216957 | 未回到基线 |
+
+### Decision
+1. R1 判定为“部分恢复，不通过”。
+2. 进入 R2/R3 单变量剥离。
 
 ---
 
-## 4. 下一批实验（待激活）
+## 3.6 EXP-008：A3R2 修正对照（仅改切换时机，已完成）
 
-## 4.1 EXP-008：A3R2（只改切换时机）
-- 目的：验证 stage1 延后是否是主因。
-- 条件：A3R1 未达到预期时启动。
+### Objective
+- 验证 `stage1_epochs` 延后是否是 A3 退化主因。
 
-## 4.2 EXP-009：A3R3（只改 Inter 权重）
-- 目的：验证 alpha 调低是否是主因。
-- 条件：A3R1 未达到预期时启动。
+### Config
+- `loss_type=balance`
+- `balance_alpha=1.0`
+- `balance_beta=1.0`
+- `balance_gamma=1.0`
+- `stage1_epochs=100`
+- 其余参数与 A3 基本一致。
+
+### Evidence
+- 训练日志：`work_dir/exp_logs/A3R2_train.log`（Epoch 199 完成）
+- 评估日志：`work_dir/eval_metrics/logs/A3R2_eval.log`
+- 评估汇总：`work_dir/eval_metrics/A3R2_summary.json`
+
+### Result
+- DSC=0.904431, HD95=6.617903, ASD=0.801991
+
+### Comparison
+- A3R2 vs A3R1：DSC -0.009229，HD95 -0.020579，ASD +0.047277（整体不如 A3R1）。
+- A3R2 vs A2：DSC -0.048122，HD95 +3.249500，ASD +0.427092（仍显著退化）。
+
+### Decision
+- R2 不通过。
+- “仅延后切换时机”不能解释或修复主问题。
+
+---
+
+## 3.7 EXP-009：A3R3 修正对照（仅改 Inter 权重，已完成）
+
+### Objective
+- 验证降低 `balance_alpha` 是否是恢复性能的主因。
+
+### Config
+- `loss_type=balance`
+- `balance_alpha=0.5`
+- `balance_beta=1.0`
+- `balance_gamma=1.0`
+- `stage1_epochs=50`
+- `balance_hard_threshold=0.9`
+- `balance_hard_weight=2.0`
+- `balance_neg_ratio=3.0`
+
+### Evidence
+- 训练日志：`work_dir/exp_logs/A3R3_train.log`（Epoch 199 完成）
+- 日志参数行已确认：`alpha=0.5,beta=1.0,gamma=1.0,stage1_epochs=50,...`
+- 评估日志：`work_dir/eval_metrics/logs/A3R3_eval.log`
+- 评估汇总：`work_dir/eval_metrics/A3R3_summary.json`
+
+### Result
+- DSC=0.959554, HD95=2.251109, ASD=0.246323
+
+### Comparison
+- A3R3 vs A2：DSC +0.007000，HD95 -1.117294，ASD -0.128576（全面优于 A2）。
+- A3R3 vs A3R1：DSC +0.045894，HD95 -4.387373，ASD -0.508391（显著提升）。
+
+### Decision
+1. R3 通过，且成为当前全局最优配置。
+2. 退化主因锁定为 Inter 权重强度（H1 获得强证据支持）。
+3. 后续 EXP-005（Attention 阶段）默认采用 A3R3 配置作为损失主干。
+
+---
+
+## 4. 下一阶段实验（已切换）
+
+## 4.1 EXP-005：Attention 模块阶段（进行中）
+- 阶段入口条件：已满足（R3 通过且优于 A2）。
+- 默认 Loss 主干：A3R3（`alpha=0.5, beta=1.0, gamma=1.0, stage1_epochs=50`）。
+- 先做：B1（Attention 模块独立增益验证）；
+- 再做：C1（Attention + A3R3 完整方案）。
 
 ---
 
@@ -243,4 +272,4 @@ echo $! > work_dir/eval_metrics/logs/A3R1_eval.pid
 
 1. 章节中给出的数值必须与本文件表格一致。
 2. 每个结论至少对应一个 `summary.json` 和一个训练日志来源。
-3. 未完成实验只能写“进行中/待验证”，不能写确定结论。
+3. 对“主因”类结论，必须给出至少一个单变量对照（本轮为 R2/R3）。
