@@ -1,6 +1,6 @@
 # 实验事实库（标准化卡片）
 
-> 更新时间：2026-02-22  
+> 更新时间：2026-02-24  
 > 作用：作为论文与答辩的“唯一实验事实来源”。  
 > 总控入口：`docs/THESIS_MASTER_GUIDE.md`
 
@@ -24,6 +24,7 @@
 | EXP-002 | A1 Inter-CBL | 完成 | 与 A0 接近 | `A1_summary.json` |
 | EXP-003 | A2 Intra-CBL | 完成 | 历史最优（修正前） | `A2_summary.json` |
 | EXP-004 | A3 Balance(原始) | 完成 | 明显退化 | `A3_summary.json` |
+| EXP-005 | B1 Attention-Only | 完成 | 模块可运行，优于 A0 但低于 A3R3 | `B1_summary.json` |
 | EXP-007 | A3R1 修正 | 完成 | 相比 A3 恢复，但仍显著落后 A2 | `A3R1_summary.json` |
 | EXP-008 | A3R2 修正对照 | 完成 | 仅改切换时机后仍显著退化 | `A3R2_summary.json` |
 | EXP-009 | A3R3 修正对照 | 完成 | 显著优于 A2，锁定新主干 | `A3R3_summary.json` |
@@ -41,6 +42,8 @@
 | A3R1 | 0.913660 | 6.638482 | 0.754714 | 部分恢复（未达 A2） |
 | A3R2 | 0.904431 | 6.617903 | 0.801991 | 未恢复（不通过） |
 | A3R3 | 0.959554 | 2.251109 | 0.246323 | 当前全局最优（通过） |
+| B1 | 0.943297 | 3.602789 | 0.437852 | Attention 单模块可运行，未超过 A3R3 |
+| C1 | 0.942718 | 4.417467 | 0.501330 | Attention + A3R3，性能弱于 A3R3 和 B1，不通过 |
 
 ---
 
@@ -258,13 +261,86 @@
 
 ---
 
-## 4. 下一阶段实验（已切换）
+## 3.8 EXP-005：B1 Attention-Only（已完成）
 
-## 4.1 EXP-005：Attention 模块阶段（进行中）
-- 阶段入口条件：已满足（R3 通过且优于 A2）。
-- 默认 Loss 主干：A3R3（`alpha=0.5, beta=1.0, gamma=1.0, stage1_epochs=50`）。
-- 先做：B1（Attention 模块独立增益验证）；
-- 再做：C1（Attention + A3R3 完整方案）。
+### Objective
+- 验证 AttentionCrossBlock 在 `dicece` 条件下的独立可运行性与净增益方向。
+
+### Config
+- `loss_type=dicece`
+- `use_attention=true`
+- `num_epochs=200`
+- `batch_size=1`
+- `lr=1e-4`
+- `world_size=2`
+
+### Evidence
+- 训练日志：`work_dir/exp_logs/B1_train.log`（Epoch 199 完成）
+- 评估日志：`work_dir/eval_metrics/logs/B1_eval.log`
+- 个例结果：`work_dir/eval_metrics/B1_case_metrics.csv`
+- 评估汇总：`work_dir/eval_metrics/B1_summary.json`
+
+### Result
+- DSC=0.943297, HD95=3.602789, ASD=0.437852
+- Checkpoint：`work_dir/MedSAM-FLARE22-B1-AttnOnly-20260223-0018/medsam_model_best.pth`
+
+### Comparison
+- B1 vs A0：DSC +0.002556，HD95 -1.227714，ASD -0.099905（有小幅提升）。
+- B1 vs A2：DSC -0.009257，HD95 +0.234386，ASD +0.062953（仍弱于 A2）。
+- B1 vs A3R3：DSC -0.016257，HD95 +1.351680，ASD +0.191529（明显弱于主干最优）。
+
+### Decision
+1. B1 判定为“模块可运行，具备可用基线”，但不能替代 A3R3 主干。
+2. C1（Attention + A3R3）已完成评估，判定为负向收益，不进入主线方案。
+
+---
+
+## 3.9 EXP-005：C1 Attention + A3R3（已完成）
+
+### Objective
+- 验证 AttentionCrossBlock 在 `balance` (A3R3) 主干下的完整组合收益。
+
+### Config
+- `loss_type=balance`
+- `use_attention=true`
+- `balance_alpha=0.5`
+- `balance_beta=1.0`
+- `balance_gamma=1.0`
+- `stage1_epochs=50`
+- `balance_hard_threshold=0.9`
+- `balance_hard_weight=2.0`
+- `balance_neg_ratio=3.0`
+- `num_epochs=200`
+
+### Evidence
+- 训练日志：`work_dir/exp_logs/C1_train.log`（Epoch 199 完成）
+- 评估汇总：`work_dir/eval_metrics/C1_summary.json`
+- Checkpoint: `work_dir/MedSAM-FLARE22-C1-Attn-BalanceR3-20260224-2122/medsam_model_best.pth`
+
+### Result
+- DSC=0.942718, HD95=4.417467, ASD=0.501330
+
+### Comparison
+- C1 vs A3R3：DSC -0.016836，HD95 +2.166358，ASD +0.255007（相较于去掉 Attention 的主干全面且剧烈退化）。
+- C1 vs B1 (Attention-only)：DSC -0.000579，HD95 +0.814678，ASD +0.063478（竟然比 DiceCE 下的 Attention 还要差）。
+- C1 vs A0：DSC +0.001977，HD95 -0.413036，ASD -0.036427（仅仅勉强持平最弱基线）。
+
+### Decision
+1. C1 判定为“原生 Attention 与 Balance Loss 特征流不兼容，无收益”。
+2. 虽然 B1 本身有效，但 C1 的彻底崩塌说明“老式 Attention 加和融合”不适合当前的医学表征。
+3. **下一步关键决策**：废弃后续基于 Attention 的修补。全面引入 Parameter-Efficient Fine-Tuning (LoRA) 与 Multi-scale Local-Global Adapter，作为医学 SAM 架构魔改的新第二、第三创新点（详见 FULL_EXPERIMENT_PLAN.md 阶段 2）。
+
+---
+
+## 4. Attention 阶段进度（EXP-005）
+
+## 4.1 已完成：B1（Attention-Only）
+- 已完成 40 例同口径评估。
+- 用于证明 Attention 模块在基础 Loss 下的有效性。
+
+## 4.2 已完成：C1（Attention + A3R3）
+- 结果：组合后无额外增益甚至倒退。
+- 结论：作为负例写入论文。为满足更高的工作量和创新度标准，终止 Attention 分支实验，全面转入 C2 (LoRA) 与 C3 (Local-Global Adapter) 的架构扩充开发。
 
 ---
 

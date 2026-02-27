@@ -12,13 +12,12 @@ import matplotlib.pyplot as plt
 import monai
 import numpy as np
 import torch
-import torch.multiprocessing as mp
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from losses import BalanceLoss, InterClassBalanceLoss, IntraClassBalanceLoss
-from models import MedSAMFSS
+from models.medsam_fss import MedSAMFSS, apply_lora_to_image_encoder, LocalGlobalAdapter
 from segment_anything import sam_model_registry
 
 join = os.path.join
@@ -38,9 +37,13 @@ class NpyDataset(Dataset):
         self.data_root = data_root
         self.gt_path = join(data_root, "gts")
         self.img_path = join(data_root, "imgs")
-        self.gt_path_files = sorted(glob.glob(join(self.gt_path, "**/*.npy"), recursive=True))
+        self.gt_path_files = sorted(
+            glob.glob(join(self.gt_path, "**/*.npy"), recursive=True)
+        )
         self.gt_path_files = [
-            p for p in self.gt_path_files if os.path.isfile(join(self.img_path, os.path.basename(p)))
+            p
+            for p in self.gt_path_files
+            if os.path.isfile(join(self.img_path, os.path.basename(p)))
         ]
         self.bbox_shift = bbox_shift
         print(f"number of images: {len(self.gt_path_files)}")
@@ -53,7 +56,9 @@ class NpyDataset(Dataset):
         img_name = os.path.basename(gt_file)
         img_1024 = np.load(join(self.img_path, img_name), "r", allow_pickle=True)
         img_1024 = np.transpose(img_1024, (2, 0, 1))
-        assert np.max(img_1024) <= 1.0 and np.min(img_1024) >= 0.0, "image should be normalized to [0,1]"
+        assert (
+            np.max(img_1024) <= 1.0 and np.min(img_1024) >= 0.0
+        ), "image should be normalized to [0,1]"
 
         gt = np.load(gt_file, "r", allow_pickle=True)
         label_ids = np.unique(gt)[1:]
@@ -122,6 +127,11 @@ def build_arg_parser():
     parser.add_argument("-attention_embed_dim", type=int, default=256)
     parser.add_argument("-attention_num_heads", type=int, default=8)
     parser.add_argument("-num_support", type=int, default=1)
+
+    parser.add_argument("-use_lora", type=str2bool, default=False)
+    parser.add_argument("-lora_rank", type=int, default=4)
+    parser.add_argument("-use_lg_adapter", type=str2bool, default=False)
+
     return parser
 
 
@@ -160,6 +170,9 @@ def main():
                 "use_attention": args.use_attention,
                 "attention_embed_dim": args.attention_embed_dim,
                 "attention_num_heads": args.attention_num_heads,
+                "use_lora": args.use_lora,
+                "lora_rank": args.lora_rank,
+                "use_lg_adapter": args.use_lg_adapter,
             },
         )
 
@@ -177,7 +190,10 @@ def main_worker(gpu, ngpus_per_node, args):
     print(f"[Rank {rank}] Use GPU: {gpu}")
     if is_main_host:
         os.makedirs(args.model_save_path, exist_ok=True)
-        shutil.copyfile(__file__, join(args.model_save_path, args.run_id + "_" + os.path.basename(__file__)))
+        shutil.copyfile(
+            __file__,
+            join(args.model_save_path, args.run_id + "_" + os.path.basename(__file__)),
+        )
 
     torch.cuda.set_device(gpu)
     torch.distributed.init_process_group(
@@ -188,6 +204,12 @@ def main_worker(gpu, ngpus_per_node, args):
     )
 
     sam_model = sam_model_registry[args.model_type](checkpoint=args.checkpoint)
+
+    if args.use_lora:
+        if is_main_host:
+            print(f"Applying LoRA to Image Encoder with rank {args.lora_rank}")
+        apply_lora_to_image_encoder(sam_model.image_encoder, rank=args.lora_rank)
+
     medsam_model = MedSAMFSS(
         image_encoder=sam_model.image_encoder,
         mask_decoder=sam_model.mask_decoder,
@@ -195,7 +217,14 @@ def main_worker(gpu, ngpus_per_node, args):
         use_support_attention=args.use_attention,
         attention_embed_dim=args.attention_embed_dim,
         attention_num_heads=args.attention_num_heads,
-    ).cuda()
+    )
+
+    if args.use_lg_adapter:
+        if is_main_host:
+            print("Applying Local-Global Multi-Scale Adapter")
+        medsam_model.local_global_adapter = LocalGlobalAdapter(embed_dim=256)
+
+    medsam_model = medsam_model.cuda()
 
     medsam_model = nn.parallel.DistributedDataParallel(
         medsam_model,
@@ -213,15 +242,37 @@ def main_worker(gpu, ngpus_per_node, args):
             f"embed_dim={args.attention_embed_dim}, heads={args.attention_num_heads}"
         )
         print(f"Total parameters: {sum(p.numel() for p in medsam_model.parameters())}")
-        print(f"Trainable parameters: {sum(p.numel() for p in medsam_model.parameters() if p.requires_grad)}")
+        print(
+            f"Trainable parameters: {sum(p.numel() for p in medsam_model.parameters() if p.requires_grad)}"
+        )
 
-    trainable_params = list(medsam_model.module.image_encoder.parameters()) + list(
-        medsam_model.module.mask_decoder.parameters()
-    )
+    if args.use_lora:
+        # Only optimize LoRA parameters and prompt/mask decoders
+        for name, param in medsam_model.module.image_encoder.named_parameters():
+            if "lora_" not in name:
+                param.requires_grad = False
+            else:
+                param.requires_grad = True
+
+        # Now collect trainable params
+        trainable_params = [
+            p for p in medsam_model.module.image_encoder.parameters() if p.requires_grad
+        ]
+    else:
+        # Full finetuning of image encoder
+        trainable_params = list(medsam_model.module.image_encoder.parameters())
+
+    trainable_params += list(medsam_model.module.mask_decoder.parameters())
+
     if args.use_attention and medsam_model.module.attention_fusion is not None:
         trainable_params += list(medsam_model.module.attention_fusion.parameters())
 
-    optimizer = torch.optim.AdamW(trainable_params, lr=args.lr, weight_decay=args.weight_decay)
+    if args.use_lg_adapter and medsam_model.module.local_global_adapter is not None:
+        trainable_params += list(medsam_model.module.local_global_adapter.parameters())
+
+    optimizer = torch.optim.AdamW(
+        trainable_params, lr=args.lr, weight_decay=args.weight_decay
+    )
 
     seg_loss = monai.losses.DiceLoss(sigmoid=True, squared_pred=True, reduction="mean")
     ce_loss = nn.BCEWithLogitsLoss(reduction="mean")
@@ -229,7 +280,9 @@ def main_worker(gpu, ngpus_per_node, args):
     loss_type = "baseline" if args.loss_type == "dicece" else args.loss_type
     if loss_type == "inter_cbl":
         custom_loss = InterClassBalanceLoss(neg_ratio=args.inter_neg_ratio)
-        print(f"[Rank {rank}] Using Inter-CBL + Dice (neg_ratio={args.inter_neg_ratio})")
+        print(
+            f"[Rank {rank}] Using Inter-CBL + Dice (neg_ratio={args.inter_neg_ratio})"
+        )
     elif loss_type == "intra_cbl":
         custom_loss = IntraClassBalanceLoss(
             hard_threshold=args.intra_threshold,
@@ -295,7 +348,9 @@ def main_worker(gpu, ngpus_per_node, args):
             image = image.cuda(non_blocking=True)
             gt2d = gt2d.cuda(non_blocking=True)
 
-            with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=args.use_amp):
+            with torch.autocast(
+                device_type="cuda", dtype=torch.float16, enabled=args.use_amp
+            ):
                 pred = medsam_model(image, boxes_np)
                 if loss_type == "balance":
                     loss = custom_loss(pred, gt2d, epoch=epoch)
@@ -311,12 +366,21 @@ def main_worker(gpu, ngpus_per_node, args):
             epoch_loss += loss.item()
 
             if step > 10 and step % 100 == 0 and is_main_host:
-                checkpoint = {"model": medsam_model.state_dict(), "optimizer": optimizer.state_dict(), "epoch": epoch}
-                torch.save(checkpoint, join(args.model_save_path, "medsam_model_latest_step.pth"))
+                checkpoint = {
+                    "model": medsam_model.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                    "epoch": epoch,
+                }
+                torch.save(
+                    checkpoint,
+                    join(args.model_save_path, "medsam_model_latest_step.pth"),
+                )
 
         epoch_loss /= max(1, len(train_dataloader))
         losses.append(epoch_loss)
-        print(f"Time: {datetime.now().strftime('%Y%m%d-%H%M')}, Epoch: {epoch}, Loss: {epoch_loss}")
+        print(
+            f"Time: {datetime.now().strftime('%Y%m%d-%H%M')}, Epoch: {epoch}, Loss: {epoch_loss}"
+        )
 
         if args.use_wandb:
             import wandb
@@ -325,11 +389,19 @@ def main_worker(gpu, ngpus_per_node, args):
                 wandb.log({"epoch_loss": epoch_loss, "epoch": epoch})
 
         if is_main_host:
-            checkpoint = {"model": medsam_model.state_dict(), "optimizer": optimizer.state_dict(), "epoch": epoch}
-            torch.save(checkpoint, join(args.model_save_path, "medsam_model_latest.pth"))
+            checkpoint = {
+                "model": medsam_model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "epoch": epoch,
+            }
+            torch.save(
+                checkpoint, join(args.model_save_path, "medsam_model_latest.pth")
+            )
             if epoch_loss < best_loss:
                 best_loss = epoch_loss
-                torch.save(checkpoint, join(args.model_save_path, "medsam_model_best.pth"))
+                torch.save(
+                    checkpoint, join(args.model_save_path, "medsam_model_best.pth")
+                )
 
             plt.plot(losses)
             plt.title(f"{args.task_name} ({loss_type}) Loss")
