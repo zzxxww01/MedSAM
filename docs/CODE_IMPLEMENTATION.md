@@ -152,108 +152,65 @@ class BalanceLoss(nn.Module):
 
 ---
 
-### 1.2 `modules/attention_cross_block.py`
+### 1.2 `models/medsam_fss.py` 修改：LoRA 与 Local-Global Adapter
 
 #### 文件概述
-- **功能**: 实现注意力特征融合模块
+- **功能**: 在 MedSAM 骨干中插入并封装额外的网络结构层创新
 - **优先级**: 高
-- **预计代码行数**: 400-500行
+- **预计新增代码行数**: ~100行
 
 #### 类设计
 
 ```python
 # =============================================================================
-# 类: AttentionCrossBlock
+# 类: LoRALinear
 # =============================================================================
-class AttentionCrossBlock(nn.Module):
+class LoRALinear(nn.Module):
     """
-    交叉注意力特征融合模块
-
-    使用多头交叉注意力机制融合查询特征和支持集特征
-
-    Architecture:
-        Input(query) ─┬─> Q_proj ─────────────────┐
-                      │                           ├─> Attention ─> Output
-        Input(support) ─> K_proj, V_proj ─────────┘
-
-    Attributes:
-        embed_dim (int): 嵌入维度
-        num_heads (int): 注意力头数
-        use_residual (bool): 是否使用残差连接
+    低秩自适应并行线性层
+    在冻结原线性矩阵的情况下，旁路串联极为轻量的小型矩阵 A 和 B。
+    
+    公式: Output = Linear(x) + (x @ A @ B) * (alpha / rank)
     """
-
-    def __init__(self,
-                 embed_dim: int = 256,
-                 num_heads: int = 8,
-                 dropout: float = 0.0,
-                 use_layer_norm: bool = True,
-                 use_residual: bool = True):
+    def __init__(self, linear_layer: nn.Linear, rank: int = 4, alpha: float = 1.0):
         pass
 
-    def forward(self,
-                query_features: torch.Tensor,
-                support_features: torch.Tensor,
-                support_masks: Optional[torch.Tensor] = None) -> torch.Tensor:
-        """
-        Args:
-            query_features: [B, C, H, W] 查询图像特征
-            support_features: [B, N, C, H, W] 或 [B, C, H, W] 支持集特征
-            support_masks: [B, N, 1, H, W] 可选的掩码权重
-
-        Returns:
-            fused_features: [B, C, H, W] 融合后的特征
-        """
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         pass
 
-
 # =============================================================================
-# 类: SpatialCrossAttention
+# 方法: apply_lora_to_image_encoder
 # =============================================================================
-class SpatialCrossAttention(nn.Module):
+def apply_lora_to_image_encoder(image_encoder: nn.Module, rank: int = 4):
     """
-    空间交叉注意力模块
-
-    仅在空间维度上计算注意力，内存效率更高
+    递归替换整个 ViT 的自注意力层 (qkv) 的 Linear 实现为我们的 LoRALinear。
     """
     pass
 
-
 # =============================================================================
-# 类: ChannelCrossAttention
+# 类: LocalGlobalAdapter
 # =============================================================================
-class ChannelCrossAttention(nn.Module):
+class LocalGlobalAdapter(nn.Module):
     """
-    通道交叉注意力模块
-
-    使用全局池化进行通道重标定
+    轻量化多尺度/高频局部适配器
+    
+    使用并行的普通卷积与膨胀卷积捕获多视野上下文，用于弥补单纯 Transformer 输出
+    在解剖边缘/极小目标上的细粒度不足。
     """
-    pass
+    def __init__(self, embed_dim=256):
+        pass
 
-
-# =============================================================================
-# 类: SupportAggregator
-# =============================================================================
-class SupportAggregator(nn.Module):
-    """
-    支持集聚合模块
-
-    将多个支持样本聚合为单一表示
-    """
-    pass
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # 残差连接: x_out = x + PointwiseConv(Concat(Conv(x), DilatedConv(x)))
+        pass
 ```
 
 #### 实现要点
 
-1. **内存优化**:
-   - 支持分块计算
-   - 可选Flash Attention
-
-2. **灵活性**:
-   - 支持单个或多个支持样本
-   - 可选掩码加权
-
-3. **可调试性**:
-   - 返回注意力权重用于可视化
+1. **极其优雅的侵入**:
+   - 对 `SAM` 的 ViT `apply_lora_to_image_encoder` 是一键式的。外部冻结所有参数再打开 `#lora_` 的 require_grad = True。
+2. **轻量化**:
+   - `LocalGlobalAdapter` 的组维 (`groups=embed_dim`) 属于 Depthwise Conv 设计，参数几乎不涨，但能带来极好的感受野多尺度感知融合。
 
 ---
 
@@ -316,43 +273,37 @@ class FewShotNpyDataset(Dataset):
 
 ---
 
-### 1.4 `models/medsam_fss.py`
+### 1.4 `models/medsam_fss.py` （集成）
 
 #### 文件概述
-- **功能**: Few-Shot Segmentation版本的MedSAM
-- **优先级**: 中
-- **预计代码行数**: 150-200行
+- **功能**: 魔改版 MedSAM 组装入口
+- **优先级**: 高
 
-#### 类设计
+#### 核心代码
 
 ```python
-class MedSAM_FSS(nn.Module):
-    """
-    Few-Shot Segmentation版本的MedSAM
-
-    在原MedSAM基础上增加:
-    1. 支持集编码
-    2. 注意力特征融合
-    """
-
+class MedSAMFSS(nn.Module):
     def __init__(self,
-                 medsam_model: nn.Module,
-                 num_support: int = 5,
-                 use_attention: bool = True,
-                 freeze_encoder: bool = False):
-        pass
-
-    def encode_support(self,
-                       support_images: torch.Tensor,
-                       support_masks: torch.Tensor) -> torch.Tensor:
-        """编码支持集"""
-        pass
+                 ...):
+        super().__init__()
+        self.image_encoder = image_encoder
+        self.mask_decoder = mask_decoder
+        
+        # 挂载可选模块
+        self.local_global_adapter = None  # 通过 train_fss.py -use_lg_adapter 动态实例化
 
     def forward(self,
                 query_image: torch.Tensor,
-                boxes: torch.Tensor,
-                support_images: Optional[torch.Tensor] = None,
-                support_masks: Optional[torch.Tensor] = None) -> torch.Tensor:
+                boxes: torch.Tensor) -> torch.Tensor:
+        
+        # 1. 编码
+        image_embedding = self.image_encoder(image)
+        
+        # 2. 局部-全局适配器前向 (如果打开)
+        if getattr(self, "local_global_adapter", None) is not None:
+            image_embedding = self.local_global_adapter(image_embedding)
+            
+        # 3. 提示编码与解码...
         pass
 ```
 
