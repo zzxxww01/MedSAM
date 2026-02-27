@@ -84,13 +84,13 @@ python train_fss.py \
   --world_size 2 \
   -use_amp \
   -loss_type balance \
-  -balance_alpha 0.5 \
-  -balance_beta 1.0 \
-  -balance_gamma 1.0 \
+  --balance_alpha 0.5 \
+  --balance_beta 1.0 \
+  --balance_gamma 1.0 \
   -stage1_epochs 50 \
-  -balance_hard_threshold 0.9 \
-  -balance_hard_weight 2.0 \
-  -balance_neg_ratio 3.0 \
+  --balance_hard_threshold 0.9 \
+  --balance_hard_weight 2.0 \
+  --balance_neg_ratio 3.0 \
   -use_lora True \
   -lora_rank 4
 ' > work_dir/exp_logs/C2_train.log 2>&1 < /dev/null &
@@ -120,13 +120,13 @@ python train_fss.py \
   --world_size 2 \
   -use_amp \
   -loss_type balance \
-  -balance_alpha 0.5 \
-  -balance_beta 1.0 \
-  -balance_gamma 1.0 \
+  --balance_alpha 0.5 \
+  --balance_beta 1.0 \
+  --balance_gamma 1.0 \
   -stage1_epochs 50 \
-  -balance_hard_threshold 0.9 \
-  -balance_hard_weight 2.0 \
-  -balance_neg_ratio 3.0 \
+  --balance_hard_threshold 0.9 \
+  --balance_hard_weight 2.0 \
+  --balance_neg_ratio 3.0 \
   -use_lg_adapter True
 ' > work_dir/exp_logs/C3_train.log 2>&1 < /dev/null &
 echo $! > work_dir/exp_logs/C3_train.pid
