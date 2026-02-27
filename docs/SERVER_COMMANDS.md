@@ -14,7 +14,7 @@ conda activate medsam
 
 ---
 
-## 1. 当前进度快照（2026-02-22）
+## 1. 当前进度快照（2026-02-27）
 
 | 实验 | 状态 | 指标/说明 |
 |---|---|---|
@@ -25,10 +25,12 @@ conda activate medsam
 | A3R1 | 已完成 | DSC=0.913660, HD95=6.638482, ASD=0.754714 |
 | A3R2 | 已完成 | DSC=0.904431, HD95=6.617903, ASD=0.801991 |
 | A3R3 | 已完成 | DSC=0.959554, HD95=2.251109, ASD=0.246323（当前最优） |
+| B1 | 已完成 | DSC=0.943297, HD95=3.602789, ASD=0.437852（Attention-only 基线） |
+| C1 | 已完成 | DSC=0.942719, HD95=4.417467, ASD=0.501330（低于 A3R3 与 B1） |
 
 ---
 
-## 2. 结果快速核验命令（A2/R1/R2/R3）
+## 2. 结果快速核验命令（A2/R1/R2/R3/B1/C1）
 
 ```bash
 python - <<'PY'
@@ -38,6 +40,8 @@ files = [
   "work_dir/eval_metrics/A3R1_summary.json",
   "work_dir/eval_metrics/A3R2_summary.json",
   "work_dir/eval_metrics/A3R3_summary.json",
+  "work_dir/eval_metrics/B1_summary.json",
+  "work_dir/eval_metrics/C1_summary.json",
 ]
 for p in files:
     d = json.load(open(p, "r", encoding="utf-8"))
@@ -55,9 +59,9 @@ ls -l train_fss.py models/medsam_fss.py modules/attention_cross_block.py
 
 ---
 
-## 4. Attention 实验启动模板（脚本存在时）
+## 4. 架构创新实验启动模板
 
-## 4.1 B1：AttentionCrossBlock 独立验证（Dice/CE）
+## 4.1 C2：A3R3 + LoRA 微调
 ```bash
 mkdir -p work_dir/exp_logs
 
@@ -71,21 +75,29 @@ export MASTER_PORT=12358
 export MPLBACKEND=Agg
 python train_fss.py \
   -i data/npy/CT_Abd \
-  -task_name MedSAM-FLARE22-B1-AttnOnly \
+  -task_name MedSAM-FLARE22-C2-LoRA \
   -model_type vit_b \
   -checkpoint work_dir/medsam_vit_b.pth \
   -num_epochs 200 \
-  -batch_size 1 \
+  -batch_size 2 \
   -lr 0.0001 \
   --world_size 2 \
   -use_amp \
-  -loss_type dicece \
-  -use_attention True
-' > work_dir/exp_logs/B1_train.log 2>&1 < /dev/null &
-echo $! > work_dir/exp_logs/B1_train.pid
+  -loss_type balance \
+  -balance_alpha 0.5 \
+  -balance_beta 1.0 \
+  -balance_gamma 1.0 \
+  -stage1_epochs 50 \
+  -balance_hard_threshold 0.9 \
+  -balance_hard_weight 2.0 \
+  -balance_neg_ratio 3.0 \
+  -use_lora True \
+  -lora_rank 4
+' > work_dir/exp_logs/C2_train.log 2>&1 < /dev/null &
+echo $! > work_dir/exp_logs/C2_train.pid
 ```
 
-## 4.2 C1：Attention + A3R3 Loss 主干（完整方案）
+## 4.2 C3：A3R3 + Local-Global Adapter
 ```bash
 mkdir -p work_dir/exp_logs
 
@@ -99,11 +111,11 @@ export MASTER_PORT=12359
 export MPLBACKEND=Agg
 python train_fss.py \
   -i data/npy/CT_Abd \
-  -task_name MedSAM-FLARE22-C1-Attn-BalanceR3 \
+  -task_name MedSAM-FLARE22-C3-LGAdapter \
   -model_type vit_b \
   -checkpoint work_dir/medsam_vit_b.pth \
   -num_epochs 200 \
-  -batch_size 1 \
+  -batch_size 2 \
   -lr 0.0001 \
   --world_size 2 \
   -use_amp \
@@ -115,9 +127,9 @@ python train_fss.py \
   -balance_hard_threshold 0.9 \
   -balance_hard_weight 2.0 \
   -balance_neg_ratio 3.0 \
-  -use_attention True
-' > work_dir/exp_logs/C1_train.log 2>&1 < /dev/null &
-echo $! > work_dir/exp_logs/C1_train.pid
+  -use_lg_adapter True
+' > work_dir/exp_logs/C3_train.log 2>&1 < /dev/null &
+echo $! > work_dir/exp_logs/C3_train.pid
 ```
 
 ---
@@ -125,10 +137,10 @@ echo $! > work_dir/exp_logs/C1_train.pid
 ## 5. 训练监控命令
 
 ```bash
-ps -fp $(cat work_dir/exp_logs/B1_train.pid)
-tail -n 40 work_dir/exp_logs/B1_train.log
-ps -fp $(cat work_dir/exp_logs/C1_train.pid)
-tail -n 40 work_dir/exp_logs/C1_train.log
+ps -fp $(cat work_dir/exp_logs/C2_train.pid)
+tail -n 40 work_dir/exp_logs/C2_train.log
+ps -fp $(cat work_dir/exp_logs/C3_train.pid)
+tail -n 40 work_dir/exp_logs/C3_train.log
 watch -n 2 nvidia-smi
 ```
 
