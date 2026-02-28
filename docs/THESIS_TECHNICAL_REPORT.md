@@ -142,14 +142,15 @@ L_{balance}=\alpha L_{inter}+\beta L_{intra}+\gamma L_{dice}
 
 ## 第三部分：架构级创新 (LoRA 与多尺度适配器)（第4章核心）
 
-## 3.1 LoRA (Low-Rank Adaptation) 理论基底
+## 3.1 LoRA Parameter-Efficient Fine-Tuning (Ablation Insight)
 - **源起**：Hu et al., LoRA: Low-Rank Adaptation of Large Language Models (ICLR 2022).
 - **核心公式**：$W = W_0 + \Delta W = W_0 + B A$，其中 $B \in \mathbb{R}^{d \times r}, A \in \mathbb{R}^{r \times k}$，秩 $r \ll \min(d, k)$。
-- **医学影像落地**：通过冻结庞大的 ViT Encoder，只在 Attention 层的 $Q, V$ 投影矩阵旁路引入极少参数，既保障了泛化性能，又极大降低了医疗算力损耗 (如 *SAMed* 所验证)。
+- **医学影像落地**：通过冻结庞大的 ViT Encoder，只在 Attention 层的 $Q, V$ 旁路更新极少参数。但在 FLARE22 这种复杂域测试下，强行冻结主干导致模型极度欠拟合（DSC 退化至 0.879），这反向证明了“开放主干进行空间重塑”的必要性（A3R3 的成功所在）。
 
 ## 3.2 Local-Global Adapter (局部-全局多尺度适配器)
-- **原理**：将大感受野的全局语义特征（ViT 输出）与小感受野的细粒度局部特征（卷积提取）动态融合。
-- **你的实现**：利用并联的两路卷积（其中一路带有 `dilation=2` 来扩大局部感受野并捕捉高频细节），经过特征拼接融合，再以残差模式加和回原主干。
+- **原理**：将大感受野的全局语义特征（ViT 输出）与小感受野的细粒度特征动态融合。
+- **文献启发**：2024年最新的研究（如 ECCV 2024 提出的 I-MedSAM 中强调的 Frequency Adapter）指出 SAM 极易“平滑”掉医学图像中最关键的高频边缘。
+- **你的实现**：在不冻结主干的情况下，利用并联的两路卷积（其中一路带有 `dilation=2`）在 Encoder 和 Decoder 的桥接处重构高频局部响应。
 - **机制解释**：专门弥补 SAM 基座因为单一下采样导致的医学图像“微小病灶模糊、模糊器官边界不准”的两大顽疾。
 - **与全局 Loss 的联动**：特征流上的 LG-Adapter 专门刻画边界特征，而梯度流上的 Intra-CBL 专门惩罚边界难样本的分类错判。二者形成完美闭环。
 
