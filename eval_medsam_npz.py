@@ -36,18 +36,34 @@ from skimage import transform
 from tqdm import tqdm
 
 from segment_anything import sam_model_registry
+from models.medsam_fss import MedSAMFSS, apply_lora_to_image_encoder, LocalGlobalAdapter
 from utils.SurfaceDice import compute_average_surface_distance
 from utils.SurfaceDice import compute_dice_coefficient
 from utils.SurfaceDice import compute_robust_hausdorff
 from utils.SurfaceDice import compute_surface_distances
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ("yes", "true", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Evaluate MedSAM checkpoints on NPZ volumes."
     )
-    parser.add_argument("--data_root", type=str, required=True, help="Directory with *.npz volumes.")
-    parser.add_argument("--checkpoint", type=str, required=True, help="Path to medsam_model_best.pth.")
+    parser.add_argument(
+        "--data_root", type=str, required=True, help="Directory with *.npz volumes."
+    )
+    parser.add_argument(
+        "--checkpoint", type=str, required=True, help="Path to medsam_model_best.pth."
+    )
     parser.add_argument(
         "--sam_base_checkpoint",
         type=str,
@@ -57,12 +73,30 @@ def parse_args() -> argparse.Namespace:
             "If empty, script will auto search common paths."
         ),
     )
-    parser.add_argument("--exp_name", type=str, required=True, help="Experiment name (A1/A2/A3...).")
-    parser.add_argument("--device", type=str, default="cuda:0", help="Inference device, e.g. cuda:0.")
-    parser.add_argument("--bbox_shift", type=int, default=20, help="BBox expansion in pixels.")
-    parser.add_argument("--max_cases", type=int, default=0, help="Use first N cases only (0 = all).")
-    parser.add_argument("--out_csv", type=str, required=True, help="Per-case metrics csv path.")
-    parser.add_argument("--out_json", type=str, required=True, help="Summary json path.")
+    parser.add_argument(
+        "--exp_name", type=str, required=True, help="Experiment name (A1/A2/A3...)."
+    )
+    parser.add_argument(
+        "--device", type=str, default="cuda:0", help="Inference device, e.g. cuda:0."
+    )
+    parser.add_argument(
+        "--bbox_shift", type=int, default=20, help="BBox expansion in pixels."
+    )
+
+    # New Arguments for Architecture Innovations
+    parser.add_argument("-use_lora", type=str2bool, default=False)
+    parser.add_argument("-lora_rank", type=int, default=4)
+    parser.add_argument("-use_lg_adapter", type=str2bool, default=False)
+
+    parser.add_argument(
+        "--max_cases", type=int, default=0, help="Use first N cases only (0 = all)."
+    )
+    parser.add_argument(
+        "--out_csv", type=str, required=True, help="Per-case metrics csv path."
+    )
+    parser.add_argument(
+        "--out_json", type=str, required=True, help="Summary json path."
+    )
     parser.add_argument(
         "--save_pred_dir",
         type=str,
@@ -114,11 +148,35 @@ def resolve_sam_base_checkpoint(user_path: str = "") -> str:
     )
 
 
-def load_medsam_model(ckpt_path: str, sam_base_ckpt: str, device: torch.device) -> torch.nn.Module:
+def load_medsam_model(
+    ckpt_path: str,
+    sam_base_ckpt: str,
+    device: torch.device,
+    use_lora: bool,
+    lora_rank: int,
+    use_lg_adapter: bool,
+) -> torch.nn.Module:
     state_dict = load_checkpoint_state(ckpt_path)
-    model = sam_model_registry["vit_b"](checkpoint=sam_base_ckpt)
+    base_model = sam_model_registry["vit_b"](checkpoint=sam_base_ckpt)
+
+    # Construct MedSAMFSS wrapped model
+    model = MedSAMFSS(
+        image_encoder=base_model.image_encoder,
+        mask_decoder=base_model.mask_decoder,
+        prompt_encoder=base_model.prompt_encoder,
+    )
+
+    if use_lora:
+        print(f"Applying LoRA to eval model with rank {lora_rank}")
+        apply_lora_to_image_encoder(model.image_encoder, rank=lora_rank)
+
+    if use_lg_adapter:
+        print("Applying Local-Global Adapter to eval model")
+        model.local_global_adapter = LocalGlobalAdapter(embed_dim=256)
+
     missing, unexpected = model.load_state_dict(state_dict, strict=False)
     print(f"[load] base checkpoint: {sam_base_ckpt}")
+    print(f"[load] custom checkpoint: {ckpt_path}")
     print(f"[load] missing keys: {len(missing)}, unexpected keys: {len(unexpected)}")
     model = model.to(device)
     model.eval()
@@ -147,6 +205,14 @@ def compute_image_embedding(
         .unsqueeze(0)
     )
     embedding = model.image_encoder(image_t)
+
+    # Process through LG Adapter if it exists in the model
+    if (
+        hasattr(model, "local_global_adapter")
+        and model.local_global_adapter is not None
+    ):
+        embedding = model.local_global_adapter(embedding)
+
     return embedding, height, width
 
 
@@ -159,7 +225,9 @@ def infer_single_label_with_box(
     out_w: int,
     device: torch.device,
 ) -> np.ndarray:
-    box_1024 = box_xyxy / np.array([out_w, out_h, out_w, out_h], dtype=np.float32) * 1024.0
+    box_1024 = (
+        box_xyxy / np.array([out_w, out_h, out_w, out_h], dtype=np.float32) * 1024.0
+    )
     box_t = torch.as_tensor(box_1024, dtype=torch.float32, device=device).view(1, 1, 4)
 
     sparse_embeddings, dense_embeddings = model.prompt_encoder(
@@ -173,9 +241,13 @@ def infer_single_label_with_box(
         multimask_output=False,
     )
     low_res_pred = torch.sigmoid(low_res_logits)
-    pred = F.interpolate(
-        low_res_pred, size=(out_h, out_w), mode="bilinear", align_corners=False
-    )[0, 0].cpu().numpy()
+    pred = (
+        F.interpolate(
+            low_res_pred, size=(out_h, out_w), mode="bilinear", align_corners=False
+        )[0, 0]
+        .cpu()
+        .numpy()
+    )
     return (pred > 0.5).astype(np.uint8)
 
 
@@ -257,7 +329,12 @@ def compute_case_metrics(
 
     if len(dices) == 0:
         return 0.0, 500.0, 500.0, 0
-    return float(np.mean(dices)), float(np.mean(hd95s)), float(np.mean(asds)), len(dices)
+    return (
+        float(np.mean(dices)),
+        float(np.mean(hd95s)),
+        float(np.mean(asds)),
+        len(dices),
+    )
 
 
 def dump_case_csv(rows: Iterable[Dict[str, object]], out_csv: str) -> None:
@@ -279,7 +356,14 @@ def main() -> None:
 
     device = torch.device(args.device)
     sam_base_ckpt = resolve_sam_base_checkpoint(args.sam_base_checkpoint)
-    model = load_medsam_model(args.checkpoint, sam_base_ckpt, device)
+    model = load_medsam_model(
+        ckpt_path=args.checkpoint,
+        sam_base_ckpt=sam_base_ckpt,
+        device=device,
+        use_lora=args.use_lora,
+        lora_rank=args.lora_rank,
+        use_lg_adapter=args.use_lg_adapter,
+    )
 
     npz_files = sorted(glob.glob(join(args.data_root, "*.npz")))
     if args.max_cases > 0:
