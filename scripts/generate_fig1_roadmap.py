@@ -55,7 +55,7 @@ def main():
     c_base = draw_box(ax, (3.5, 5.8), 4.5, 0.8, "MedSAM 基座模型\n(ViT-Base + Mask Decoder)", "#2C3E50", 11)
 
     # ── 三核标题 ──
-    ax.text(5.75, 5.05, ""三核驱动"技术路线", ha="center", va="center",
+    ax.text(5.75, 5.05, '\u201c三核驱动\u201d技术路线', ha="center", va="center",
             fontsize=14, fontweight="bold", color="#2C3E50",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="#ECF0F1", edgecolor="#2C3E50", linewidth=1.5))
 
