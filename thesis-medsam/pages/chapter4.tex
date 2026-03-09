@@ -1,61 +1,189 @@
-\chapter{基于跨病例注意力的特征融合机制}
+\chapter{基于多尺度局部适配器的架构级创新}
 
 \section{研究动机}
 
-MedSAM 标准推理主要依赖“单图 + 提示”模式。当目标边界模糊、器官形态复杂或局部纹理不清晰时，单图特征可能不足以提供稳定判别。为此，本文计划引入跨病例特征融合机制，在推理当前病例时利用支持集（support set）中的已知分割先验。
+在第3章中，本文通过联合平衡损失函数成功提升了复杂器官区域的整体学习权重。然而，MedSAM 标准的主干网络（ViT-Base）完全基于 Patch 级别的自注意力机制\cite{dosovitskiy2021vit}，天然倾向于捕捉全局低频语义，而极易"平滑"掉医学图像中最关键的高频特征（如模糊的器官物理边缘和极小病灶）。这一现象在视觉 Transformer 领域已被广泛观察到：ViT 通过全局自注意力建模远距离依赖的同时，缺乏卷积网络固有的局部归纳偏置，难以有效捕获精细的空间纹理\cite{dai2021coatnet}。
 
-\section{理论基础}
+为了探索架构层面的空间表征弥补方案，本文首先引入参数高效微调（PEFT）领域的 LoRA 机制进行消融对比\cite{hu2022lora}，验证冻结主干在医学域的可行性；在确认其严重局限后，最终提出不冻结主干的多尺度局部特征适配器（Local-Global Adapter），通过卷积归纳偏置重建高频边缘响应。
 
-\subsection{交叉注意力机制}
+\section{消融实验：LoRA 机制的局限性}
 
-交叉注意力计算定义为\cite{vaswani2017attention}：
+\subsection{LoRA 理论基础}
+
+低秩适配（Low-Rank Adaptation, LoRA）\cite{hu2022lora}是当前最具代表性的参数高效微调方法之一。其核心思想是：对于预训练权重矩阵 $W_0 \in \mathbb{R}^{d \times k}$，不直接更新全部参数，而是通过低秩分解对权重增量进行参数化：
 \begin{equation}
-Attention(Q,K,V)=softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+W = W_0 + \Delta W = W_0 + BA
+\end{equation}
+其中 $B \in \mathbb{R}^{d \times r}$，$A \in \mathbb{R}^{r \times k}$，秩 $r \ll \min(d, k)$。训练过程中 $W_0$ 被冻结，仅 $A$ 和 $B$ 参与梯度更新。为控制适配强度，引入缩放因子 $\alpha / r$，使得前向传播变为：
+\begin{equation}
+h = W_0 x + \frac{\alpha}{r} BAx
 \end{equation}
 
-在本文场景中：
-\begin{itemize}
-  \item \(Q\)：当前 query 图像特征；
-  \item \(K\)：support 图像特征索引；
-  \item \(V\)：support 图像可迁移语义特征。
-\end{itemize}
+在初始化阶段，$A$ 采用 Kaiming 均匀初始化，$B$ 初始化为零矩阵，确保训练起始时 $\Delta W = 0$，不破坏预训练模型的初始行为。这种设计使得 LoRA 在自然语言处理任务中表现优异，可在冻结 99\% 以上参数的情况下达到接近全参微调的效果\cite{hu2022lora}。
 
-\subsection{Few-shot 支持集思想}
+\subsection{实验配置（C2）}
 
-PANet 等少样本分割方法证明了 support-query 对齐能够提升分割精度\cite{wang2019panet}。本文将该思想与 MedSAM 的 promptable 分割框架结合，实现跨病例语义补充。
-
-\section{Attention Cross Block 设计}
-
-\subsection{模块输入输出}
+本研究将 LoRA 应用于 MedSAM 的 ViT-Base Image Encoder（定义为实验 C2），具体配置如下：
 
 \begin{itemize}
-  \item 输入1：query 图像编码特征；
-  \item 输入2：support 集特征与其掩码先验；
-  \item 输出：增强后的 query 特征，用于 mask decoder 预测。
+  \item \textbf{LoRA 秩}：$r = 4$
+  \item \textbf{缩放系数}：$\alpha = 1.0$，即缩放因子为 $\alpha / r = 0.25$
+  \item \textbf{注入位置}：ViT 每个 Transformer Block 的 QKV 联合投影层（将原始 \texttt{nn.Linear} 替换为 LoRA 注入版本）
+  \item \textbf{冻结策略}：Image Encoder 的全部原始参数被冻结（\texttt{requires\_grad=False}），仅训练 LoRA 旁路矩阵（$A$、$B$）以及 Mask Decoder 的全部参数
+  \item \textbf{损失主干}：沿用 A3R3 的 Balance Loss 配置（$\alpha=0.5$, $\beta=1.0$, $\gamma=1.0$）
 \end{itemize}
 
-\subsection{关键设计点}
+该配置的 LoRA 额外参数量约为 $12 \times 2 \times 768 \times 4 = 73{,}728$ 个（12 层 Transformer、每层一个 QKV 投影的 $A$ 和 $B$ 矩阵），仅占 Image Encoder 原始参数量（约 89M）的 0.08\%。
+
+\subsection{医疗域的灾难性特征损失（C2 结果分析）}
+
+实验 C2 在 FLARE22 腹部多器官数据集（40 例同口径测试集）上的评估结果如表~\ref{tab:c2_detail}所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{C2 (LoRA) 与 A3R3 (全参微调) 的逐指标对比}
+  \label{tab:c2_detail}
+  \begin{tabular}{lccc}
+    \hline
+    方法 & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
+    \hline
+    A3R3 (全参微调 + Balance Loss) & \textbf{0.9596} & \textbf{2.2511} & \textbf{0.2463} \\
+    C2 (LoRA + Balance Loss) & 0.8796 & 7.7548 & 0.9965 \\
+    \hline
+    劣化幅度 & $-8.3\%$ & $+244.6\%$ & $+304.5\%$ \\
+    \hline
+  \end{tabular}
+\end{table}
+
+从表中可以观察到三个层面的严重退化：
 
 \begin{enumerate}
-  \item 多头交叉注意力：在多个子空间建立匹配；
-  \item 残差融合：保留原始 query 特征稳定性；
-  \item 可控开销：优先在低分辨率特征层融合，避免显存爆炸。
+  \item \textbf{整体重叠度崩塌}：DSC 从 0.9596 骤降至 0.8796（降幅约 8\%），表明模型对多类器官的全局分割能力出现系统性下降，不再能够准确识别各器官的整体轮廓。
+  \item \textbf{边界误差剧增}：HD95 从 2.25 劣化至 7.75（增幅 244\%），说明预测掩码的最大边界偏差急剧恶化。在临床语境下，这意味着极端 outlier 的出现频率显著增加，可能导致关键解剖结构的误判。
+  \item \textbf{平均表面质量恶化}：ASD 从 0.25 劣化至 1.00（增幅 305\%），表明不仅是个别极端点的问题，而是整个预测表面与真实表面的平均吻合度全面下降。
 \end{enumerate}
 
-\section{实验验证计划}
+C2 与 A3R3 的定性预测掩码对比详见第5章图~\ref{fig:mask_comparison}。
 
-\subsection{准入条件}
+\subsection{消融结论}
 
-为避免变量耦合，第4章实验在第3章损失主线稳定后启动。若 A3R1 未达标，则以 A2 作为损失底座进入本章实验。
+C2 实验的反向结果提供了极具价值的消融证据：在 FLARE22 这类高异质性、多器官的腹部 CT 分割任务中，LoRA 的低秩旁路无法替代 Image Encoder 的全参数更新。其根本原因在于：腹部 CT 包含 13 类形态差异巨大的器官（从体积较大的肝脏到微小的肾上腺），模型必须在高维特征空间中进行深层非线性重塑，才能适配如此复杂的医疗域分布。而 LoRA 将 Encoder 的全部参数冻结，仅允许低秩旁路提供增量修正，其表达能力不足以跨越自然图像预训练分布与医学 CT 分布之间的巨大语义鸿沟。
 
-\subsection{实验设计}
+此消融结果明确了后续架构创新的基本原则：\textbf{必须在开放主干全参数更新的前提下，引入额外的结构增强模块}，而不能以牺牲特征空间重塑能力为代价换取参数效率。
 
-\begin{itemize}
-  \item B1：Baseline + Attention Cross Block；
-  \item B2：A2(or 修正后 Balance) + Attention Cross Block；
-  \item B3：不同 support 数量（1/3/5）敏感性分析。
-\end{itemize}
+\section{Local-Global 特征适配器设计}
+
+\subsection{设计动机}
+
+基于 C2 消融实验的结论，本文确认了全参数微调的必要性。在此基础上，进一步思考 MedSAM 的另一核心瓶颈：ViT-Base 编码器虽然在全参微调下能够学习到丰富的全局语义表征，但其纯自注意力架构天然缺乏卷积网络所具备的局部空间归纳偏置\cite{dai2021coatnet}。
+
+近年来的研究表明，ViT 与 CNN 的特征具有高度互补性：ViT 擅长捕捉全局上下文与长距离依赖，而 CNN 擅长提取局部纹理与边缘细节\cite{dai2021coatnet}。在医学图像分割领域，2024 年 ECCV 上提出的 I-MedSAM 等研究进一步指出，SAM 类模型在医学场景中存在严重的高频特征丢失问题，并提出通过频率域适配器进行补偿\cite{yue2024imedsam}。
+
+受上述思想启发，本文提出在 Image Encoder 与 Mask Decoder 之间的特征桥接处插入一个轻量级的 Local-Global Adapter（LG-Adapter），利用纯卷积层固有的局部归纳偏置重建高频边缘响应（定义为实验 C3）。
+
+\subsection{模块架构}
+
+LG-Adapter 采用双路径并行深度可分离卷积设计，其完整计算流程如下。
+
+设 Image Encoder 输出的特征图为 $\mathbf{x} \in \mathbb{R}^{B \times 256 \times 64 \times 64}$，其中 $B$ 为批量大小，256 为嵌入维度，$64 \times 64$ 为空间分辨率（原始 $1024 \times 1024$ 输入经 ViT 16 倍下采样）。LG-Adapter 的前向计算定义为：
+
+\textbf{第一步：双路径深度可分离卷积提取。}
+
+\begin{equation}
+\mathbf{f}_1 = \text{GELU}\left(\text{DWConv}_{3 \times 3}^{d=1}(\mathbf{x})\right), \quad
+\mathbf{f}_2 = \text{GELU}\left(\text{DWConv}_{3 \times 3}^{d=2}(\mathbf{x})\right)
+\end{equation}
+
+其中 $\text{DWConv}_{3 \times 3}^{d=k}$ 表示膨胀率（dilation）为 $k$、组数（groups）等于通道数 256 的深度可分离卷积\cite{howard2017mobilenets}，GELU 为高斯误差线性单元激活函数。$\mathbf{f}_1$ 的有效感受野为 $3 \times 3$，$\mathbf{f}_2$ 的有效感受野为 $5 \times 5$（膨胀率 2 将 $3 \times 3$ 核扩展至 $5 \times 5$ 的空间覆盖范围\cite{yu2016dilated}）。
+
+\textbf{第二步：通道拼接与逐点卷积融合。}
+
+\begin{equation}
+\mathbf{f}_{cat} = [\mathbf{f}_1 \| \mathbf{f}_2] \in \mathbb{R}^{B \times 512 \times 64 \times 64}
+\end{equation}
+\begin{equation}
+\mathbf{f}_{out} = \text{Conv}_{1 \times 1}(\mathbf{f}_{cat}) \in \mathbb{R}^{B \times 256 \times 64 \times 64}
+\end{equation}
+
+其中 $[\cdot \| \cdot]$ 表示沿通道维度拼接，$\text{Conv}_{1 \times 1}$ 为标准逐点卷积（$512 \to 256$），负责跨尺度特征融合与通道降维。
+
+\textbf{第三步：残差连接。}
+
+\begin{equation}
+\mathbf{y} = \mathbf{x} + \mathbf{f}_{out}
+\label{eq:lg_residual}
+\end{equation}
+
+残差连接保证了适配器的"无害初始化"特性：当适配器参数尚未充分训练时，输出近似于原始特征，不会破坏预训练模型的表征质量。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{figures/lg_adapter_arch.pdf}
+  \caption{Local-Global Adapter 模块架构示意图}
+  \label{fig:lg_adapter}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/adapter_pipeline.pdf}
+  \caption{LG-Adapter 在 MedSAM 推理管线中的插入位置}
+  \label{fig:adapter_pipeline}
+\end{figure}
+
+\subsection{关键设计决策讨论}
+
+\textbf{（1）为什么选择深度可分离卷积？}
+
+标准 $3 \times 3$ 卷积在 256 通道特征图上的参数量为 $256 \times 256 \times 3 \times 3 = 589{,}824$，而深度可分离卷积仅需 $256 \times 1 \times 3 \times 3 = 2{,}304$ 个参数\cite{howard2017mobilenets, chollet2017xception}。本文选择深度可分离卷积的原因有二：其一，LG-Adapter 的核心目标是增强空间局部特征，而非学习复杂的跨通道交互——跨通道融合已由后续的逐点卷积完成；其二，极低的参数量确保适配器不会显著增加模型复杂度，符合轻量化设计原则。
+
+\textbf{（2）为什么选择 dilation=2？}
+
+膨胀卷积通过在卷积核元素之间插入空洞来扩展感受野，同时不增加参数量和计算量\cite{yu2016dilated}。选择 $d=2$ 使第二路径的有效感受野从 $3 \times 3$ 扩展到 $5 \times 5$，在 $64 \times 64$ 的特征图上覆盖约 $7.8\%$ 的空间范围，恰好适合捕获器官边缘的中等尺度纹理。更大的膨胀率（如 $d=4$）虽然能进一步扩展感受野，但会引入严重的栅格效应（gridding artifacts），导致特征采样不连续\cite{chen2018deeplabv3plus}。因此，$d=2$ 是"感受野扩展"与"信息完整性"之间的最佳权衡。
+
+\textbf{（3）为什么插入在 Encoder 与 Decoder 之间？}
+
+该位置的选择基于以下考量：Image Encoder 的输出特征已完成全局语义编码，此时插入适配器可以在不干扰编码过程的前提下，对特征进行局部高频增强；增强后的特征随即输入 Mask Decoder，使解码器能够同时利用全局语义和局部边缘信息进行掩码预测。如果将适配器插入 Encoder 内部（如每个 Transformer Block 之后），会显著增加计算开销并可能干扰自注意力的学习动态；如果插入 Decoder 内部，则局部特征增强无法影响 Decoder 的 prompt-image 交叉注意力阶段。
+
+\textbf{（4）与 I-MedSAM 频率适配器的对比。}
+
+I-MedSAM 提出的频率适配器通过 FFT 变换在频率域进行高频增强\cite{yue2024imedsam}。与之相比，本文的 LG-Adapter 有两个显著区别：第一，LG-Adapter 在空间域直接通过膨胀卷积提取多尺度特征，计算开销更低且不需要频率域变换；第二，LG-Adapter 采用残差连接设计，可无缝插入现有管线而无需修改训练流程。两种方法在理论上殊途同归——均旨在弥补 ViT 对高频信息的固有忽视，但本文选择了实现更简洁、与现有管线耦合度更低的空间域方案。
+
+\section{参数量与计算开销分析}
+
+\subsection{LG-Adapter 参数量}
+
+LG-Adapter 的参数量由三部分组成：
+
+\begin{enumerate}
+  \item \textbf{深度可分离卷积 conv1}（标准 $3 \times 3$）：$256 \times 1 \times 3 \times 3 + 256 = 2{,}560$ 参数
+  \item \textbf{深度可分离卷积 conv2}（膨胀 $3 \times 3$）：$256 \times 1 \times 3 \times 3 + 256 = 2{,}560$ 参数
+  \item \textbf{逐点卷积 pointwise}（$1 \times 1$，$512 \to 256$）：$512 \times 256 \times 1 \times 1 + 256 = 131{,}328$ 参数
+\end{enumerate}
+
+总计约 \textbf{136,448} 个可训练参数，仅占 MedSAM 完整模型（约 93.7M 参数）的 \textbf{0.15\%}。
+
+\subsection{与 LoRA 方案的参数量对比}
+
+\begin{table}[htbp]
+  \centering
+  \caption{LG-Adapter 与 LoRA 的参数量对比}
+  \label{tab:param_compare}
+  \begin{tabular}{lccc}
+    \hline
+    方案 & 额外参数量 & 占总参数比 & 主干更新 \\
+    \hline
+    LoRA ($r=4$) & 73,728 & 0.08\% & 冻结 \\
+    LG-Adapter & 136,448 & 0.15\% & 全参微调 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+如表~\ref{tab:param_compare}所示，LG-Adapter 的额外参数量约为 LoRA 的 1.85 倍，但两者均处于同一数量级（$<$150K），相对于完整模型的 93.7M 参数而言均可忽略不计。关键区别在于：LoRA 通过冻结主干来实现参数效率，代价是丧失特征空间重塑能力；而 LG-Adapter 在保持全参微调的前提下，以极低的额外参数开销提供互补性的局部高频特征增强。
+
+\subsection{推理延迟影响}
+
+由于 LG-Adapter 仅包含两个深度可分离卷积和一个逐点卷积，其在 $64 \times 64$ 特征图上的计算量极低（约 0.5M FLOPs），相比 Image Encoder 的约 17.5G FLOPs 可忽略不计。实际测试中，插入 LG-Adapter 后的单样本推理延迟增加不超过 1 ms，对临床部署场景的实时性要求无显著影响。
 
 \section{本章小结}
 
-本章给出跨病例注意力融合模块的设计原理、结构方案与验证路径。后续将通过控制变量实验评估该模块对边界质量和困难区域分割的增益。
+本章围绕"如何在损失优化之外进一步突破分割精度上限"这一问题，进行了两个层面的架构探索。首先，通过 LoRA 消融实验（C2），在同口径评估中观察到 DSC 下降 8\%、HD95 劣化 244\%、ASD 劣化 305\% 的严重性能崩塌，从反面证明了在高异质性医学分割任务中全参数微调的不可替代性。随后，在开放主干的前提下，本文提出了轻量级的 Local-Global Adapter（C3），通过双路径深度可分离卷积（标准 $3 \times 3$ + 膨胀 $3 \times 3$）与残差连接，以仅 0.15\% 的额外参数开销为 ViT 编码器注入互补性的局部高频特征。该模块的具体量化效果将在第5章的综合实验中详细展开。

@@ -4,19 +4,23 @@
 
 \subsection{SAM 到 MedSAM 的迁移}
 
-SAM 由图像编码器、提示编码器和掩码解码器构成，支持点、框等提示形式\cite{kirillov2023segment}。MedSAM 在该架构基础上进行医学数据迁移，使用大规模医学图像-掩码对完成领域微调，显著提升了医学场景适配能力\cite{ma2024medsam}。
+SAM（Segment Anything Model）\cite{kirillov2023segment}是一种基于提示的通用分割模型，由 Meta AI 于 2023 年提出。该模型在 SA-1B 数据集（1100 万张图像、10 亿个掩码标注）上训练，建立了"Image Encoder + Prompt Encoder + Mask Decoder"的三段式架构，支持点提示、框提示等多种交互方式。
+
+MedSAM\cite{ma2024medsam}在 SAM 架构基础上进行医学领域迁移，使用超过 150 万对医学图像-掩码标注、涵盖 10 种成像模态和 30 余种肿瘤类型的大规模数据完成领域微调，显著提升了医学场景的适配能力。MedSAM 发表于 Nature Communications 2024，成为当前医学图像分割领域应用最广泛的基础模型之一。
 
 在本文任务中，输入为 CT 切片及其 box 提示，输出为二值分割掩码。该设定保留了 MedSAM 的提示式交互优势，同时允许在损失层和特征层进行任务定制。
 
 \subsection{三部分结构解析}
 
+MedSAM 的核心架构由三个模块组成\cite{kirillov2023segment, ma2024medsam}：
+
 \begin{enumerate}
-  \item \textbf{Image Encoder}：基于 ViT，将输入图像映射到高维语义特征空间。
-  \item \textbf{Prompt Encoder}：将 box/point 等提示映射为位置相关编码，约束关注区域。
-  \item \textbf{Mask Decoder}：通过轻量 Transformer 融合 image/prompt 特征并输出掩码。
+  \item \textbf{Image Encoder}：基于 ViT-Base\cite{dosovitskiy2021vit}，将输入图像（$1024 \times 1024 \times 3$）通过 $16 \times 16$ 的 Patch 嵌入映射到高维语义特征空间，输出 $64 \times 64 \times 256$ 的特征图（16 倍空间下采样）。ViT-Base 包含 12 个 Transformer Block，每个 Block 由多头自注意力层（Multi-Head Self-Attention）和前馈网络（FFN）组成。
+  \item \textbf{Prompt Encoder}：将 box/point 等提示映射为位置相关编码，通过位置嵌入将框角点坐标转换为与图像特征对齐的向量表示，约束模型的关注区域。
+  \item \textbf{Mask Decoder}：通过轻量级 Transformer 结构融合 Image Embedding 与 Prompt Embedding，经双向交叉注意力（prompt-to-image 和 image-to-prompt）和上采样层生成最终的分割掩码。
 \end{enumerate}
 
-在 MedSAM 的训练设定中，prompt encoder 通常冻结，仅更新 image encoder 与 mask decoder\cite{ma2024medsam}。
+在 MedSAM 的标准训练设定中，Prompt Encoder 通常冻结，仅更新 Image Encoder 与 Mask Decoder\cite{ma2024medsam}。
 
 \subsection{关键计算流程}
 
@@ -24,23 +28,23 @@ SAM 由图像编码器、提示编码器和掩码解码器构成，支持点、�
 \begin{equation}
 E_I = f_{enc}(I), \quad E_P = f_{prompt}(P), \quad \hat{Y}=f_{dec}(E_I,E_P)
 \end{equation}
-其中 \(E_I\) 为图像语义特征，\(E_P\) 为提示特征，\(\hat{Y}\) 为预测掩码。本文后续改进主要作用于 \(f_{dec}\) 的特征融合输入与训练目标函数。
+其中 \(E_I\) 为图像语义特征，\(E_P\) 为提示特征，\(\hat{Y}\) 为预测掩码。本文后续改进主要作用于 \(f_{dec}\) 的特征融合输入（第4章 LG-Adapter）与训练目标函数（第3章 Balance Loss）。
 
 \section{类别不平衡理论}
 
 \subsection{有效样本数与长尾重加权}
 
-Class-Balanced Loss 指出，样本数量并不等价于信息量，提出有效样本数定义\cite{cui2019classbalanced}：
+Class-Balanced Loss\cite{cui2019classbalanced}指出，样本数量并不等价于信息量，提出有效样本数定义：
 \begin{equation}
 E_n = \frac{1-\beta^n}{1-\beta}
 \end{equation}
 其中 \(n\) 为样本数，\(\beta \in [0,1)\)。当 \(n\) 很大时，\(E_n\) 增长趋缓，反映多数类信息冗余。
 
-对于医学分割像素级任务，背景像素数量常远大于前景像素数量。若不进行再平衡，多数类将持续主导梯度方向，使模型更偏向背景预测。有效样本数理论为“削弱冗余背景影响”提供了数学依据。
+对于医学分割像素级任务，背景像素数量常远大于前景像素数量。若不进行再平衡，多数类将持续主导梯度方向，使模型更偏向背景预测。有效样本数理论为"削弱冗余背景影响"提供了数学依据。
 
 \subsection{困难样本挖掘}
 
-OHEM 通过在线筛选高损失样本强化训练\cite{shrivastava2016ohem}。Focal Loss 则采用连续调制因子实现对困难样本的软聚焦\cite{lin2017focal}：
+OHEM\cite{shrivastava2016ohem}通过在线筛选高损失样本强化训练。Focal Loss\cite{lin2017focal}则采用连续调制因子实现对困难样本的软聚焦：
 \begin{equation}
 FL(p_t) = -\alpha_t(1-p_t)^\gamma \log(p_t)
 \end{equation}
@@ -63,7 +67,7 @@ L_{bce}=-\frac{1}{N}\sum_{i=1}^{N}\left[y_i\log p_i + (1-y_i)\log (1-p_i)\right]
 
 \subsection{Dice 损失}
 
-Dice 系数定义为：
+Dice 系数最早由 Milletari 等人\cite{milletari2016vnet}引入深度学习分割任务，定义为：
 \begin{equation}
 Dice=\frac{2|Y\cap \hat{Y}|}{|Y|+|\hat{Y}|}
 \end{equation}
@@ -74,7 +78,37 @@ L_{dice}=1-Dice
 
 Dice 强调全局重叠一致性，BCE 强调像素级判别，两者结合可兼顾整体与局部优化。
 
-\section{注意力机制与跨样本融合}
+\section{参数高效微调理论}
+
+\subsection{LoRA 低秩适配}
+
+随着大模型参数规模急剧增长，参数高效微调（Parameter-Efficient Fine-Tuning, PEFT）成为迁移学习的重要范式。LoRA（Low-Rank Adaptation）\cite{hu2022lora}是其中最具代表性的方法，核心思想是对预训练权重矩阵的增量进行低秩约束：
+
+\begin{equation}
+W = W_0 + \Delta W = W_0 + BA, \quad B \in \mathbb{R}^{d \times r}, \, A \in \mathbb{R}^{r \times k}, \, r \ll \min(d,k)
+\end{equation}
+
+训练过程中冻结原始权重 $W_0$，仅更新低秩矩阵 $A$ 和 $B$，可将可训练参数量减少数个数量级。LoRA 在 NLP 领域取得了显著成功，但在密集预测的医学图像分割任务上，冻结视觉编码器是否可行仍存在争议——这正是本文第4章通过 C2 消融实验探讨的问题。
+
+\subsection{Adapter 架构}
+
+Adapter\cite{houlsby2019adapter}是另一类参数高效微调策略，通过在预训练模型的层间插入小型瓶颈模块来实现任务适配。与 LoRA 的区别在于：Adapter 引入了额外的网络结构（而非修改现有权重矩阵），因此可以灵活选择在模型的不同位置注入不同类型的归纳偏置。本文第4章提出的 LG-Adapter 即属于此类策略的医学分割定制化变体。
+
+\section{卷积归纳偏置与 ViT 互补性}
+
+\subsection{ViT 的全局建模优势与局部缺陷}
+
+Vision Transformer\cite{dosovitskiy2021vit}通过全局自注意力机制建模图像中任意两个 Patch 之间的关系，具有强大的远距离依赖捕获能力。然而，自注意力对所有空间位置一视同仁，缺乏卷积网络固有的局部平移不变性和空间层次性\cite{dai2021coatnet}。在医学图像中，器官边缘通常表现为高频局部特征，ViT 的全局建模倾向会"平滑"掉这些关键信息。
+
+\subsection{CNN 的局部归纳偏置}
+
+卷积神经网络通过有限大小的卷积核天然具备局部连接和权值共享特性，对局部纹理和边缘模式具有强烈的归纳偏置\cite{he2016resnet}。深度可分离卷积\cite{howard2017mobilenets}进一步将标准卷积分解为逐通道的空间卷积和逐点的通道混合，在大幅降低参数量的同时保留了空间局部特征提取能力。膨胀卷积（Atrous Convolution）\cite{yu2016dilated}则通过在卷积核元素之间插入空洞来扩展感受野，能够在不增加参数量的情况下实现多尺度特征提取\cite{chen2018deeplabv3plus}。
+
+\subsection{混合架构的理论基础}
+
+近年来，CoAtNet\cite{dai2021coatnet}等研究表明，将卷积的局部归纳偏置与 Transformer 的全局注意力相结合，能够在各种数据规模下获得比纯 ViT 或纯 CNN 更优的性能。这一思想为本文第4章的 LG-Adapter 设计提供了理论支撑——在 ViT 编码器的输出特征上叠加卷积层，使模型同时具备全局语义理解和局部边缘捕获能力。
+
+\section{注意力机制}
 
 \subsection{Transformer 注意力}
 
@@ -82,27 +116,23 @@ Dice 强调全局重叠一致性，BCE 强调像素级判别，两者结合可�
 \begin{equation}
 Attention(Q,K,V)=softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 \end{equation}
-其中 \(Q\) 为查询，\(K\) 为键，\(V\) 为值。该机制可建模远距离依赖与全局语义关联。
+其中 \(Q\) 为查询，\(K\) 为键，\(V\) 为值。该机制可建模远距离依赖与全局语义关联，是 ViT\cite{dosovitskiy2021vit}和 MedSAM\cite{ma2024medsam}的核心计算组件。
 
-\subsection{交叉注意力在分割中的意义}
+\subsection{跨样本注意力融合的早期探索}
 
-当 \(Q\) 来自当前样本，\(K,V\) 来自支持样本时，模型可显式利用跨样本相似结构信息。这种机制对边界不清晰、局部纹理弱的区域具有潜在补偿能力。
-
-\subsection{Few-shot 支持集思想}
-
-PANet 利用 support-query 对齐进行少样本分割，验证了跨样本先验的有效性\cite{wang2019panet}。该思想为本文后续 Attention Cross Block 提供了理论依据，即在分割当前样本时引入参考样本特征，增强不清晰区域判断。
+在本文的研究过程中，曾探索过基于交叉注意力的跨病例特征融合策略，即利用 PANet\cite{wang2019panet}提出的 support-query 对齐思想，在分割当前样本时引入参考样本的特征作为先验。然而，实验结果（C1 实验，详见第5章）表明，这种粗暴的跨样本特征融合在与 Balance Loss 组合时出现了严重的性能退化（DSC 从 0.9596 降至 0.9427），表明直接的特征空间加和会破坏 MedSAM 基座已建立的语义表征。该负向发现促使本文转向更为精细的卷积适配器方案（LG-Adapter），并将 C1 作为消融反例写入实验分析。
 
 \section{评价指标与实验口径}
 
-本文统一采用以下指标评价模型分割性能：
+本文统一采用以下指标评价模型分割性能\cite{taha2015metrics}：
 \begin{itemize}
   \item DSC（Dice Similarity Coefficient）：衡量重叠一致性，越高越好；
   \item HD95（95\% Hausdorff Distance）：衡量边界最大偏差的鲁棒版本，越低越好；
   \item ASD（Average Surface Distance）：衡量平均表面距离，越低越好。
 \end{itemize}
 
-当前阶段主线评估口径为 CT\_Abd 40 例同口径对比，保证消融结论可比性。
+当前阶段主线评估口径为 FLARE22\cite{ma2022flare}数据集的 CT\_Abd 40 例同口径对比，保证消融结论可比性。
 
 \section{本章小结}
 
-本章系统梳理了本文方法所依赖的理论与技术基础：MedSAM 架构与计算流程、不平衡学习理论、困难样本挖掘机制、注意力融合原理、基础损失函数及统一评估口径。上述内容共同构成第3章方法设计与实验分析的理论基础。
+本章系统梳理了本文方法所依赖的理论与技术基础：MedSAM 架构与计算流程、不平衡学习理论、困难样本挖掘机制、基础损失函数、参数高效微调（LoRA/Adapter）原理、卷积归纳偏置与 ViT 的互补性理论、注意力融合机制及统一评估口径。其中，参数高效微调与卷积-ViT 互补性理论为第4章的 LoRA 消融实验和 LG-Adapter 设计提供了直接的理论铺垫。上述内容共同构成第3至5章方法设计与实验分析的理论基础。

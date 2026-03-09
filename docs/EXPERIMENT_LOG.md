@@ -1,353 +1,124 @@
-# 实验事实库（标准化卡片）
+# 实验事实库
 
-> 更新时间：2026-02-24  
-> 作用：作为论文与答辩的“唯一实验事实来源”。  
-> 总控入口：`docs/THESIS_MASTER_GUIDE.md`
-
----
-
-## 0. 评估口径定义（统一）
-
-1. 数据：`data/npy/CT_Abd`（40 例）。
-2. 指标：DSC / HD95 / ASD。
-3. 评估脚本：`eval_medsam_npz.py`。
-4. 设备：默认 `cuda:0`。
-5. 结论引用规则：必须来自 `work_dir/eval_metrics/*_summary.json`。
+> **本文件是全部实验数据的唯一权威来源。** 所有论文中引用的数值必须与本表一致。
+> 更新时间：2026-03-03 | 状态：全部实验完成，代码冻结
+> 详细解读见 `docs/THESIS_KNOWLEDGE_BASE.md`
 
 ---
 
-## 1. 状态总览
+## 评估口径
 
-| ID | 实验 | 状态 | 结果摘要 | 产物 |
-|---|---|---|---|---|
-| EXP-001 | A0 Baseline | 完成 | 稳定基线 | `A0_summary.json` |
-| EXP-002 | A1 Inter-CBL | 完成 | 与 A0 接近 | `A1_summary.json` |
-| EXP-003 | A2 Intra-CBL | 完成 | 历史最优（修正前） | `A2_summary.json` |
-| EXP-004 | A3 Balance(原始) | 完成 | 明显退化 | `A3_summary.json` |
-| EXP-005 | B1 Attention-Only | 完成 | 模块可运行，优于 A0 但低于 A3R3 | `B1_summary.json` |
-| EXP-007 | A3R1 修正 | 完成 | 相比 A3 恢复，但仍显著落后 A2 | `A3R1_summary.json` |
-| EXP-008 | A3R2 修正对照 | 完成 | 仅改切换时机后仍显著退化 | `A3R2_summary.json` |
-| EXP-009 | A3R3 修正对照 | 完成 | 显著优于 A2，锁定新主干 | `A3R3_summary.json` |
+- 数据：`data/npy/CT_Abd`（FLARE22，40 例独立测试集）
+- 指标：DSC / HD95 / ASD
+- 脚本：`eval_medsam_npz.py`
+- 结果来源：`work_dir/eval_metrics/*_summary.json`
 
 ---
 
-## 2. 统一结果表（同口径）
+## 统一结果表
 
-| 实验编号 | 方法组合 | 测试口径 | Dice (%) | HD95 | ASD | 状态 | 结论/意义 |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **A0** | Baseline (Dice+CE) | CT_Abd | 0.940741 | 4.830503 | 0.537757 | 已跑通 | 用于对照的基座下限 |
-| **A1** | Inter-CBL | CT_Abd | 0.940596 | 4.790533 | 0.531697 | 已跑通 | 单独增加 Inter 效果微乎其微 |
-| **A2** | Intra-CBL | CT_Abd | 0.952554 | 3.368403 | 0.374899 | 已跑通 | 单独增加 Intra 有稳定增强 |
-| **A3** | 原始 Balance (Inter+Intra) | CT_Abd | 0.903470 | 7.922879 | 0.886811 | 已退化 | 直接组合出现严重冲突，产生负向作用 |
-| **A3R1** | Balance 修正1 (Alpha=0.5, Stage=100) | CT_Abd | 0.913660 | 6.638482 | 0.754714 | 跑完评估 | 有所回升但未达 A2 水平，说明同时修两个变量不好定性 |
-| **A3R2** | Balance 修正2 (仅改 Stage=100) | CT_Abd | 0.904431 | 6.617903 | 0.801991 | 跑完评估 | 与A3几乎持平，排除“切换时机”为主因 |
-| **A3R3** | Balance 修正3 (仅改 Alpha=0.5) | CT_Abd | 0.959554 | 2.251109 | 0.246323 | 跑完评估 | **当前全局最优**，锁定 Inter 权重过大为退化元凶 |
-| **B1** | 仅开启 Attention (无 Balance) | CT_Abd | 0.943297 | 3.602789 | 0.437852 | 跑完评估 | 作为后续 Attention 叠加实验的独立基线 |
-| **C1** | Attention + A3R3 Balance | CT_Abd | 0.942719 | 4.417467 | 0.501330 | 退化收场 | 已彻底废弃 Attention 路线，这证明跨样本粗暴融合破坏基座特征空间。 |
-| **C2** | A3R3 Balance + LoRA (rank=4) | CT_Abd | 0.879610 | 7.754797 | 0.996511 | 出乎意料退化 | 相比 A0/A3R3 大幅下降。证明在复杂多器官的医疗小样本上，冻结 ViT 主干切断了特征空间重塑能力，产生严重欠拟合。用作消融实验负向拔高点。 |
-| **C3** | A3R3 Balance + Local-Global Adapter | CT_Abd | 0.961958 | 2.914536 | 0.538947 | **全局第一** | **历史性突破！** DSC 成功突破 0.96 大关！证明了在全参数微调 (A3R3) 的基座上，加装 Local-Global 适配器完美命中了 SAM 在医学边缘高频特征上的盲区，达成了这篇论文最核心的“理论+实践”双丰收。 |
-
----
-
-## 3. 标准化实验卡片
-
-## 3.1 EXP-001：A0 Baseline
-
-### Objective
-- 建立同口径可比基线。
-
-### Hypothesis
-- 预训练 MedSAM 在 CT_Abd 上应提供稳定起点。
-
-### Config
-- Checkpoint：`work_dir/MedSAM-Baseline-20260208-1953/medsam_model_best.pth`
-- Eval 输出：`work_dir/eval_metrics/A0_summary.json`
-
-### Evidence
-- 评估日志：`work_dir/eval_metrics/logs/A0_eval.log`
-- 汇总 JSON：`work_dir/eval_metrics/A0_summary.json`
-
-### Result
-- DSC=0.940741, HD95=4.830503, ASD=0.537757
-
-### Decision
-- 作为全部后续实验统一参照。
+| 编号 | 方法组合 | DSC | HD95 | ASD | 结论 |
+|:---|:---|---:|---:|---:|:---|
+| **A0** | Baseline (Dice+CE) | 0.940741 | 4.830503 | 0.537757 | 基线 |
+| **A1** | Inter-CBL only | 0.940596 | 4.790533 | 0.531697 | 单独Inter无增益 |
+| **A2** | Intra-CBL only | 0.952554 | 3.368403 | 0.374899 | 困难样本加权有效 |
+| **A3** | Balance (α=1.0, stage=50) | 0.903470 | 7.922879 | 0.886811 | 严重退化 |
+| **A3R1** | Balance (α=0.5, stage=70) | 0.913660 | 6.638482 | 0.754714 | 部分恢复 |
+| **A3R2** | Balance (α=1.0, stage=100) | 0.904431 | 6.617903 | 0.801991 | 未恢复 → H2否定 |
+| **A3R3** | Balance (α=0.5, stage=50) | **0.959554** | **2.251109** | **0.246323** | **损失层最优** → H1通过 |
+| **B1** | Attention-only (dicece) | 0.943297 | 3.602789 | 0.437852 | Attention独立基线 |
+| **C1** | Attention + A3R3 | 0.942719 | 4.417467 | 0.501330 | 退化 → 废弃Attention |
+| **C2** | LoRA (r=4) + A3R3 | 0.879610 | 7.754797 | 0.996511 | 灾难退化 → 消融反证 |
+| **C3** | LG-Adapter + A3R3 | **0.961958** | 2.914536 | 0.538947 | **全局最优 DSC** |
 
 ---
 
-## 3.2 EXP-002：A1 Inter-CBL
+## 实验卡片
 
-### Objective
-- 验证“仅类别间平衡”收益。
+### A0 Baseline
+- Checkpoint: `work_dir/MedSAM-Baseline-20260208-1953/medsam_model_best.pth`
+- Eval JSON: `work_dir/eval_metrics/A0_summary.json`
 
-### Hypothesis
-- Inter-CBL 可降低假阳性并带来小幅提升。
+### A1 Inter-CBL
+- Config: `loss_type=inter_cbl`
+- 日志: `work_dir/A1_20260209-2026.log`
+- Checkpoint: `work_dir/MedSAM-FLARE22-A1-InterCBL-20260209-2026-20260209-2027/medsam_model_best.pth`
+- Eval JSON: `work_dir/eval_metrics/A1_summary.json`
 
-### Config
-- 日志：`work_dir/A1_20260209-2026.log`
-- 权重：`work_dir/MedSAM-FLARE22-A1-InterCBL-20260209-2026-20260209-2027/medsam_model_best.pth`
-- Eval 输出：`work_dir/eval_metrics/A1_summary.json`
+### A2 Intra-CBL
+- Config: `loss_type=intra_cbl`
+- 日志: `work_dir/A2_20260210-2309.log`
+- Checkpoint: `work_dir/MedSAM-FLARE22-A2-IntraCBL-20260210-2309-20260210-2309/medsam_model_best.pth`
+- Eval JSON: `work_dir/eval_metrics/A2_summary.json`
 
-### Evidence
-- 训练终点：Epoch 199 完成，无 Traceback。
-- 汇总 JSON：`work_dir/eval_metrics/A1_summary.json`
+### A3 Balance (原始)
+- Config: `loss_type=balance, alpha=1.0, beta=1.0, gamma=1.0, stage1_epochs=50`
+- 日志: `work_dir/A3_20260212-002344_bs1.log`
+- Eval JSON: `work_dir/eval_metrics/A3_summary.json`
+- 备注: batch_size=1（首轮OOM后降低）
 
-### Result
-- DSC=0.940596, HD95=4.790533, ASD=0.531697
+### A3R1 修正 (双变量)
+- Config: `alpha=0.5, stage1_epochs=70`
+- 日志: `work_dir/exp_logs/A3R1_train.log`
+- Eval JSON: `work_dir/eval_metrics/A3R1_summary.json`
 
-### Comparison
-- 与 A0 基本持平。
+### A3R2 修正 (仅改切换时机，验证H2)
+- Config: `alpha=1.0, stage1_epochs=100`
+- 日志: `work_dir/exp_logs/A3R2_train.log`
+- Eval JSON: `work_dir/eval_metrics/A3R2_summary.json`
+- 结论: H2否定（切换时机非主因）
 
-### Decision
-- Inter 单独不是主增益项。
+### A3R3 修正 (仅改Inter权重，验证H1)
+- Config: `alpha=0.5, beta=1.0, gamma=1.0, stage1_epochs=50, threshold=0.9, hard_weight=2.0, neg_ratio=3.0`
+- 日志: `work_dir/exp_logs/A3R3_train.log`
+- Eval JSON: `work_dir/eval_metrics/A3R3_summary.json`
+- 结论: **H1通过，锁定为损失主干**
 
----
+### B1 Attention-Only
+- Config: `loss_type=dicece, use_attention=true, batch_size=1`
+- 日志: `work_dir/exp_logs/B1_train.log`
+- Checkpoint: `work_dir/MedSAM-FLARE22-B1-AttnOnly-20260223-0018/medsam_model_best.pth`
+- Eval JSON: `work_dir/eval_metrics/B1_summary.json`
 
-## 3.3 EXP-003：A2 Intra-CBL
-
-### Objective
-- 验证“类内难样本加权”收益。
-
-### Hypothesis
-- Intra-CBL 可显著改善边界和困难样本表现。
-
-### Config
-- 日志：`work_dir/A2_20260210-2309.log`
-- 权重：`work_dir/MedSAM-FLARE22-A2-IntraCBL-20260210-2309-20260210-2309/medsam_model_best.pth`
-- Eval 输出：`work_dir/eval_metrics/A2_summary.json`
-
-### Evidence
-- 训练终点：Epoch 199 完成，无 Traceback。
-- 汇总 JSON：`work_dir/eval_metrics/A2_summary.json`
-
-### Result
-- DSC=0.952554, HD95=3.368403, ASD=0.374899
-
-### Comparison
-- 明显优于 A0/A1/A3。
-
-### Decision
-- 修正实验前的默认最优模型与后续基准。
-
----
-
-## 3.4 EXP-004：A3 Balance（原始配置）
-
-### Objective
-- 验证完整 Balance 组合收益。
-
-### Hypothesis
-- Inter + Intra + Dice 应优于单项损失。
-
-### Config
-- 成功日志：`work_dir/A3_20260212-002344_bs1.log`
-- 权重：`work_dir/MedSAM-FLARE22-A3-BalanceLoss-20260212-002344-20260212-0023/medsam_model_best.pth`
-- Eval 输出：`work_dir/eval_metrics/A3_summary.json`
-
-### Failure Analysis
-1. 首轮曾 OOM（batch_size=2）。
-2. 修复后（batch_size=1）训练完成，但评估明显退化。
-3. 说明“可训练完成”不等于“配置有效”。
-
-### Result
-- DSC=0.903470, HD95=7.922879, ASD=0.886811
-
-### Decision
-- 进入修正实验（R1/R2/R3），不直接进入 Attention。
-
----
-
-## 3.5 EXP-007：A3R1 修正实验（已完成）
-
-### Objective
-- 验证“弱化 Inter + 延后切换”是否恢复性能。
-
-### Hypothesis
-- 原 A3 退化主要由 Inter 权重过强与阶段切换过早导致。
-
-### Config
-- `loss_type=balance`
-- `balance_alpha=0.5`
-- `balance_beta=1.0`
-- `balance_gamma=1.0`
-- `stage1_epochs=70`
-- `balance_hard_threshold=0.9`
-- `balance_hard_weight=2.0`
-- `balance_neg_ratio=3.0`
-
-### Evidence
-- 日志：`work_dir/exp_logs/A3R1_train.log`
-- 评估日志：`work_dir/eval_metrics/logs/A3R1_eval.log`
-- 评估汇总：`work_dir/eval_metrics/A3R1_summary.json`
-
-### Result
-- DSC=0.913660, HD95=6.638482, ASD=0.754714
-
-### Detailed Comparison（详细对比）
-
-| 对比项 | DSC变化 | HD95变化 | ASD变化 | 解读 |
-|---|---:|---:|---:|---|
-| A3R1 vs A3 | +0.010190 | -1.284397 | -0.132097 | 明显恢复，修正方向有效 |
-| A3R1 vs A2 | -0.038894 | +3.270079 | +0.379815 | 与当时最优仍有明显差距 |
-| A3R1 vs A0 | -0.027081 | +1.807979 | +0.216957 | 未回到基线 |
-
-### Decision
-1. R1 判定为“部分恢复，不通过”。
-2. 进入 R2/R3 单变量剥离。
-
----
-
-## 3.6 EXP-008：A3R2 修正对照（仅改切换时机，已完成）
-
-### Objective
-- 验证 `stage1_epochs` 延后是否是 A3 退化主因。
-
-### Config
-- `loss_type=balance`
-- `balance_alpha=1.0`
-- `balance_beta=1.0`
-- `balance_gamma=1.0`
-- `stage1_epochs=100`
-- 其余参数与 A3 基本一致。
-
-### Evidence
-- 训练日志：`work_dir/exp_logs/A3R2_train.log`（Epoch 199 完成）
-- 评估日志：`work_dir/eval_metrics/logs/A3R2_eval.log`
-- 评估汇总：`work_dir/eval_metrics/A3R2_summary.json`
-
-### Result
-- DSC=0.904431, HD95=6.617903, ASD=0.801991
-
-### Comparison
-- A3R2 vs A3R1：DSC -0.009229，HD95 -0.020579，ASD +0.047277（整体不如 A3R1）。
-- A3R2 vs A2：DSC -0.048122，HD95 +3.249500，ASD +0.427092（仍显著退化）。
-
-### Decision
-- R2 不通过。
-- “仅延后切换时机”不能解释或修复主问题。
-
----
-
-## 3.7 EXP-009：A3R3 修正对照（仅改 Inter 权重，已完成）
-
-### Objective
-- 验证降低 `balance_alpha` 是否是恢复性能的主因。
-
-### Config
-- `loss_type=balance`
-- `balance_alpha=0.5`
-- `balance_beta=1.0`
-- `balance_gamma=1.0`
-- `stage1_epochs=50`
-- `balance_hard_threshold=0.9`
-- `balance_hard_weight=2.0`
-- `balance_neg_ratio=3.0`
-
-### Evidence
-- 训练日志：`work_dir/exp_logs/A3R3_train.log`（Epoch 199 完成）
-- 日志参数行已确认：`alpha=0.5,beta=1.0,gamma=1.0,stage1_epochs=50,...`
-- 评估日志：`work_dir/eval_metrics/logs/A3R3_eval.log`
-- 评估汇总：`work_dir/eval_metrics/A3R3_summary.json`
-
-### Result
-- DSC=0.959554, HD95=2.251109, ASD=0.246323
-
-### Comparison
-- A3R3 vs A2：DSC +0.007000，HD95 -1.117294，ASD -0.128576（全面优于 A2）。
-- A3R3 vs A3R1：DSC +0.045894，HD95 -4.387373，ASD -0.508391（显著提升）。
-
-### Decision
-1. R3 通过，且成为当前全局最优配置。
-2. 退化主因锁定为 Inter 权重强度（H1 获得强证据支持）。
-3. 后续 EXP-005（Attention 阶段）默认采用 A3R3 配置作为损失主干。
-
----
-
-## 3.8 EXP-005：B1 Attention-Only（已完成）
-
-### Objective
-- 验证 AttentionCrossBlock 在 `dicece` 条件下的独立可运行性与净增益方向。
-
-### Config
-- `loss_type=dicece`
-- `use_attention=true`
-- `num_epochs=200`
-- `batch_size=1`
-- `lr=1e-4`
-- `world_size=2`
-
-### Evidence
-- 训练日志：`work_dir/exp_logs/B1_train.log`（Epoch 199 完成）
-- 评估日志：`work_dir/eval_metrics/logs/B1_eval.log`
-- 个例结果：`work_dir/eval_metrics/B1_case_metrics.csv`
-- 评估汇总：`work_dir/eval_metrics/B1_summary.json`
-
-### Result
-- DSC=0.943297, HD95=3.602789, ASD=0.437852
-- Checkpoint：`work_dir/MedSAM-FLARE22-B1-AttnOnly-20260223-0018/medsam_model_best.pth`
-
-### Comparison
-- B1 vs A0：DSC +0.002556，HD95 -1.227714，ASD -0.099905（有小幅提升）。
-- B1 vs A2：DSC -0.009257，HD95 +0.234386，ASD +0.062953（仍弱于 A2）。
-- B1 vs A3R3：DSC -0.016257，HD95 +1.351680，ASD +0.191529（明显弱于主干最优）。
-
-### Decision
-1. B1 判定为“模块可运行，具备可用基线”，但不能替代 A3R3 主干。
-2. C1（Attention + A3R3）已完成评估，判定为负向收益，不进入主线方案。
-
----
-
-## 3.9 EXP-005：C1 Attention + A3R3（已完成）
-
-### Objective
-- 验证 AttentionCrossBlock 在 `balance` (A3R3) 主干下的完整组合收益。
-
-### Config
-- `loss_type=balance`
-- `use_attention=true`
-- `balance_alpha=0.5`
-- `balance_beta=1.0`
-- `balance_gamma=1.0`
-- `stage1_epochs=50`
-- `balance_hard_threshold=0.9`
-- `balance_hard_weight=2.0`
-- `balance_neg_ratio=3.0`
-- `num_epochs=200`
-
-### Evidence
-- 训练日志：`work_dir/exp_logs/C1_train.log`（Epoch 199 完成）
-- 评估汇总：`work_dir/eval_metrics/C1_summary.json`
+### C1 Attention + A3R3
+- Config: `loss_type=balance(A3R3), use_attention=true`
+- 日志: `work_dir/exp_logs/C1_train.log`
 - Checkpoint: `work_dir/MedSAM-FLARE22-C1-Attn-BalanceR3-20260224-2122/medsam_model_best.pth`
+- Eval JSON: `work_dir/eval_metrics/C1_summary.json`
+- 结论: 退化，废弃Attention路线
 
-### Result
-- DSC=0.942718, HD95=4.417467, ASD=0.501330
+### C2 LoRA + A3R3
+- Config: `loss_type=balance(A3R3), use_lora=true, lora_rank=4`
+- 日志: `work_dir/exp_logs/C2_train.log`
+- Eval JSON: `work_dir/eval_metrics/C2_summary.json`
+- 结论: 灾难退化，冻结主干不可行
 
-### Comparison
-- C1 vs A3R3：DSC -0.016836，HD95 +2.166358，ASD +0.255007（相较于去掉 Attention 的主干全面且剧烈退化）。
-- C1 vs B1 (Attention-only)：DSC -0.000579，HD95 +0.814678，ASD +0.063478（竟然比 DiceCE 下的 Attention 还要差）。
-- C1 vs A0：DSC +0.001977，HD95 -0.413036，ASD -0.036427（仅仅勉强持平最弱基线）。
-
-### Decision
-1. C1 判定为“原生 Attention 与 Balance Loss 特征流不兼容，无收益”。
-2. 虽然 B1 本身有效，但 C1 的彻底崩塌说明“老式 Attention 加和融合”不适合当前的医学表征。
-3. **下一步关键决策**：废弃后续基于 Attention 的修补。全面引入 Parameter-Efficient Fine-Tuning (LoRA) 与 Multi-scale Local-Global Adapter，作为医学 SAM 架构魔改的新第二、第三创新点（详见 FULL_EXPERIMENT_PLAN.md 阶段 2）。
-
----
-
-## 4. Attention 阶段进度（EXP-005）
-
-## 4.1 已完成：B1（Attention-Only）
-- 已完成 40 例同口径评估。
-- 用于证明 Attention 模块在基础 Loss 下的有效性。
-
-## 4.2 已完成：C1（Attention + A3R3）
-- 结果：组合后无额外增益甚至倒退。
-- 结论：作为负例写入论文。为满足更高的工作量和创新度标准，终止 Attention 分支实验，全面转入 C2 (LoRA) 与 C3 (Local-Global Adapter) 的架构扩充开发。
+### C3 LG-Adapter + A3R3
+- Config: `loss_type=balance(A3R3), use_lg_adapter=true`
+- 日志: `work_dir/exp_logs/C3_train.log`
+- Eval JSON: `work_dir/eval_metrics/C3_summary.json`
+- 结论: **全局最优 DSC=0.9620**
 
 ---
 
-## 5. 引用规范（论文写作）
+## 差分证据表
 
-1. 章节中给出的数值必须与本文件表格一致。
-2. 每个结论至少对应一个 `summary.json` 和一个训练日志来源。
-3. 对“主因”类结论，必须给出至少一个单变量对照（本轮为 R2/R3）。
+| 对比 | ΔDSC | ΔHD95 | ΔASD | 解读 |
+|:---|---:|---:|---:|:---|
+| A1 vs A0 | -0.0001 | -0.0400 | -0.0061 | Inter-only 基本无净增益 |
+| A2 vs A0 | +0.0118 | -1.4621 | -0.1629 | Intra-CBL 稳定有效 |
+| A3 vs A2 | -0.0491 | +4.5545 | +0.5119 | 原始Balance严重退化 |
+| A3R2 vs A2 | -0.0481 | +3.2495 | +0.4271 | 仅改切换时机无效(H2否定) |
+| A3R3 vs A2 | +0.0070 | -1.1173 | -0.1286 | 仅改Inter权重即显著提升(H1通过) |
+| A3R3 vs A0 | +0.0188 | -2.5794 | -0.2914 | Balance Loss全面提升 |
+| C2 vs A3R3 | -0.0800 | +5.5037 | +0.7502 | 冻结主干导致崩溃 |
+| C3 vs A3R3 | +0.0024 | +0.6634 | +0.2926 | DSC进一步突破 |
+| C1 vs A3R3 | -0.0168 | +2.1664 | +0.2550 | Attention融合有害 |
+
+---
+
+## 引用规范
+
+1. 章节中给出的数值必须与本表一致
+2. 每个结论至少对应一个 `summary.json` 来源
+3. 对"主因"类结论必须给出单变量对照（R2/R3）
