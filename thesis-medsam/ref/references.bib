@@ -1,3 +1,7 @@
+% ============================================================
+%  基座模型 & 通用视觉基础模型
+% ============================================================
+
 @article{ma2024medsam,
   title   = {Segment anything in medical images},
   author  = {Ma, Jun and He, Yichi and Li, Feifei and Han, Lin and You, Chenyu and Wang, Bo},
@@ -16,6 +20,89 @@
   year      = {2023},
   doi       = {10.1109/ICCV51070.2023.00371}
 }
+
+@article{ravi2024sam2,
+  title   = {{SAM} 2: Segment Anything in Images and Videos},
+  author  = {Ravi, Nikhila and Gabber, Valentin and Hu, Yuan-Ting and Hu, Ronghang and Ryali, Chaitanya and Ma, Tengyu and Khedr, Haitham and R{\"a}dle, Roman and Rolland, Chloe and Gustafson, Laura and Mintun, Eric and Pan, Junting and Alwala, Kalyan Vasudev and Carion, Nicolas and Wu, Chao-Yuan and Girshick, Ross and Doll{\'a}r, Piotr and Feichtenhofer, Christoph},
+  journal = {arXiv preprint arXiv:2408.00714},
+  year    = {2024}
+}
+
+@inproceedings{dosovitskiy2021vit,
+  title     = {An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale},
+  author    = {Dosovitskiy, Alexey and Beyer, Lucas and Kolesnikov, Alexander and Weissenborn, Dirk and Zhai, Xiaohua and Unterthiner, Thomas and Dehghani, Mostafa and Minderer, Matthias and Heigold, Georg and Gelly, Sylvain and Uszkoreit, Jakob and Houlsby, Neil},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021}
+}
+
+% ============================================================
+%  医学图像分割经典网络
+% ============================================================
+
+@inproceedings{ronneberger2015unet,
+  title     = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
+  author    = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
+  pages     = {234--241},
+  year      = {2015},
+  doi       = {10.1007/978-3-319-24574-4_28}
+}
+
+@article{isensee2021nnunet,
+  title   = {nn{U-N}et: a self-configuring method for deep learning-based biomedical image segmentation},
+  author  = {Isensee, Fabian and Jaeger, Paul F. and Kohl, Simon A. A. and Petersen, Jens and Maier-Hein, Klaus H.},
+  journal = {Nature Methods},
+  volume  = {18},
+  number  = {2},
+  pages   = {203--211},
+  year    = {2021},
+  doi     = {10.1038/s41592-020-01008-z}
+}
+
+@inproceedings{chen2021transunet,
+  title     = {Trans{UN}et: Transformers Make Strong Encoders for Medical Image Segmentation},
+  author    = {Chen, Jieneng and Lu, Yongyi and Yu, Qihang and Luo, Xiangde and Adeli, Ehsan and Wang, Yan and Lu, Le and Yuille, Alan L. and Zhou, Yuyin},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
+  year      = {2021}
+}
+
+@inproceedings{cao2022swinunet,
+  title     = {Swin-Unet: Unet-like Pure Transformer for Medical Image Segmentation},
+  author    = {Cao, Hu and Wang, Yueyue and Chen, Joy and Jiang, Dongsheng and Zhang, Xiaopeng and Tian, Qi and Wang, Manning},
+  booktitle = {European Conference on Computer Vision (ECCV) Workshops},
+  pages     = {205--218},
+  year      = {2022},
+  doi       = {10.1007/978-3-031-25066-8_9}
+}
+
+% ============================================================
+%  SAM 系列衍生 (医学领域)
+% ============================================================
+
+@inproceedings{zhang2024samed,
+  title     = {{SAMed}: A General and Efficient Medical Image Segmentation Framework Based on Segment Anything Model},
+  author    = {Zhang, Kaidong and Liu, Dong},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
+  year      = {2024}
+}
+
+@inproceedings{yue2024imedsam,
+  title     = {Surgicalsam: Efficient class promptable surgical instrument segmentation},
+  author    = {Yue, Wenxi and Zhang, Jing and Hu, Kun and Xia, Yong and Luo, Jiebo and Wang, Zhiqiang},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  year      = {2024}
+}
+
+@article{wu2023medsamadapter,
+  title   = {Medical {SAM} Adapter: Adapting Segment Anything Model for Medical Image Segmentation},
+  author  = {Wu, Junde and Ji, Wei and Liu, Yuanpei and Fu, Huazhu and Yu, Min and Xu, Yanwu and Jin, Yueming},
+  journal = {arXiv preprint arXiv:2304.12620},
+  year    = {2023}
+}
+
+% ============================================================
+%  不平衡学习与困难样本挖掘
+% ============================================================
 
 @inproceedings{cui2019classbalanced,
   title     = {Class-Balanced Loss Based on Effective Number of Samples},
@@ -44,6 +131,23 @@
   doi       = {10.1109/ICCV.2017.324}
 }
 
+% ============================================================
+%  损失函数
+% ============================================================
+
+@inproceedings{milletari2016vnet,
+  title     = {V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation},
+  author    = {Milletari, Fausto and Navab, Nassir and Ahmadi, Seyed-Ahmad},
+  booktitle = {2016 Fourth International Conference on 3D Vision (3DV)},
+  pages     = {565--571},
+  year      = {2016},
+  doi       = {10.1109/3DV.2016.79}
+}
+
+% ============================================================
+%  注意力机制
+% ============================================================
+
 @inproceedings{vaswani2017attention,
   title     = {Attention Is All You Need},
   author    = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, Lukasz and Polosukhin, Illia},
@@ -52,6 +156,10 @@
   year      = {2017}
 }
 
+% ============================================================
+%  Few-shot 分割
+% ============================================================
+
 @inproceedings{wang2019panet,
   title     = {PANet: Few-Shot Image Semantic Segmentation With Prototype Alignment},
   author    = {Wang, Kaixin and Liew, Jun Hao and Zou, Yingtian and Zhou, Daquan and Feng, Jiashi},
@@ -59,4 +167,175 @@
   pages     = {9197--9206},
   year      = {2019},
   doi       = {10.1109/ICCV.2019.00929}
+}
+
+% ============================================================
+%  参数高效微调 (PEFT / LoRA)
+% ============================================================
+
+@inproceedings{hu2022lora,
+  title     = {{LoRA}: Low-Rank Adaptation of Large Language Models},
+  author    = {Hu, Edward J. and Shen, Yelong and Wallis, Phillip and Allen-Zhu, Zeyuan and Li, Yuanzhi and Wang, Shean and Wang, Lu and Chen, Weizhu},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2022}
+}
+
+@inproceedings{houlsby2019adapter,
+  title     = {Parameter-Efficient Transfer Learning for {NLP}},
+  author    = {Houlsby, Neil and Giurgiu, Andrei and Jastrzebski, Stanislaw and Morber, Bruna and Laroussilhe, Octavian and Gesmundo, Andrea and Attariyan, Mona and Gelly, Sylvain},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  pages     = {2790--2799},
+  year      = {2019}
+}
+
+% ============================================================
+%  深度可分离卷积 & 轻量化网络
+% ============================================================
+
+@inproceedings{howard2017mobilenets,
+  title     = {MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications},
+  author    = {Howard, Andrew G. and Zhu, Menglong and Chen, Bo and Kalenichenko, Dmitry and Wang, Weijun and Weyand, Tobias and Andreetto, Marco and Adam, Hartmut},
+  booktitle = {arXiv preprint arXiv:1704.04861},
+  year      = {2017}
+}
+
+@inproceedings{chollet2017xception,
+  title     = {Xception: Deep Learning with Depthwise Separable Convolutions},
+  author    = {Chollet, Fran{\c{c}}ois},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {1251--1258},
+  year      = {2017},
+  doi       = {10.1109/CVPR.2017.195}
+}
+
+@inproceedings{chen2018deeplabv3plus,
+  title     = {Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation},
+  author    = {Chen, Liang-Chieh and Zhu, Yukun and Papandreou, George and Schroff, Florian and Adam, Hartmut},
+  booktitle = {Proceedings of the European Conference on Computer Vision (ECCV)},
+  pages     = {801--818},
+  year      = {2018},
+  doi       = {10.1007/978-3-030-01234-2_49}
+}
+
+% ============================================================
+%  数据集 & 挑战赛
+% ============================================================
+
+@article{ma2022flare,
+  title   = {Fast and Low-GPU-memory Abdomen Segmentation: The {FLARE} Challenge},
+  author  = {Ma, Jun and Zhang, Yao and Gu, Song and Zhu, Cheng and Ge, Cheng and Zhang, Yichi and An, Xingle and Wang, Congcong and Wang, Qiyuan and Liu, Xin and others},
+  journal = {Medical Image Analysis},
+  volume  = {82},
+  pages   = {102616},
+  year    = {2022},
+  doi     = {10.1016/j.media.2022.102616}
+}
+
+% ============================================================
+%  优化器
+% ============================================================
+
+@inproceedings{loshchilov2019adamw,
+  title     = {Decoupled Weight Decay Regularization},
+  author    = {Loshchilov, Ilya and Hutter, Frank},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2019}
+}
+
+% ============================================================
+%  医学图像分割综述
+% ============================================================
+
+@article{litjens2017survey,
+  title   = {A survey on deep learning in medical image analysis},
+  author  = {Litjens, Geert and Kooi, Thijs and Bejnordi, Babak Ehteshami and Setio, Arnaud Arindra Adiyoso and Ciompi, Francesco and Ghafoorian, Mohsen and van der Laak, Jeroen A. W. M. and van Ginneken, Bram and S{\'a}nchez, Clara I.},
+  journal = {Medical Image Analysis},
+  volume  = {42},
+  pages   = {60--88},
+  year    = {2017},
+  doi     = {10.1016/j.media.2017.07.005}
+}
+
+@article{hesamian2019survey,
+  title   = {Deep Learning Techniques for Medical Image Segmentation: Achievements and Challenges},
+  author  = {Hesamian, Mohammad Hesam and Jia, Wenjing and He, Xiangjian and Kennedy, Paul},
+  journal = {Journal of Digital Imaging},
+  volume  = {32},
+  number  = {4},
+  pages   = {582--596},
+  year    = {2019},
+  doi     = {10.1007/s10278-019-00227-x}
+}
+
+@article{wang2022medseg_survey,
+  title   = {Medical image segmentation using deep learning: A survey},
+  author  = {Wang, Risheng and Lei, Tao and Cui, Ruixia and Zhang, Bingtao and Meng, Hongying and Nandi, Asoke K.},
+  journal = {IET Image Processing},
+  volume  = {16},
+  number  = {5},
+  pages   = {1243--1267},
+  year    = {2022},
+  doi     = {10.1049/ipr2.12419}
+}
+
+% ============================================================
+%  残差网络 & 基础架构
+% ============================================================
+
+@inproceedings{he2016resnet,
+  title     = {Deep Residual Learning for Image Recognition},
+  author    = {He, Kaiming and Zhang, Xiangyu and Ren, Shaoqing and Sun, Jian},
+  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {770--778},
+  year      = {2016},
+  doi       = {10.1109/CVPR.2016.90}
+}
+
+@article{long2015fcn,
+  title   = {Fully Convolutional Networks for Semantic Segmentation},
+  author  = {Long, Jonathan and Shelhamer, Evan and Darrell, Trevor},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume  = {39},
+  number  = {4},
+  pages   = {640--651},
+  year    = {2017},
+  doi     = {10.1109/TPAMI.2016.2572683}
+}
+
+% ============================================================
+%  评价指标
+% ============================================================
+
+@article{taha2015metrics,
+  title   = {Metrics for evaluating 3D medical image segmentation: analysis, selection, and tool},
+  author  = {Taha, Abdel Aziz and Hanbury, Allan},
+  journal = {BMC Medical Imaging},
+  volume  = {15},
+  number  = {1},
+  pages   = {29},
+  year    = {2015},
+  doi     = {10.1186/s12880-015-0068-x}
+}
+
+% ============================================================
+%  膨胀卷积（空洞卷积）
+% ============================================================
+
+@inproceedings{yu2016dilated,
+  title     = {Multi-Scale Context Aggregation by Dilated Convolutions},
+  author    = {Yu, Fisher and Koltun, Vladislav},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2016}
+}
+
+% ============================================================
+%  ViT 与 CNN 互补性
+% ============================================================
+
+@inproceedings{dai2021coatnet,
+  title     = {{CoAtNet}: Marrying Convolution and Attention for All Data Sizes},
+  author    = {Dai, Zihang and Liu, Hanxiao and Le, Quoc V. and Tan, Mingxing},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {34},
+  year      = {2021}
 }
