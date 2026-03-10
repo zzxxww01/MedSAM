@@ -94,9 +94,9 @@ def find_boundary_roi(mask, roi_size=128):
     dy = np.abs(np.diff(mask_2d, axis=0))
     dx = np.abs(np.diff(mask_2d, axis=1))
 
-    boundary = np.zeros_like(mask_2d)
-    boundary[:-1, :] += (dy > 0).astype(int)
-    boundary[:, :-1] += (dx > 0).astype(int)
+    boundary = np.zeros(mask_2d.shape, dtype=np.int64)
+    boundary[:-1, :] += (dy > 0).astype(np.int64)
+    boundary[:, :-1] += (dx > 0).astype(np.int64)
 
     # Find densest boundary region
     best_score = 0
@@ -168,10 +168,10 @@ def main():
         # Zoomed view
         roi = mask_rgb[ry:ry + rs, rx:rx + rs]
         axes[1, col].imshow(roi, interpolation="nearest")
-        axes[1, col].set_title(f"{titles[col]} (放大)", fontsize=10)
+        axes[1, col].set_title(f"{titles[col]} (zoom)", fontsize=10)
         axes[1, col].axis("off")
 
-    fig.suptitle("边界区域放大对比 — C3 高频特征增强效果",
+    fig.suptitle("Boundary Detail Comparison",
                  fontsize=13, fontweight="bold", y=1.02)
     fig.tight_layout()
 

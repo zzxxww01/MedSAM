@@ -174,7 +174,7 @@ def main():
             axes[col].axis("off")
             col += 1
 
-    fig.suptitle("典型病例的预测掩码对比", fontsize=14, fontweight="bold", y=1.02)
+    fig.suptitle("Prediction Mask Comparison", fontsize=14, fontweight="bold", y=1.02)
     fig.tight_layout()
 
     out_path = os.path.join(OUT_DIR, "mask_comparison.pdf")
