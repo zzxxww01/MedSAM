@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
 plt.rcParams["font.family"] = "serif"
-plt.rcParams["font.serif"] = ["SimSun", "STSong", "Noto Serif CJK SC", "DejaVu Serif"]
 plt.rcParams["axes.unicode_minus"] = False
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
