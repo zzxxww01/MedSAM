@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Fig.8 MedSAM 三段式架构图（可选）
+"""Fig.8 MedSAM Three-Stage Architecture (Optional)
 
-生成纯 matplotlib 架构图，无外部数据依赖。
-输出: thesis-medsam/figures/medsam_arch.pdf
+Pure matplotlib architecture diagram, no external data dependency.
+Output: thesis-medsam/figures/medsam_arch.pdf
 """
 
 import os
@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 plt.rcParams["font.family"] = "serif"
-plt.rcParams["font.serif"] = ["SimSun", "STSong", "Noto Serif CJK SC", "DejaVu Serif"]
 plt.rcParams["axes.unicode_minus"] = False
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
@@ -47,64 +46,64 @@ def main():
     ax.set_ylim(-0.5, 6)
     ax.axis("off")
 
-    ax.text(7.0, 5.5, "MedSAM 三段式架构", ha="center",
+    ax.text(7.0, 5.5, "MedSAM Three-Stage Architecture", ha="center",
             fontsize=15, fontweight="bold", color="#2C3E50")
 
     y_enc = 3.0
     y_prompt = 0.8
 
-    # ── 输入图像 ──
+    # Input image
     draw_box(ax, (0.0, y_enc - 0.5), 2.0, 1.0,
-             "医学 CT 切片\n1024×1024×3", "#95A5A6", 9)
+             "Medical CT Slice\n1024x1024x3", "#95A5A6", 9)
 
-    # ── Image Encoder ──
+    # Image Encoder
     draw_arrow(ax, (2.0, y_enc), (2.5, y_enc))
     draw_box(ax, (2.5, y_enc - 0.7), 3.5, 1.4,
-             "Image Encoder\n━━━━━━━━━━\nViT-Base (12 Blocks)\nPatch 16×16\nMulti-Head Self-Attention\n→ 64×64×256",
+             "Image Encoder\n----------\nViT-Base (12 Blocks)\nPatch 16x16\nMulti-Head Self-Attention\n-> 64x64x256",
              "#2C3E50", 8.5)
 
-    # ── 特征图 ──
+    # Feature map
     draw_arrow(ax, (6.0, y_enc), (6.5, y_enc))
     draw_box(ax, (6.5, y_enc - 0.35), 1.8, 0.7,
-             "Image\nEmbedding\n64×64×256", "#8E44AD", 8)
+             "Image\nEmbedding\n64x64x256", "#8E44AD", 8)
 
-    # ── Mask Decoder ──
+    # Mask Decoder
     draw_arrow(ax, (8.3, y_enc), (8.8, y_enc))
     draw_box(ax, (8.8, y_enc - 0.7), 3.0, 1.4,
-             "Mask Decoder\n━━━━━━━━━━\n双向交叉注意力\n(prompt↔image)\nMLP + 上采样\n→ 1024×1024",
+             "Mask Decoder\n----------\nBi-directional Cross-Attn\n(prompt<->image)\nMLP + Upsampling\n-> 1024x1024",
              "#3498DB", 8.5)
 
-    # ── 输出掩码 ──
+    # Output mask
     draw_arrow(ax, (11.8, y_enc), (12.3, y_enc))
     draw_box(ax, (12.3, y_enc - 0.5), 2.0, 1.0,
-             "分割掩码\n1024×1024", "#27AE60", 9)
+             "Segmentation\nMask\n1024x1024", "#27AE60", 9)
 
-    # ── Prompt Encoder（下方） ──
+    # Prompt Encoder (bottom)
     draw_box(ax, (0.0, y_prompt - 0.35), 2.0, 0.7,
-             "Box / Point\n提示", "#F39C12", 9, text_color="black")
+             "Box / Point\nPrompt", "#F39C12", 9, text_color="black")
 
     draw_arrow(ax, (2.0, y_prompt), (2.5, y_prompt), "#F39C12")
     draw_box(ax, (2.5, y_prompt - 0.5), 3.5, 1.0,
-             "Prompt Encoder\n━━━━━━━━━━\n位置嵌入 + 类型编码\n(冻结，不参与训练)",
+             "Prompt Encoder\n----------\nPosition Embedding\n+ Type Encoding\n(Frozen)",
              "#F39C12", 8.5, text_color="black")
 
     draw_arrow(ax, (6.0, y_prompt), (6.5, y_prompt), "#F39C12")
     draw_box(ax, (6.5, y_prompt - 0.35), 1.8, 0.7,
              "Prompt\nEmbedding", "#E67E22", 8)
 
-    # Prompt Embedding → Decoder
+    # Prompt Embedding -> Decoder
     draw_arrow(ax, (8.3, y_prompt), (10.3, y_enc - 0.7), "#F39C12")
 
-    # ── 训练标注 ──
-    ax.text(4.25, y_enc + 1.1, "全参微调", ha="center",
+    # Training annotations
+    ax.text(4.25, y_enc + 1.1, "Full Fine-Tuning", ha="center",
             fontsize=9, color="#E74C3C", fontweight="bold",
             bbox=dict(boxstyle="round,pad=0.15", facecolor="#FADBD8",
                       edgecolor="#E74C3C"))
-    ax.text(10.3, y_enc + 1.1, "全参微调", ha="center",
+    ax.text(10.3, y_enc + 1.1, "Full Fine-Tuning", ha="center",
             fontsize=9, color="#E74C3C", fontweight="bold",
             bbox=dict(boxstyle="round,pad=0.15", facecolor="#FADBD8",
                       edgecolor="#E74C3C"))
-    ax.text(4.25, y_prompt - 0.95, "冻结", ha="center",
+    ax.text(4.25, y_prompt - 0.95, "Frozen", ha="center",
             fontsize=9, color="#7F8C8D", fontweight="bold",
             bbox=dict(boxstyle="round,pad=0.15", facecolor="#EAECEE",
                       edgecolor="#7F8C8D"))

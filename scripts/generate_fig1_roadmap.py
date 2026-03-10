@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Fig.1 技术路线总览图（三核驱动）
+"""Fig.1 Technical Roadmap (Three-Pillar Approach)
 
-生成纯 matplotlib 流程图，无外部数据依赖。
-输出: thesis-medsam/figures/tech_roadmap.pdf
+Pure matplotlib flowchart, no external data dependency.
+Output: thesis-medsam/figures/tech_roadmap.pdf
 """
 
 import os
@@ -10,9 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
-# ── 中文字体 ──
 plt.rcParams["font.family"] = "serif"
-plt.rcParams["font.serif"] = ["SimSun", "STSong", "Noto Serif CJK SC", "DejaVu Serif"]
 plt.rcParams["axes.unicode_minus"] = False
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
@@ -51,35 +49,37 @@ def main():
     ax.set_ylim(-1, 7)
     ax.axis("off")
 
-    # ── 顶部：MedSAM 基座 ──
-    c_base = draw_box(ax, (3.5, 5.8), 4.5, 0.8, "MedSAM 基座模型\n(ViT-Base + Mask Decoder)", "#2C3E50", 11)
+    # Top: MedSAM base
+    c_base = draw_box(ax, (3.5, 5.8), 4.5, 0.8,
+                       "MedSAM Base Model\n(ViT-Base + Mask Decoder)", "#2C3E50", 11)
 
-    # ── 三核标题 ──
-    ax.text(5.75, 5.05, '\u201c三核驱动\u201d技术路线', ha="center", va="center",
+    # Three-pillar title
+    ax.text(5.75, 5.05, "Three-Pillar Technical Roadmap", ha="center", va="center",
             fontsize=14, fontweight="bold", color="#2C3E50",
-            bbox=dict(boxstyle="round,pad=0.3", facecolor="#ECF0F1", edgecolor="#2C3E50", linewidth=1.5))
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="#ECF0F1",
+                      edgecolor="#2C3E50", linewidth=1.5))
 
-    # ── 第一核：损失层 ──
+    # Pillar 1: Loss Layer
     c1 = draw_box(ax, (0.2, 3.2), 3.2, 1.2,
-                  "第一核：损失层\n━━━━━━━━━━\nBalance Loss\n(Inter-CBL + Intra-CBL\n+ Dice + 两阶段训练)",
+                  "Pillar 1: Loss Layer\n----------\nBalance Loss\n(Inter-CBL + Intra-CBL\n+ Dice + Two-Stage)",
                   "#E74C3C", 9)
 
-    # ── 第二核：消融层 ──
+    # Pillar 2: Ablation
     c2 = draw_box(ax, (4.15, 3.2), 3.2, 1.2,
-                  "第二核：消融反证\n━━━━━━━━━━\nLoRA (r=4) 冻结主干\n→ DSC 0.879\n→ 证明全参微调必要性",
+                  "Pillar 2: Ablation\n----------\nLoRA (r=4) Frozen Backbone\n-> DSC 0.879\n-> Full FT is necessary",
                   "#3498DB", 9)
 
-    # ── 第三核：特征层 ──
+    # Pillar 3: Feature Layer
     c3 = draw_box(ax, (8.1, 3.2), 3.2, 1.2,
-                  "第三核：特征流层\n━━━━━━━━━━\nLG-Adapter\n(双路径深度可分离卷积\n+ 膨胀卷积 + 残差)",
+                  "Pillar 3: Feature Layer\n----------\nLG-Adapter\n(Dual-Path DWConv\n+ Dilated Conv + Residual)",
                   "#27AE60", 9)
 
-    # ── 箭头：基座 → 三核 ──
+    # Arrows: base -> three pillars
     draw_arrow(ax, (5.75, 5.8), (1.8, 4.4), "#E74C3C")
     draw_arrow(ax, (5.75, 5.8), (5.75, 4.4), "#3498DB")
     draw_arrow(ax, (5.75, 5.8), (9.7, 4.4), "#27AE60")
 
-    # ── 底部消融链 ──
+    # Bottom: ablation chain
     steps = [
         ("A0\nBaseline\nDSC 0.941", "#95A5A6", 0.3),
         ("A3R3\nBalance Loss\nDSC 0.960", "#E74C3C", 3.0),
@@ -89,13 +89,13 @@ def main():
     for text, color, x in steps:
         draw_box(ax, (x, 0.8), 2.3, 1.0, text, color, 9)
 
-    # 箭头：消融链
+    # Arrows: ablation chain
     draw_arrow(ax, (2.6, 1.3), (3.0, 1.3), "#555")
     draw_arrow(ax, (5.3, 1.3), (5.7, 1.3), "#555")
     draw_arrow(ax, (8.0, 1.3), (8.4, 1.3), "#555")
 
-    ax.text(5.75, 0.3, "消融路径：A0 → A3R3 → C2 (反证) → C3 (最优)", ha="center",
-            fontsize=10, fontstyle="italic", color="#7F8C8D")
+    ax.text(5.75, 0.3, "Ablation Path: A0 -> A3R3 -> C2 (counter-evidence) -> C3 (optimal)",
+            ha="center", fontsize=10, fontstyle="italic", color="#7F8C8D")
 
     fig.tight_layout()
     out_path = os.path.join(OUT_DIR, "tech_roadmap.pdf")
