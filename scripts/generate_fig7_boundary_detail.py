@@ -67,8 +67,17 @@ def load_npz(path):
     return img, mask
 
 
+def to_2d(mask):
+    """Ensure mask is 2D (H, W). If 3D, take the middle slice."""
+    mask = np.squeeze(mask)
+    if mask.ndim == 3:
+        mask = mask[mask.shape[0] // 2]
+    return mask
+
+
 def colorize_mask(mask):
-    h, w = mask.shape[:2]
+    mask = to_2d(mask)
+    h, w = mask.shape
     rgb = np.zeros((h, w, 3), dtype=np.uint8)
     for label_id, color in enumerate(ORGAN_COLORS):
         rgb[mask == label_id] = color
@@ -78,7 +87,7 @@ def colorize_mask(mask):
 def find_boundary_roi(mask, roi_size=128):
     """Find a region with interesting organ boundaries."""
     # Find boundary pixels (where adjacent pixels have different labels)
-    mask_2d = mask.squeeze()
+    mask_2d = to_2d(mask)
     h, w = mask_2d.shape
 
     # Simple boundary detection via gradient
@@ -135,7 +144,7 @@ def main():
     for name in experiments:
         _, mask = load_npz(pred_files[name][idx])
         if mask is not None:
-            masks[name] = mask.squeeze()
+            masks[name] = to_2d(mask)
 
     # Find boundary ROI from A3R3 prediction
     ref_mask = masks.get("A3R3", list(masks.values())[0])
