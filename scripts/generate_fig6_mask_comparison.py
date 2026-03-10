@@ -76,9 +76,18 @@ def load_npz(path):
     return img, mask
 
 
+def to_2d(mask):
+    """Ensure mask is 2D (H, W). If 3D, take the middle slice."""
+    mask = np.squeeze(mask)
+    if mask.ndim == 3:
+        mask = mask[mask.shape[0] // 2]
+    return mask
+
+
 def colorize_mask(mask):
     """Convert label mask to RGB image."""
-    h, w = mask.shape[:2]
+    mask = to_2d(mask)
+    h, w = mask.shape
     rgb = np.zeros((h, w, 3), dtype=np.uint8)
     for label_id, color in enumerate(ORGAN_COLORS):
         rgb[mask == label_id] = color
@@ -147,14 +156,14 @@ def main():
 
     col = 0
     if gt_mask is not None:
-        axes[col].imshow(colorize_mask(gt_mask.squeeze()))
+        axes[col].imshow(colorize_mask(gt_mask))
         axes[col].set_title("Ground Truth", fontsize=11, fontweight="bold")
         axes[col].axis("off")
         col += 1
 
     for name in EXPERIMENTS:
         if name in masks:
-            axes[col].imshow(colorize_mask(masks[name].squeeze()))
+            axes[col].imshow(colorize_mask(masks[name]))
             label = {
                 "A0": "A0 Baseline\nDSC=0.941",
                 "A3R3": "A3R3 Balance\nDSC=0.960",
