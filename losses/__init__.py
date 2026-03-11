@@ -8,10 +8,12 @@ from .balance_loss import (
     InterClassBalanceLoss,
     IntraClassBalanceLoss,
     BalanceLoss,
+    DiceFocalLoss,
 )
 
 __all__ = [
     'InterClassBalanceLoss',
     'IntraClassBalanceLoss',
     'BalanceLoss',
+    'DiceFocalLoss',
 ]

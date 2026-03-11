@@ -17,7 +17,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
-from losses import BalanceLoss, InterClassBalanceLoss, IntraClassBalanceLoss
+from losses import BalanceLoss, InterClassBalanceLoss, IntraClassBalanceLoss, DiceFocalLoss
 from models.medsam_fss import MedSAMFSS, apply_lora_to_image_encoder, LocalGlobalAdapter
 from segment_anything import sam_model_registry
 
@@ -111,7 +111,7 @@ def build_arg_parser():
         "-loss_type",
         type=str,
         default="baseline",
-        choices=["baseline", "dicece", "inter_cbl", "intra_cbl", "balance"],
+        choices=["baseline", "dicece", "inter_cbl", "intra_cbl", "balance", "focal"],
     )
     parser.add_argument("-stage1_epochs", type=int, default=50)
     parser.add_argument("--inter_neg_ratio", type=float, default=3.0)
@@ -123,6 +123,8 @@ def build_arg_parser():
     parser.add_argument("--balance_neg_ratio", type=float, default=3.0)
     parser.add_argument("--balance_hard_threshold", type=float, default=0.9)
     parser.add_argument("--balance_hard_weight", type=float, default=2.0)
+    parser.add_argument("--focal_alpha", type=float, default=0.25)
+    parser.add_argument("--focal_gamma", type=float, default=2.0)
 
     parser.add_argument("-use_attention", type=str2bool, default=False)
     parser.add_argument("-attention_embed_dim", type=int, default=256)
@@ -309,6 +311,15 @@ def main_worker(gpu, ngpus_per_node, args):
             f"neg_ratio={args.balance_neg_ratio}, hard_threshold={args.balance_hard_threshold}, "
             f"hard_weight={args.balance_hard_weight}"
         )
+    elif loss_type == "focal":
+        custom_loss = DiceFocalLoss(
+            focal_alpha=args.focal_alpha,
+            focal_gamma=args.focal_gamma,
+        )
+        print(
+            f"[Rank {rank}] Using Dice+Focal Loss: alpha={args.focal_alpha}, "
+            f"gamma={args.focal_gamma}"
+        )
     else:
         custom_loss = None
         print(f"[Rank {rank}] Using Baseline Dice + BCE")
@@ -357,6 +368,8 @@ def main_worker(gpu, ngpus_per_node, args):
                     loss = custom_loss(pred, gt2d, epoch=epoch)
                 elif loss_type in {"inter_cbl", "intra_cbl"}:
                     loss = custom_loss(pred, gt2d) + seg_loss(pred, gt2d)
+                elif loss_type == "focal":
+                    loss = custom_loss(pred, gt2d)
                 else:
                     loss = seg_loss(pred, gt2d) + ce_loss(pred, gt2d.float())
 

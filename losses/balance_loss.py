@@ -195,3 +195,38 @@ class BalanceLoss(nn.Module):
             loss = self.alpha * inter + self.beta * intra + self.gamma * dice
 
         return loss
+
+
+class DiceFocalLoss(nn.Module):
+    """Dice + Focal Loss baseline (A0-focal)."""
+
+    def __init__(self, focal_alpha=0.25, focal_gamma=2.0):
+        super().__init__()
+        self.focal_alpha = focal_alpha
+        self.focal_gamma = focal_gamma
+
+    def dice_loss(self, pred, target, smooth=1e-5):
+        pred_prob = torch.sigmoid(pred)
+        pred_flat = pred_prob.view(-1)
+        target_flat = target.view(-1).float()
+        intersection = (pred_flat * target_flat).sum()
+        dice = (2.0 * intersection + smooth) / (
+            pred_flat.sum() + target_flat.sum() + smooth
+        )
+        return 1 - dice
+
+    def focal_loss(self, pred, target):
+        pred_flat = pred.view(-1)
+        target_flat = target.view(-1).float()
+        bce = F.binary_cross_entropy_with_logits(
+            pred_flat, target_flat, reduction="none"
+        )
+        pt = torch.exp(-bce)
+        alpha_t = self.focal_alpha * target_flat + (1 - self.focal_alpha) * (
+            1 - target_flat
+        )
+        focal = alpha_t * (1 - pt) ** self.focal_gamma * bce
+        return focal.mean()
+
+    def forward(self, pred, target, **kwargs):
+        return self.dice_loss(pred, target) + self.focal_loss(pred, target)
