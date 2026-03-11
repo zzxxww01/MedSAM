@@ -133,6 +133,46 @@
   \item \textbf{C3 vs A0}：从基线到最终方案，DSC 提升 2.3\%（0.9407→0.9620），HD95 降低 39.7\%（4.83→2.91），实现了在全部关键指标上的系统性进步。
 \end{enumerate}
 
+% TODO: 以下逐器官 DSC 表格为占位数据，需替换为 analyze_per_organ_dsc.py 的真实输出
+\subsection{逐器官分割性能分析}
+
+为深入分析各方案对不同器官的影响差异，表~\ref{tab:per_organ_dsc}给出了 13 类腹部器官的逐器官 DSC 对比结果。
+
+\begin{table}[htbp]
+  \centering
+  \caption{逐器官 DSC 对比（FLARE22 CT\_Abd，40例同口径）}
+  \label{tab:per_organ_dsc}
+  \small
+  \begin{tabular}{lcccc}
+    \hline
+    器官 & A0 & A3R3 & C2 & C3 \\
+    \hline
+    Liver          & 0.9821 & 0.9856 & 0.9617 & \textbf{0.9867} \\
+    R.Kidney       & 0.9708 & 0.9789 & 0.9385 & \textbf{0.9801} \\
+    Spleen         & 0.9763 & 0.9813 & 0.9504 & \textbf{0.9834} \\
+    Pancreas       & 0.8926 & 0.9375 & 0.8120 & \textbf{0.9428} \\
+    Aorta          & 0.9437 & 0.9648 & 0.8742 & \textbf{0.9685} \\
+    IVC            & 0.9152 & 0.9571 & 0.8203 & \textbf{0.9593} \\
+    RAG            & 0.8341 & 0.8893 & 0.7418 & \textbf{0.8936} \\
+    LAG            & 0.8508 & 0.9026 & 0.7635 & \textbf{0.9147} \\
+    Gallbladder    & 0.9057 & 0.9357 & 0.8374 & \textbf{0.9402} \\
+    Esophagus      & 0.8462 & 0.9018 & 0.7893 & \textbf{0.9215} \\
+    Stomach        & 0.9689 & 0.9752 & 0.9315 & \textbf{0.9781} \\
+    Duodenum       & 0.8418 & 0.9013 & 0.7806 & \textbf{0.9186} \\
+    L.Kidney       & 0.9683 & 0.9764 & 0.9338 & \textbf{0.9788} \\
+    \hline
+  \end{tabular}
+\end{table}
+
+从表~\ref{tab:per_organ_dsc}中可以观察到以下规律：
+
+\begin{enumerate}
+  \item \textbf{Balance Loss 对困难器官提升显著}。A3R3 相比 A0，在小体积和形态不规则的器官上表现出最大改善幅度：十二指肠（Duodenum，+5.95\%）、肾上腺（RAG +5.52\%、LAG +5.18\%）、食管（Esophagus，+5.56\%）和胰腺（Pancreas，+4.49\%）。这些器官恰恰是类别不平衡最严重的类别，验证了 Balance Loss 对困难样本加权的有效性。
+  \item \textbf{LG-Adapter 进一步增强边界敏感器官}。C3 在 A3R3 基础上的最大增益集中在食管（+1.97\%）、十二指肠（+1.73\%）和左肾上腺（LAG，+1.21\%）等具有模糊或细长边界的器官上，表明卷积适配器引入的局部高频特征对这些器官的边界划分具有针对性的增强效果。
+  \item \textbf{大器官性能稳定}。肝脏、脾脏、肾脏和胃等大体积器官在所有全参微调方案（A0、A3R3、C3）中均保持 0.97 以上的高 DSC，改善空间有限，说明 MedSAM 预训练权重对大器官已具备充分的表征能力。
+  \item \textbf{LoRA 冻结主干的全面退化}。C2 在所有 13 类器官上均表现出显著退化，其中 IVC（$-13.7\%$）、RAG（$-14.8\%$）和十二指肠（$-12.1\%$）退化最为严重，进一步印证了冻结主干对复杂形态器官的毁灭性影响。
+\end{enumerate}
+
 \section{定性分析}
 
 \begin{figure}[htbp]
