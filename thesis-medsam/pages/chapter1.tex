@@ -4,21 +4,43 @@
 
 医学图像分割是计算机辅助诊断、术前规划和放疗勾画中的关键基础能力\cite{litjens2017survey}。高质量分割结果直接影响器官体积估计、病灶边界判读以及下游治疗决策。相比自然图像任务，医学图像分割具有两个长期痛点：第一，器官或病灶前景像素占比低，训练过程容易被大量背景样本主导；第二，边界区域和低对比区域的困难像素对最终临床可用性影响大，但在常规训练中常被简单样本淹没\cite{hesamian2019survey}。
 
-深度学习技术的发展推动了医学分割方法的持续进步。从全卷积网络（FCN）\cite{long2015fcn}到 U-Net\cite{ronneberger2015unet}，再到 nnU-Net\cite{isensee2021nnunet}和基于 Transformer 的 TransUNet\cite{chen2021transunet}、Swin-Unet\cite{cao2022swinunet}，模型的表征能力不断增强。近年来，Segment Anything Model（SAM）\cite{kirillov2023segment}为统一提示式分割提供了新范式，其后续版本 SAM 2\cite{ravi2024sam2}进一步扩展到视频领域。在医学领域，MedSAM\cite{ma2024medsam}将 SAM 迁移并微调到大规模医学数据，显著提升了跨任务可用性。但在现实复杂的腹部多器官分割任务中，基座模型仍存在"类别不平衡显式建模不足"和"高频边缘特征提取极为欠缺"两个限制。围绕这两个核心限制展开架构与损失层面的改进，具有极大的研究价值与工程价值。
+深度学习技术的发展推动了医学分割方法的持续进步。从全卷积网络（FCN）\cite{long2015fcn}到 U-Net\cite{ronneberger2015unet}，再到 nnU-Net\cite{isensee2021nnunet}和基于 Transformer 的 TransUNet\cite{chen2021transunet}、Swin-Unet\cite{cao2022swinunet}，模型的表征能力不断增强。近年来，Segment Anything Model（SAM）\cite{kirillov2023segment}为统一提示式分割提供了新范式，其后续版本 SAM 2\cite{ravi2024sam2}进一步扩展到视频领域。在医学领域，MedSAM\cite{ma2024medsam}将 SAM 迁移并微调到大规模医学数据，显著提升了跨任务可用性。但在现实复杂的腹部多器官分割任务中，基座模型仍存在"类别不平衡显式建模不足"和"高频边缘特征提取较为欠缺"两个限制。围绕这两个核心限制展开架构与损失层面的改进，具有重要的研究价值与工程价值。
 
 \section{国内外研究现状}
 
 \subsection{医学图像分割模型发展}
 
-医学分割方法经历了从卷积网络到 Transformer，再到视觉基础模型迁移的演进\cite{wang2022medseg_survey}。U-Net\cite{ronneberger2015unet}奠定了编码器-解码器结构的经典范式；nnU-Net\cite{isensee2021nnunet}通过自动化配置在多个医学分割基准上取得了领先性能；TransUNet\cite{chen2021transunet}首次将 Transformer 引入医学分割，验证了全局注意力对长距离依赖建模的有效性。基于提示的通用分割范式将"一个模型适配多任务"从研究概念推向可用框架\cite{kirillov2023segment}。MedSAM\cite{ma2024medsam}的提出则验证了该范式在医学场景中的迁移潜力，而 SAMed\cite{zhang2024samed}、Medical SAM Adapter\cite{wu2023medsamadapter}等后续工作进一步探索了如何将 SAM 高效适配到特定医学任务。
+医学图像分割方法经历了从传统方法到深度学习，再到视觉基础模型迁移的多阶段演进\cite{wang2022medseg_survey}。
+
+在深度学习时代之前，医学图像分割主要依赖于基于阈值、区域生长、活动轮廓模型等传统方法\cite{litjens2017survey}。这些方法虽然在特定场景下有效，但严重依赖手工特征设计和先验知识，面对复杂的解剖结构和多变的成像条件时泛化能力不足。
+
+全卷积网络（FCN）\cite{long2015fcn}的提出标志着深度学习在语义分割领域的突破，其通过端到端的像素级预测取代了传统的手工特征管线。U-Net\cite{ronneberger2015unet}在此基础上引入了对称的编码器-解码器结构和跳跃连接机制，使深层语义信息与浅层空间细节有效融合，奠定了医学图像分割的经典范式。此后，研究者从多个方向对 U-Net 进行了改进：UNet++\cite{zhou2018unetpp}通过密集嵌套的跳跃路径缓解了编码器与解码器之间的语义鸿沟；Attention U-Net\cite{oktay2018attention}引入注意力门控机制，使模型能够自适应地聚焦于目标区域，在胰腺等小器官分割中表现尤为突出；3D U-Net\cite{cicek20163dunet}将 U-Net 架构扩展到三维体积数据，利用帧间空间信息提升了体积分割精度。V-Net\cite{milletari2016vnet}不仅引入了三维卷积架构，还首次提出了 Dice Loss，为后续处理类别不平衡问题奠定了基础。
+
+在自动化配置方面，nnU-Net\cite{isensee2021nnunet}通过自适应的预处理、网络拓扑和后处理策略，在无需手动调参的情况下在多个医学分割基准上取得了领先性能，成为医学图像分割的强基线。在语义分割的多尺度建模方面，PSPNet\cite{zhao2017pspnet}提出金字塔池化模块捕获不同尺度的上下文信息，DeepLabV3\cite{chen2017deeplabv3}和 DeepLabV3+\cite{chen2018deeplabv3plus}则通过空洞空间金字塔池化（ASPP）和编码器-解码器结构实现了多尺度特征的有效聚合。DenseNet\cite{huang2017densenet}提出的密集连接策略通过特征复用增强了梯度流动，也被广泛应用于医学分割网络的构建。
+
+随着 Transformer 架构在视觉领域的引入，医学图像分割进入了新的阶段。TransUNet\cite{chen2021transunet}首次将 Transformer 编码器与 CNN 解码器相结合，验证了全局自注意力机制对长距离依赖建模的有效性。SETR\cite{zheng2021setr}进一步证明了纯 Transformer 架构在语义分割任务上的可行性。Swin Transformer\cite{liu2021swin}通过层次化的移动窗口自注意力机制在计算效率与全局建模之间取得了平衡，Swin-Unet\cite{cao2022swinunet}将其应用于医学分割，构建了纯 Transformer 的 U 形网络。SegFormer\cite{xie2021segformer}则提出了轻量化的分层 Transformer 编码器，通过混合 FFN 实现了高效的多尺度特征提取。在三维医学分割方面，UNETR\cite{hatamizadeh2022unetr}将 ViT 与 U-Net 解码器结合，在 CT 和 MRI 的多器官分割任务上取得了优异表现。
+
+基于提示的通用分割范式代表了该领域的最新趋势。SAM\cite{kirillov2023segment}将"一个模型适配多任务"从研究概念推向了可用框架，其后续版本 SAM 2\cite{ravi2024sam2}进一步扩展到视频领域。MedSAM\cite{ma2024medsam}的提出验证了该范式在医学场景中的迁移潜力，而 SAMed\cite{zhang2024samed}、Medical SAM Adapter\cite{wu2023medsamadapter}、SAM-Med2D\cite{cheng2023sammed2d}、SAM-Med3D\cite{wang2023sammed3d}等后续工作进一步探索了如何将 SAM 高效适配到特定医学任务。Mazurowski 等\cite{mazurowski2023sam_survey}对 SAM 在医学图像分析中的应用进行了系统性评估，指出其在医学领域仍存在显著的性能差距，特别是在小目标和模糊边界场景下。
 
 \subsection{不平衡学习方法}
 
-针对长尾问题，Class-Balanced Loss\cite{cui2019classbalanced}通过有效样本数建模多数类信息冗余，给出了系统化重加权方法。针对难样本学习，OHEM\cite{shrivastava2016ohem}提出在线困难样本挖掘，Focal Loss\cite{lin2017focal}通过连续调制因子降低易样本权重。Dice Loss\cite{milletari2016vnet}从集合重叠度角度提供了对不平衡数据的天然鲁棒性。这些思想为医学分割中的"前景稀疏 + 难样本稀缺"问题提供了方法学基础。
+类别不平衡是医学图像分割中长期存在的核心问题\cite{litjens2017survey}。在腹部多器官分割中，背景像素通常占据图像的 90\% 以上，而小器官（如肾上腺、十二指肠）的前景像素占比不足 1\%，形成了严重的长尾分布。
+
+针对类别间不平衡，Class-Balanced Loss\cite{cui2019classbalanced}通过有效样本数建模多数类的信息冗余，给出了系统化的类别重加权方法。针对难样本挖掘，OHEM\cite{shrivastava2016ohem}提出在线困难样本挖掘策略，通过筛选高损失样本强化边界区域学习；Focal Loss\cite{lin2017focal}采用连续调制因子 $(1-p_t)^\gamma$ 降低易样本权重，使模型自动聚焦于困难样本；GHM\cite{li2019ghm}从梯度密度的角度重新审视了样本加权问题，通过梯度调和机制抑制异常样本对训练的干扰。
+
+在损失函数设计方面，Dice Loss\cite{milletari2016vnet}从集合重叠度角度提供了对不平衡数据的天然鲁棒性，是医学分割中最常用的损失函数之一。Tversky Loss\cite{salehi2017tversky}通过引入可调节的假阳性与假阴性权重参数，提供了比 Dice Loss 更灵活的召回率-精确率权衡机制，特别适用于小目标分割场景。Lov\'{a}sz-Softmax\cite{berman2018lovasz}直接优化 IoU 指标的凸代理函数，为分割损失的设计提供了理论最优性保证。上述方法虽然分别从不同维度缓解了不平衡问题，但尚未有工作将类别间重平衡与类别内难度加权进行联合建模——这正是本文第3章 Balance Loss 的核心创新点。
 
 \subsection{参数高效微调与空间适配器}
 
-随着大模型的普及，LoRA\cite{hu2022lora}等参数高效微调（PEFT）技术通过冻结主干来极大缩小训练成本。Adapter\cite{houlsby2019adapter}方法则通过在预训练模型层间插入轻量瓶颈模块实现任务适配。然而，在医学图像分割这种强依赖密集空间重塑的任务上，单纯冻结主干往往导致性能塌陷。近期研究表明，ViT 的全局注意力与 CNN 的局部归纳偏置具有高度互补性\cite{dai2021coatnet}，将两者结合可在多种任务上获得更优性能。在医学 SAM 适配领域，I-MedSAM\cite{yue2024imedsam}等工作提出通过频率域或空间域适配器增强高频边缘响应，这为突破基于 ViT 架构的 SAM 模型的性能瓶颈提供了全新思路。
+随着视觉基础模型参数规模的急剧增长（如 ViT-Base 约 86M、ViT-Large 约 307M 参数），全参数微调的计算成本和存储需求日益高企。参数高效微调（Parameter-Efficient Fine-Tuning, PEFT）技术通过冻结预训练模型的大部分参数、仅更新少量可训练参数来实现任务适配，成为大模型时代迁移学习的主流范式。
+
+LoRA\cite{hu2022lora}通过对预训练权重矩阵的增量进行低秩分解，以不到 1\% 的可训练参数量在 NLP 任务上达到接近全参微调的效果。Visual Prompt Tuning（VPT）\cite{jia2022vpt}通过在 ViT 输入序列中插入可学习的提示令牌来引导模型行为，无需修改模型内部结构。AdaptFormer\cite{chen2022adaptformer}在 ViT 的前馈网络中插入轻量级并行分支，在视觉识别任务上实现了高效的任务适配。Adapter\cite{houlsby2019adapter}方法通过在预训练模型的层间插入小型瓶颈模块来实现任务适配，与 LoRA 的区别在于引入了额外的网络结构而非修改现有权重矩阵。
+
+然而，在医学图像分割这种强依赖密集空间重塑的任务上，单纯冻结主干往往导致性能塌陷。近期研究表明，ViT 的全局注意力与 CNN 的局部归纳偏置具有高度互补性\cite{dai2021coatnet}，将两者结合可在多种任务上获得更优性能。在医学 SAM 适配领域，I-MedSAM\cite{yue2024imedsam}等工作提出通过频率域或空间域适配器增强高频边缘响应，这为突破基于 ViT 架构的 SAM 模型的性能瓶颈提供了新思路。Tang 等\cite{tang2022selfpre}则探索了 Swin Transformer 在三维医学图像上的自监督预训练策略，进一步验证了视觉 Transformer 在医学领域的迁移潜力。
+
+\subsection{腹部多器官分割相关工作}
+
+腹部多器官分割是医学图像分割中最具挑战性的任务之一，面临器官形态差异大、组织边界模糊、类别数量多等困难。近年来，多个国际挑战赛推动了该领域的快速发展：FLARE22\cite{ma2022flare}聚焦于快速低显存的腹部器官分割，提供了包含 13 类腹部结构的标准化评测数据；AMOS\cite{ji2022amos}提供了大规模的跨模态（CT + MRI）腹部多器官标注，涵盖 15 个解剖结构；TotalSegmentator\cite{wasserthal2023totalsegmentator}则将全身 CT 分割扩展到 104 个解剖结构，为大规模多器官分割研究提供了重要的数据支撑。这些基准数据集的建设，使得不同方法之间的公平对比评估成为可能，也为本文选择 FLARE22 作为统一评测基准提供了充分依据。
 
 \section{研究问题与挑战}
 
@@ -27,7 +49,7 @@
 \begin{enumerate}
   \item \textbf{双重不平衡挑战}：类间不平衡导致前景召回受限，类内不平衡导致边界学习不足。现有损失函数（如 Dice+CE 组合）未对此进行显式建模。
   \item \textbf{医疗域强异质性挑战}：冻结大模型主干进行极简微调难以跨越医疗图像复杂的形态学鸿沟。FLARE22\cite{ma2022flare}数据集包含 13 类形态差异巨大的腹部器官，从体积最大的肝脏到微小的肾上腺，要求模型具备强大的特征空间重塑能力。
-  \item \textbf{高频特征丢失挑战}：ViT\cite{dosovitskiy2021vit}的全局注意力机制极容易平滑掉器官或病灶的细微物理边缘，而这些边缘信息恰恰是临床应用中最关键的判别依据。
+  \item \textbf{高频特征丢失挑战}：ViT\cite{dosovitskiy2021vit}的全局注意力机制容易平滑掉器官或病灶的细微物理边缘，而这些边缘信息恰恰是临床应用中最关键的判别依据。
 \end{enumerate}
 
 \section{研究目标与技术路线}
@@ -39,10 +61,10 @@
   \label{fig:tech_roadmap}
 \end{figure}
 
-本研究提出了一种"三核驱动"的医学分割架构演进路线：
+如图~\ref{fig:tech_roadmap}所示，本研究提出了一种"三核驱动"的医学分割架构演进路线：
 \begin{enumerate}
   \item \textbf{第一核（损失层）}：构建可解释的联合平衡损失框架（A3R3），将 Inter-CBL 与 Intra-CBL 联合建模，强制模型关注医学困难样本。
-  \item \textbf{第二核（架构消融层）}：通过实施极简参数微调（LoRA）\cite{hu2022lora}，反向揭示"全参微调主干对于空间形变学习的极端重要性"。
+  \item \textbf{第二核（架构消融层）}：通过实施极简参数微调（LoRA）\cite{hu2022lora}，反向揭示"全参微调主干对于空间形变学习的重要性"。
   \item \textbf{第三核（特征流层）}：在网络深层插入多尺度纯卷积适配器（Local-Global Adapter，简称 LG-Adapter），利用深度可分离卷积\cite{howard2017mobilenets}与膨胀卷积\cite{yu2016dilated}的局部归纳偏置重建器官的高频边缘。
 \end{enumerate}
 
@@ -51,9 +73,9 @@
 围绕上述挑战，本文的主要贡献如下：
 
 \begin{enumerate}
-  \item \textbf{理论维度}：提出 Balance Loss 框架，将 Inter-CBL 与 Intra-CBL 结合并引入两阶段训练策略，通过严格的假设检验（单变量剥离 R2/R3）定位退化根因，显著提升了 Baseline 性能（DSC 从 0.941 跃升至 0.959）。
-  \item \textbf{架构维度}：设计并验证了多尺度 Local-Global 适配器，通过双路径深度可分离卷积完美弥补了 SAM 在边缘划分上的弱视，刷新了医学多器官分割的上限（DSC 达 0.9620，HD95 降至 2.91）。
-  \item \textbf{工程维度}：通过详实的 LoRA 消融实验（DSC 退化至 0.879），为医学大模型领域"是否必须解冻主干"提供了极具价值的负向参考结论和完整的复现证据链。
+  \item \textbf{理论维度}：提出 Balance Loss 框架，将 Inter-CBL 与 Intra-CBL 结合并引入两阶段训练策略，通过严格的假设检验（单变量剥离 R2/R3）定位退化根因，显著提升了 Baseline 性能（DSC 从 0.941 提升至 0.959）。
+  \item \textbf{架构维度}：设计并验证了多尺度 Local-Global 适配器，通过双路径深度可分离卷积有效弥补了 SAM 在边缘划分上的不足，刷新了医学多器官分割的上限（DSC 达 0.9620，HD95 降至 2.91）。
+  \item \textbf{工程维度}：通过详实的 LoRA 消融实验（DSC 退化至 0.879），为医学大模型领域"是否必须解冻主干"提供了具有参考价值的负向结论和完整的复现证据链。
 \end{enumerate}
 
 \section{论文组织结构}
@@ -71,4 +93,4 @@
 
 \section{本章小结}
 
-本章围绕"为什么做、做什么、如何做"给出了完整问题陈述。本文以 MedSAM 为基座，采用损失重构结合多尺度架构适配器的"三核驱动"路线，构建了一套性能卓越且理论完备的腹部多器官高精度分割系统。
+本章围绕"为什么做、做什么、如何做"给出了完整问题陈述。本文以 MedSAM 为基座，采用损失重构结合多尺度架构适配器的"三核驱动"路线，构建了一套性能优异的腹部多器官高精度分割系统。

@@ -20,7 +20,14 @@ MedSAM 的核心架构由三个模块组成\cite{kirillov2023segment, ma2024meds
   \item \textbf{Mask Decoder}：通过轻量级 Transformer 结构融合 Image Embedding 与 Prompt Embedding，经双向交叉注意力（prompt-to-image 和 image-to-prompt）和上采样层生成最终的分割掩码。
 \end{enumerate}
 
-在 MedSAM 的标准训练设定中，Prompt Encoder 通常冻结，仅更新 Image Encoder 与 Mask Decoder\cite{ma2024medsam}。
+在 MedSAM 的标准训练设定中，Prompt Encoder 通常冻结，仅更新 Image Encoder 与 Mask Decoder\cite{ma2024medsam}。图~\ref{fig:medsam_arch}展示了 MedSAM 的三段式架构及数据流向。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/medsam_arch.pdf}
+  \caption{MedSAM 三段式架构示意图（Image Encoder + Prompt Encoder + Mask Decoder）}
+  \label{fig:medsam_arch}
+\end{figure}
 
 \subsection{关键计算流程}
 
@@ -120,7 +127,7 @@ Attention(Q,K,V)=softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 
 \subsection{跨样本注意力融合的早期探索}
 
-在本文的研究过程中，曾探索过基于交叉注意力的跨病例特征融合策略，即利用 PANet\cite{wang2019panet}提出的 support-query 对齐思想，在分割当前样本时引入参考样本的特征作为先验。然而，实验结果（C1 实验，详见第5章）表明，这种粗暴的跨样本特征融合在与 Balance Loss 组合时出现了严重的性能退化（DSC 从 0.9596 降至 0.9427），表明直接的特征空间加和会破坏 MedSAM 基座已建立的语义表征。该负向发现促使本文转向更为精细的卷积适配器方案（LG-Adapter），并将 C1 作为消融反例写入实验分析。
+在本文的研究过程中，曾探索过基于交叉注意力的跨病例特征融合策略，即利用 PANet\cite{wang2019panet}提出的 support-query 对齐思想，在分割当前样本时引入参考样本的特征作为先验。然而，实验结果（C1 实验，详见第5章）表明，这种直接的跨样本特征融合在与 Balance Loss 组合时出现了严重的性能退化（DSC 从 0.9596 降至 0.9427），表明直接的特征空间加和会破坏 MedSAM 基座已建立的语义表征。该负向发现促使本文转向更为精细的卷积适配器方案（LG-Adapter），并将 C1 作为消融反例写入实验分析。
 
 \section{评价指标与实验口径}
 

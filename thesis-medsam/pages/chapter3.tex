@@ -1,5 +1,7 @@
 \chapter{基于 Balance Loss 的医学图像分割方法}
 
+针对第1章提出的双重类别不平衡挑战，本章设计了一套联合梯度平衡损失框架——Balance Loss。该框架从类别间平衡（Inter-CBL）和类别内难度加权（Intra-CBL）两个维度对像素级训练信号进行重新建模，并引入两阶段训练策略以缓解冷启动噪声。本章将依次阐述问题定义、各组件的设计动机与形式化表达、完整损失函数的组合方式，以及系统性的消融实验与假设检验过程。
+
 \section{问题定义与总体思路}
 
 在 MedSAM 的提示式分割框架下，模型输出本质是前景/背景二分类掩码。医学场景中前景像素通常显著少于背景像素，同时困难像素（边界、低对比区域）比例也偏低。为解决该双重不平衡问题，本文设计 Balance Loss，将类别间平衡与类别内难度加权联合建模。
@@ -61,9 +63,9 @@ L_{balance}=\alpha L_{inter}+\beta L_{intra}+\gamma L_{dice}
 
 最终确定的超参数配置为：$\alpha = 0.5$，$\beta = 1.0$，$\gamma = 1.0$，$T_1 = 50$（即 stage1\_epochs），$\tau = 0.9$（intra\_threshold），$w_h = 2.0$（hard\_weight），$\text{neg\_ratio} = 3.0$。该配置的确定过程将在消融实验中详细阐述。
 
+Balance Loss 的完整组件与两阶段训练策略如图~\ref{fig:balance_loss_flow}所示。
+
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.85\textwidth]{figures/balance_loss_flow.pdf}
   \caption{Balance Loss 组件与两阶段训练策略流程图}
   \label{fig:balance_loss_flow}
 \end{figure}
@@ -104,7 +106,7 @@ L_{balance}=\alpha L_{inter}+\beta L_{intra}+\gamma L_{dice}
 
 \subsection{A3 原始版本退化分析}
 
-A3 将 Inter-CBL 与 Intra-CBL 以默认权重（$\alpha = 1.0$）联合使用，结果出现了出乎意料的严重退化（DSC 从 0.9526 骤降至 0.9035，降幅 5.2\%）。本文对此退化现象进行了以下根因分析：
+A3 将 Inter-CBL 与 Intra-CBL 以默认权重（$\alpha = 1.0$）联合使用，结果出现了显著退化（DSC 从 0.9526 骤降至 0.9035，降幅 5.2\%）。本文对此退化现象进行了以下根因分析：
 
 当 $\alpha = 1.0$ 时，Inter-CBL 的梯度贡献与 Intra-CBL 等量。由于 Inter-CBL 在每次前向传播中都要选取与前景等量的困难背景样本（通过 neg\_ratio=3.0 倍的背景采样），其在训练初期产生的梯度幅度极大，会与 Intra-CBL 对困难前景像素的梯度方向产生冲突。具体而言：Inter-CBL 倾向于压低高概率背景的输出，而 Intra-CBL 倾向于拉高低置信度前景的输出，两者在边界区域的梯度方向可能相互抵消，导致模型在边界处的学习效率急剧下降。
 
@@ -141,6 +143,8 @@ A3 将 Inter-CBL 与 Intra-CBL 以默认权重（$\alpha = 1.0$）联合使用�
   \item \textbf{A3R1}（同时修改两个变量）：DSC=0.9137，处于中间水平，说明双变量同时调整引入了混淆效应，不利于因果推断。
 \end{enumerate}
 
+图~\ref{fig:training_curves}展示了 A0 与 A3R3 的训练损失变化曲线，可直观观察到 A3R3 在第二阶段引入 Inter-CBL 后的收敛行为差异。
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.85\textwidth]{figures/training_curves.pdf}
@@ -171,4 +175,4 @@ A3R3 相比 A0 基线实现了 DSC +2.0\%、HD95 $-53.4\%$、ASD $-54.2\%$ 的�
 
 \section{本章小结}
 
-本章提出了面向医学分割双重不平衡问题的 Balance Loss 框架，由类别间平衡（Inter-CBL）、类别内难度加权（Intra-CBL）和 Dice 损失三个组件联合构成，并引入两阶段训练策略以缓解冷启动噪声。通过系统性的组件消融和严格的假设检验实验（单变量剥离 R2/R3），本文将 A3 原始版本退化的根因锁定为 Inter-CBL 权重过大（H1 通过、H2 否定），并最终确定 $\alpha=0.5$ 的 A3R3 配置为最佳泛化方案（DSC 从基线的 0.9407 跃升至 0.9596）。A3R3 构成了本文的第一核心创新点，并作为后续架构创新（第4章）的损失主干。
+本章提出了面向医学分割双重不平衡问题的 Balance Loss 框架，由类别间平衡（Inter-CBL）、类别内难度加权（Intra-CBL）和 Dice 损失三个组件联合构成，并引入两阶段训练策略以缓解冷启动噪声。通过系统性的组件消融和严格的假设检验实验（单变量剥离 R2/R3），本文将 A3 原始版本退化的根因锁定为 Inter-CBL 权重过大（H1 通过、H2 否定），并最终确定 $\alpha=0.5$ 的 A3R3 配置为最佳泛化方案（DSC 从基线的 0.9407 提升至 0.9596）。A3R3 构成了本文的第一核心创新点，并作为后续架构创新（第4章）的损失主干。
