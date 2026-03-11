@@ -66,6 +66,8 @@ L_{balance}=\alpha L_{inter}+\beta L_{intra}+\gamma L_{dice}
 Balance Loss 的完整组件与两阶段训练策略如图~\ref{fig:balance_loss_flow}所示。
 
 \begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figures/balance_loss_flow.pdf}
   \caption{Balance Loss 组件与两阶段训练策略流程图}
   \label{fig:balance_loss_flow}
 \end{figure}
@@ -172,6 +174,29 @@ A3 将 Inter-CBL 与 Intra-CBL 以默认权重（$\alpha = 1.0$）联合使用�
 \end{table}
 
 A3R3 相比 A0 基线实现了 DSC +2.0\%、HD95 $-53.4\%$、ASD $-54.2\%$ 的全面提升；相比单独使用 Intra-CBL 的 A2，仍有 DSC +0.7\%、HD95 $-33.2\%$、ASD $-34.3\%$ 的进一步改善。这证明了 Inter-CBL 在适当权重下确实能为 Intra-CBL 提供有益的补充。
+
+\subsection{Intra-CBL 阈值 $\tau$ 敏感性分析}
+
+为验证 Intra-CBL 中困难样本阈值 $\tau$ 的选取对性能的影响，本文在 A2 实验框架下补充了 $\tau \in \{0.5, 0.7, 0.8, 0.9\}$ 的对比实验。各实验除 $\tau$ 取值不同外，其余训练配置完全一致（AdamW, lr=$1 \times 10^{-4}$, 200 epochs）。结果如表~\ref{tab:tau_sensitivity}所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{Intra-CBL 阈值 $\tau$ 敏感性分析（CT\_Abd，40例）}
+  \label{tab:tau_sensitivity}
+  \begin{tabular}{lcccc}
+    \hline
+    实验 & $\tau$ & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
+    \hline
+    A2-$\tau$0.5 & 0.5 & -- & -- & -- \\
+    A2-$\tau$0.7 & 0.7 & -- & -- & -- \\
+    A2-$\tau$0.8 & 0.8 & -- & -- & -- \\
+    A2 ($\tau$=0.9) & 0.9 & 0.9526 & 3.3684 & 0.3749 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+% TODO: 训练完成后填入实际数据并更新分析
+从理论上分析，$\tau$ 过低（如 0.5）会将大量中等置信度的像素也划为困难样本，导致困难样本权重对几乎所有像素生效，退化为近似均匀加权；$\tau$ 过高则仅关注极少数极端困难像素，可能遗漏部分需要重点学习的边界区域。$\tau=0.9$ 的选取在先验上倾向于"仅对真正困难的样本施加额外关注"，是一种保守但有效的策略。
 
 \section{本章小结}
 

@@ -16,7 +16,7 @@ echo "======================================"
 
 # ── A0 Baseline ──
 echo ""
-echo "[1/4] A0 Baseline..."
+echo "[1/6] A0 Baseline..."
 python eval_medsam_npz.py \
     --data_root "$DATA_ROOT" \
     --checkpoint "work_dir/MedSAM-Baseline-20260208-1953/medsam_model_best.pth" \
@@ -27,7 +27,7 @@ python eval_medsam_npz.py \
 
 # ── A3R3 Balance Loss ──
 echo ""
-echo "[2/4] A3R3 Balance Loss..."
+echo "[2/6] A3R3 Balance Loss..."
 # 注意: A3R3 checkpoint 路径需要确认，以下为候选路径
 A3R3_CKPT=$(find work_dir -name "medsam_model_best.pth" -path "*A3R3*" -o -name "medsam_model_best.pth" -path "*BalanceR3*" 2>/dev/null | head -1)
 if [ -z "$A3R3_CKPT" ]; then
@@ -49,7 +49,7 @@ fi
 
 # ── C2 LoRA ──
 echo ""
-echo "[3/4] C2 LoRA..."
+echo "[3/6] C2 LoRA..."
 C2_CKPT=$(find work_dir -name "medsam_model_best.pth" -path "*C2*" -o -name "medsam_model_best.pth" -path "*LoRA*" 2>/dev/null | head -1)
 if [ -n "$C2_CKPT" ]; then
     python eval_medsam_npz.py \
@@ -67,7 +67,7 @@ fi
 
 # ── C3 LG-Adapter ──
 echo ""
-echo "[4/4] C3 LG-Adapter..."
+echo "[4/6] C3 LG-Adapter..."
 C3_CKPT=$(find work_dir -name "medsam_model_best.pth" -path "*C3*" -o -name "medsam_model_best.pth" -path "*LG*" 2>/dev/null | head -1)
 if [ -n "$C3_CKPT" ]; then
     python eval_medsam_npz.py \
@@ -80,6 +80,42 @@ if [ -n "$C3_CKPT" ]; then
         --save_pred_dir "${PRED_BASE}/C3"
 else
     echo "[ERROR] C3 checkpoint not found! Please specify manually."
+fi
+
+# ── C2-r8 LoRA rank=8 ──
+echo ""
+echo "[5/6] C2-r8 LoRA rank=8..."
+C2R8_CKPT=$(find work_dir -name "medsam_model_best.pth" -path "*C2-r8*" 2>/dev/null | head -1)
+if [ -n "$C2R8_CKPT" ]; then
+    python eval_medsam_npz.py \
+        --data_root "$DATA_ROOT" \
+        --checkpoint "$C2R8_CKPT" \
+        --exp_name C2-r8 \
+        -use_lora true \
+        -lora_rank 8 \
+        --out_csv "work_dir/eval_metrics/C2-r8_case_metrics.csv" \
+        --out_json "work_dir/eval_metrics/C2-r8_summary.json" \
+        --save_pred_dir "${PRED_BASE}/C2-r8"
+else
+    echo "[ERROR] C2-r8 checkpoint not found! Please specify manually."
+fi
+
+# ── C2-r16 LoRA rank=16 ──
+echo ""
+echo "[6/6] C2-r16 LoRA rank=16..."
+C2R16_CKPT=$(find work_dir -name "medsam_model_best.pth" -path "*C2-r16*" 2>/dev/null | head -1)
+if [ -n "$C2R16_CKPT" ]; then
+    python eval_medsam_npz.py \
+        --data_root "$DATA_ROOT" \
+        --checkpoint "$C2R16_CKPT" \
+        --exp_name C2-r16 \
+        -use_lora true \
+        -lora_rank 16 \
+        --out_csv "work_dir/eval_metrics/C2-r16_case_metrics.csv" \
+        --out_json "work_dir/eval_metrics/C2-r16_summary.json" \
+        --save_pred_dir "${PRED_BASE}/C2-r16"
+else
+    echo "[ERROR] C2-r16 checkpoint not found! Please specify manually."
 fi
 
 echo ""
