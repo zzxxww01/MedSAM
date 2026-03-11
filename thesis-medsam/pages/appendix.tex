@@ -1,11 +1,129 @@
-\chapter{附录标题}
+\chapter{附录}
 
-\section{附录内容示例}
+\section{Balance Loss 核心算法伪代码}
 
-如有需要，可在此添加附录内容，如：
+算法~\ref{alg:balance_loss}给出了 Balance Loss 框架中 Inter-CBL 和 Intra-CBL 的计算流程。
+
+\begin{table}[htbp]
+\centering
+\caption{Balance Loss 核心算法伪代码}
+\label{alg:balance_loss}
+\begin{tabular}{p{0.92\textwidth}}
+\hline
+\textbf{算法}：Balance Loss 计算流程 \\
+\hline
+\textbf{输入}：预测概率图 $\mathbf{p} \in [0,1]^{H \times W}$，真实标签 $\mathbf{y} \in \{0,1\}^{H \times W}$，\\
+\quad\quad\quad 超参数 $\alpha, \beta, \gamma, \tau, w_h, \text{neg\_ratio}$ \\
+\textbf{输出}：总损失 $L_{balance}$ \\
+\hline
+// \textbf{Step 1: Inter-CBL（类别间平衡损失）} \\
+1. 分离前景像素集合 $F = \{i : y_i = 1\}$ 和背景像素集合 $B = \{i : y_i = 0\}$ \\
+2. 计算所有背景像素的前景预测概率 $\{p_j\}_{j \in B}$ \\
+3. 按前景概率降序排列背景像素，取前 $|F| \times \text{neg\_ratio}$ 个作为困难背景集合 $H_B$ \\
+4. 计算 $L_{inter} = \frac{1}{2}\left(\frac{1}{|F|}\sum_{i \in F} \ell_i + \frac{1}{|H_B|}\sum_{j \in H_B} \ell_j\right)$ \\
+\\
+// \textbf{Step 2: Intra-CBL（类别内难度加权损失）} \\
+5. 计算每个像素的置信度误差 $e_i = |p_i - y_i|$ \\
+6. 按阈值 $\tau$ 划分：难样本 $H = \{i : e_i > \tau\}$，易样本 $E = \{i : e_i \leq \tau\}$ \\
+7. 计算 $L_{intra} = 1.0 \cdot \frac{1}{|E|}\sum_{i \in E} \ell_i + w_h \cdot \frac{1}{|H|}\sum_{j \in H} \ell_j$ \\
+\\
+// \textbf{Step 3: 损失组合} \\
+8. 计算 Dice 损失 $L_{dice} = 1 - \frac{2|\mathbf{y} \cap \hat{\mathbf{y}}|}{|\mathbf{y}| + |\hat{\mathbf{y}}|}$ \\
+9. \textbf{return} $L_{balance} = \alpha \cdot L_{inter} + \beta \cdot L_{intra} + \gamma \cdot L_{dice}$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{两阶段训练策略}
+
 \begin{itemize}
-  \item 详细的数据表格
-  \item 程序代码
-  \item 问卷调查
-  \item 其他补充材料
+  \item \textbf{Stage 1}（Epoch 0 至 $T_1=50$）：仅启用 $L_{intra} + L_{dice}$，此阶段 Inter-CBL 不参与计算。目的是在模型预测近似随机的初期避免困难背景挖掘引入噪声梯度。
+  \item \textbf{Stage 2}（Epoch $T_1$ 至终止）：引入完整的 $\alpha L_{inter} + \beta L_{intra} + \gamma L_{dice}$。此时模型已具备基础判别能力，Inter-CBL 的困难背景挖掘可以产生有效的梯度信号。
+\end{itemize}
+
+\section{LG-Adapter 核心代码}
+
+以下为 Local-Global Adapter 模块的 PyTorch 实现代码：
+
+\begin{verbatim}
+import torch
+import torch.nn as nn
+
+class LGAdapter(nn.Module):
+    """Local-Global Adapter: dual-path depthwise separable
+    convolution for multi-scale local feature enhancement."""
+
+    def __init__(self, embed_dim=256):
+        super().__init__()
+        # Path 1: standard 3x3 depthwise conv (local)
+        self.conv1 = nn.Conv2d(
+            embed_dim, embed_dim, kernel_size=3,
+            padding=1, groups=embed_dim, bias=True
+        )
+        # Path 2: dilated 3x3 depthwise conv (semi-global)
+        self.conv2 = nn.Conv2d(
+            embed_dim, embed_dim, kernel_size=3,
+            padding=2, dilation=2, groups=embed_dim, bias=True
+        )
+        # Pointwise conv for channel fusion (512 -> 256)
+        self.pointwise = nn.Conv2d(
+            embed_dim * 2, embed_dim, kernel_size=1, bias=True
+        )
+        self.act = nn.GELU()
+
+    def forward(self, x):
+        # x: (B, 256, 64, 64) from Image Encoder
+        f1 = self.act(self.conv1(x))   # local features
+        f2 = self.act(self.conv2(x))   # semi-global features
+        f_cat = torch.cat([f1, f2], dim=1)  # (B, 512, 64, 64)
+        f_out = self.pointwise(f_cat)       # (B, 256, 64, 64)
+        return x + f_out  # residual connection
+\end{verbatim}
+
+\textbf{参数量统计}：conv1 = 2,560，conv2 = 2,560，pointwise = 131,328，总计 \textbf{136,448} 个参数（占 MedSAM 93.7M 总参数的 0.15\%）。
+
+\section{超参数配置汇总}
+
+表~\ref{tab:hyperparams}汇总了本文各实验方案的关键超参数配置。
+
+\begin{table}[htbp]
+  \centering
+  \caption{各实验方案超参数配置}
+  \label{tab:hyperparams}
+  \begin{tabular}{lcccccc}
+    \hline
+    参数 & A0 & A2 & A3R3 & C2 & C3 \\
+    \hline
+    优化器 & AdamW & AdamW & AdamW & AdamW & AdamW \\
+    学习率 & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ \\
+    权重衰减 & 0.01 & 0.01 & 0.01 & 0.01 & 0.01 \\
+    Batch size & 8 & 8 & 8 & 8 & 8 \\
+    Epochs & 200 & 200 & 200 & 200 & 200 \\
+    \hline
+    $\alpha$ (Inter-CBL) & -- & -- & 0.5 & 0.5 & 0.5 \\
+    $\beta$ (Intra-CBL) & -- & 1.0 & 1.0 & 1.0 & 1.0 \\
+    $\gamma$ (Dice) & -- & 1.0 & 1.0 & 1.0 & 1.0 \\
+    $\tau$ (threshold) & -- & 0.9 & 0.9 & 0.9 & 0.9 \\
+    $w_h$ (hard weight) & -- & 2.0 & 2.0 & 2.0 & 2.0 \\
+    neg\_ratio & -- & -- & 3.0 & 3.0 & 3.0 \\
+    stage1\_epochs & -- & -- & 50 & 50 & 50 \\
+    \hline
+    LoRA rank & -- & -- & -- & 4 & -- \\
+    LoRA $\alpha$ & -- & -- & -- & 1.0 & -- \\
+    主干冻结 & 否 & 否 & 否 & 是 & 否 \\
+    LG-Adapter & 否 & 否 & 否 & 否 & 是 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\section{实验环境}
+
+\begin{itemize}
+  \item \textbf{GPU}：NVIDIA A100（80GB 显存）
+  \item \textbf{深度学习框架}：PyTorch 2.0
+  \item \textbf{操作系统}：Ubuntu 20.04 LTS
+  \item \textbf{Python 版本}：3.10
+  \item \textbf{CUDA 版本}：11.8
+  \item \textbf{基座模型}：MedSAM（基于 ViT-Base，93.7M 参数）
+  \item \textbf{预训练权重}：MedSAM 官方发布权重\cite{ma2024medsam}
 \end{itemize}
