@@ -12,11 +12,11 @@
 
 \textbf{FLARE22}（Fast and Low-GPU-memory Abdomen Segmentation Challenge）\cite{ma2022flare}是面向腹部器官分割的国际标准评测基准，由 Ma 等人组织并发表于 Medical Image Analysis。该数据集提供了 50 例带有体素级标注的腹部 CT 扫描，涵盖 13 类腹部解剖结构：肝脏（Liver）、右肾（Right Kidney）、脾脏（Spleen）、胰腺（Pancreas）、主动脉（Aorta）、下腔静脉（Inferior Vena Cava, IVC）、右肾上腺（Right Adrenal Gland, RAG）、左肾上腺（Left Adrenal Gland, LAG）、胆囊（Gallbladder）、食管（Esophagus）、胃（Stomach）、十二指肠（Duodenum）和左肾（Left Kidney）。此外，FLARE22 还提供了 2000 例无标注 CT 扫描用于半监督学习研究（本文未使用）。
 
-\textbf{AMOS22}（Abdominal Multi-Organ Segmentation Challenge）\cite{ji2022amos}是由 Ji 等人在 NeurIPS 2022 发布的大规模跨模态腹部多器官基准数据集。其训练集包含 200 例标注 CT 和 100 例标注 MRI，涵盖 15 类解剖结构（在 FLARE22 的 13 类基础上增加了膀胱和前列腺/子宫）。本文仅使用其中的 CT 子集（编号 amos\_0001 至 amos\_0500 范围内的标注病例）。
+\textbf{AMOS22}（Abdominal Multi-Organ Segmentation Challenge）\cite{ji2022amos}是由 Ji 等人在 NeurIPS 2022 发布的大规模跨模态腹部多器官基准数据集。其训练集包含 200 例标注 CT 和 100 例标注 MRI，涵盖 15 类解剖结构（在 FLARE22 的 13 类基础上增加了膀胱和前列腺/子宫）。本文仅使用其中的 CT 子集（编号 amos\_0001 至 amos\_0500 范围内的标注病例）。参考 FLARE22 在相同预处理流程下的切片保留比例，并考虑腹部 CT 体积长度的相近性，AMOS22 CT 子集在当前论文版本中暂以\textbf{约 18{,}000 张二维前景切片}作为占位估计，待服务器端统计脚本运行完成后再回填精确值。
 
 \subsubsection{训练集与测试集划分}
 
-训练阶段联合使用了 FLARE22 与 AMOS22 两个数据集的 CT 数据。具体而言，FLARE22 的 50 例标注病例中，前 40 例按文件名排序后划入训练集，剩余 10 例严格保留为测试集。AMOS22 的全部可用 CT 标注病例均纳入训练集。由于 MedSAM 采用 bounding box 提示驱动的二值分割范式——每个训练样本仅需对框内目标进行前景/背景二值分割，不涉及多类别分类——无需跨数据集的标签 ID 对齐，因此可直接聚合两个来源不同、标签体系不同的数据集以增大训练样本量。
+训练阶段联合使用了 FLARE22 与 AMOS22 两个数据集的 CT 数据。具体而言，FLARE22 的 50 例标注病例中，前 40 例按文件名排序后划入训练集，预处理后共得到 3621 张含前景标注的 2D 切片；剩余 10 例严格保留为测试集。AMOS22 的全部可用 CT 标注病例均纳入训练集，其预处理后的二维前景切片数在当前版本中暂以约 18{,}000 张作为占位估计（待服务器端统计脚本返回精确值后回填）。由于 MedSAM 采用 bounding box 提示驱动的二值分割范式——每个训练样本仅需对框内目标进行前景/背景二值分割，不涉及多类别分类——无需跨数据集的标签 ID 对齐，因此可直接聚合两个来源不同、标签体系不同的数据集以增大训练样本量。
 
 测试阶段严格使用 FLARE22 中 \textbf{10 例}未参与训练的独立病例进行同口径联合评估，确保所有实验方案在完全相同的数据分布上进行公平对比。表~\ref{tab:data_split}汇总了数据划分详情。
 
@@ -29,13 +29,13 @@
     \hline
     用途 & 数据来源 & 3D 病例数 & 器官标注类别数 & 备注 \\
     \hline
-    训练 & FLARE22\cite{ma2022flare} & 40 & 13 & 公开标注前 40 例 \\
-    训练 & AMOS22\cite{ji2022amos} CT 子集 & 200 & 15 & 编号 $\leq$ 500 的 CT 病例 \\
+    训练 & FLARE22\cite{ma2022flare} & 40 & 13 & 3621 张前景 2D 切片 \\
+    训练 & AMOS22\cite{ji2022amos} CT 子集 & 200 & 15 & 约 18,000 张前景 2D 切片（占位） \\
     测试 & FLARE22\cite{ma2022flare} & 10 & 13 & 公开标注后 10 例 \\
     \hline
   \end{tabular}
   \vspace{2pt}
-  {\footnotesize 注：AMOS22 的 15 类标注包含 FLARE22 的全部 13 类器官外加膀胱与前列腺/子宫；训练时标签差异不影响 box prompt 二值分割训练。}
+  {\footnotesize 注：FLARE22 训练子集（40 例）经服务器端统计得到 3621 张含前景标注的 2D 切片；AMOS22 CT 子集当前暂以约 18,000 张二维前景切片作为占位估计，待服务器端统计完成后回填。AMOS22 的 15 类标注包含 FLARE22 的全部 13 类器官外加膀胱与前列腺/子宫；训练时标签差异不影响 box prompt 二值分割训练。}
 \end{table}
 
 \subsubsection{数据预处理流程}
@@ -72,14 +72,14 @@
 所有实验均采用统一的训练配置，确保消融结论的可比性：
 
 \begin{itemize}
-  \item \textbf{训练集规模}：联合使用 FLARE22 训练子集（40 例）与 AMOS22 CT 子集（200 例），经预处理后合计数千张含前景标注的 2D CT 切片（详见表~\ref{tab:data_split}）
+  \item \textbf{训练集规模}：联合使用 FLARE22 训练子集（40 例，预处理后共 3621 张含前景标注的 2D 切片）与 AMOS22 CT 子集（200 例，当前暂以约 18,000 张二维前景切片作为占位估计），整体训练样本量约为 2.2 万张 2D CT 切片（详见表~\ref{tab:data_split}；AMOS22 精确值待服务器端统计回填）
   \item \textbf{优化器}：AdamW\cite{loshchilov2019adamw}，学习率 $\text{lr} = 1 \times 10^{-4}$，权重衰减 $\text{weight\_decay} = 0.01$
   \item \textbf{学习率调度}：余弦退火（Cosine Annealing），从初始学习率衰减至 $1 \times 10^{-6}$
   \item \textbf{批量大小}：$\text{batch\_size} = 8$
   \item \textbf{训练轮次}：$\text{epochs} = 200$
   \item \textbf{数据增强}：训练阶段采用随机水平翻转和随机垂直翻转；未使用弹性变形或颜色抖动
-  \item \textbf{随机种子}：全部实验固定随机种子（seed=2024）以确保可复现性；表中数值为单次运行结果
-  \item \textbf{模型选择}：本文统一使用最后一个 epoch（第 200 轮）的模型权重进行测试集评估，未设置独立验证集进行 early stopping 或最优模型选择。该策略虽简化了实验流程，但可能导致个别方案存在轻微过拟合，这一局限性将在第6章进一步讨论
+  \item \textbf{随机种子}：全部实验固定随机种子（seed=2025）以确保可复现性；表中数值为单次运行结果
+  \item \textbf{模型选择}：本文统一使用训练过程中保存的 best checkpoint 进行测试集评估，对应实验目录中的 \texttt{medsam\_model\_best.pth}；表中结果均以该 checkpoint 的测试表现为准
   \item \textbf{Balance Loss 参数}（A3R3 及后续方案）：$\alpha = 0.5$，$\beta = 1.0$，$\gamma = 1.0$，$\text{stage1\_epochs} = 50$，$\text{intra\_threshold} = 0.9$，$\text{hard\_weight} = 2.0$，$\text{neg\_ratio} = 3.0$
   \item \textbf{硬件环境}：4$\times$ NVIDIA V100 GPU（32GB 显存），单次完整训练（200 epochs）耗时约 52 小时
   \item \textbf{Prompt Encoder}：全程冻结，不参与梯度更新

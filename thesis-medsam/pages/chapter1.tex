@@ -44,7 +44,7 @@ LoRA\cite{hu2022lora}通过对预训练权重矩阵的增量进行低秩分解�
 
 \section{研究问题与挑战}
 
-本文聚焦以下三个核心挑战，并在联合使用 FLARE22\cite{ma2022flare}与 AMOS22\cite{ji2022amos}公开数据集进行训练、FLARE22 中 10 例独立病例进行测试的条件下（推理阶段使用真实标注导出的 bounding box 作为提示，即 GT box prompt 条件）探索系统性的优化方案：
+本文聚焦以下三个核心挑战，并在联合使用 FLARE22\cite{ma2022flare}前 40 例标注 CT 与 AMOS22\cite{ji2022amos} CT 子集进行训练、FLARE22 后 10 例独立病例进行测试的条件下（推理阶段使用真实标注导出的 bounding box 作为提示，即 GT box prompt 条件）探索系统性的优化方案：
 
 \begin{enumerate}
   \item \textbf{双重不平衡挑战}：类间不平衡导致前景召回受限，类内不平衡导致边界学习不足。现有损失函数（如 Dice+CE 组合）未对此进行显式建模。
