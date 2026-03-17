@@ -6,20 +6,54 @@
 
 \subsection{数据集与预处理}
 
-本文所有实验的评估统一在 FLARE22 腹部多器官 CT 数据集上进行\cite{ma2022flare}。FLARE22（Fast and Low-GPU-memory Abdomen Segmentation Challenge）是面向腹部器官分割的国际标准评测，提供了涵盖 13 类腹部解剖结构的标注数据，具体类别包括：肝脏（Liver）、右肾（Right Kidney）、脾脏（Spleen）、胰腺（Pancreas）、主动脉（Aorta）、下腔静脉（Inferior Vena Cava）、右肾上腺（Right Adrenal Gland）、左肾上腺（Left Adrenal Gland）、胆囊（Gallbladder）、食管（Esophagus）、胃（Stomach）、十二指肠（Duodenum）和左肾（Left Kidney）。
+\subsubsection{数据集概述}
 
-训练阶段联合使用了 FLARE22\cite{ma2022flare}与 AMOS22\cite{ji2022amos}两个公开数据集的 CT 子集。FLARE22 公开标注数据中划分出 40 例病例用于训练，AMOS22 提供了额外的大规模腹部 CT 标注数据。由于 MedSAM 采用 bounding box 提示驱动的二值分割范式，每个训练样本仅需对框内目标进行前景/背景分割，无需跨数据集的标签 ID 对齐，因此可直接聚合两个数据集以增大训练样本量。
+本文的训练与评估涉及两个公开腹部 CT 分割数据集：FLARE22\cite{ma2022flare}和 AMOS22\cite{ji2022amos}。评估统一在 FLARE22 的标注体系上进行。
 
-数据预处理阶段对两个数据集执行了统一的操作：
+\textbf{FLARE22}（Fast and Low-GPU-memory Abdomen Segmentation Challenge）\cite{ma2022flare}是面向腹部器官分割的国际标准评测基准，由 Ma 等人组织并发表于 Medical Image Analysis。该数据集提供了 50 例带有体素级标注的腹部 CT 扫描，涵盖 13 类腹部解剖结构：肝脏（Liver）、右肾（Right Kidney）、脾脏（Spleen）、胰腺（Pancreas）、主动脉（Aorta）、下腔静脉（Inferior Vena Cava, IVC）、右肾上腺（Right Adrenal Gland, RAG）、左肾上腺（Left Adrenal Gland, LAG）、胆囊（Gallbladder）、食管（Esophagus）、胃（Stomach）、十二指肠（Duodenum）和左肾（Left Kidney）。此外，FLARE22 还提供了 2000 例无标注 CT 扫描用于半监督学习研究（本文未使用）。
+
+\textbf{AMOS22}（Abdominal Multi-Organ Segmentation Challenge）\cite{ji2022amos}是由 Ji 等人在 NeurIPS 2022 发布的大规模跨模态腹部多器官基准数据集。其训练集包含 200 例标注 CT 和 100 例标注 MRI，涵盖 15 类解剖结构（在 FLARE22 的 13 类基础上增加了膀胱和前列腺/子宫）。本文仅使用其中的 CT 子集（编号 amos\_0001 至 amos\_0500 范围内的标注病例）。
+
+\subsubsection{训练集与测试集划分}
+
+训练阶段联合使用了 FLARE22 与 AMOS22 两个数据集的 CT 数据。具体而言，FLARE22 的 50 例标注病例中，前 40 例按文件名排序后划入训练集，剩余 10 例严格保留为测试集。AMOS22 的全部可用 CT 标注病例均纳入训练集。由于 MedSAM 采用 bounding box 提示驱动的二值分割范式——每个训练样本仅需对框内目标进行前景/背景二值分割，不涉及多类别分类——无需跨数据集的标签 ID 对齐，因此可直接聚合两个来源不同、标签体系不同的数据集以增大训练样本量。
+
+测试阶段严格使用 FLARE22 中 \textbf{10 例}未参与训练的独立病例进行同口径联合评估，确保所有实验方案在完全相同的数据分布上进行公平对比。表~\ref{tab:data_split}汇总了数据划分详情。
+
+\begin{table}[htbp]
+  \centering
+  \caption{训练集与测试集划分}
+  \label{tab:data_split}
+  \small
+  \begin{tabular}{llccc}
+    \hline
+    用途 & 数据来源 & 3D 病例数 & 器官标注类别数 & 备注 \\
+    \hline
+    训练 & FLARE22\cite{ma2022flare} & 40 & 13 & 公开标注前 40 例 \\
+    训练 & AMOS22\cite{ji2022amos} CT 子集 & 200 & 15 & 编号 $\leq$ 500 的 CT 病例 \\
+    测试 & FLARE22\cite{ma2022flare} & 10 & 13 & 公开标注后 10 例 \\
+    \hline
+  \end{tabular}
+  \vspace{2pt}
+  {\footnotesize 注：AMOS22 的 15 类标注包含 FLARE22 的全部 13 类器官外加膀胱与前列腺/子宫；训练时标签差异不影响 box prompt 二值分割训练。}
+\end{table}
+
+\subsubsection{数据预处理流程}
+
+对两个数据集执行了统一的预处理管线，确保输入格式一致：
+
 \begin{enumerate}
-  \item 将原始 CT 切片统一裁剪并调整至 $1024 \times 1024$ 像素分辨率，以匹配 MedSAM 的 ViT-Base 输入规格\cite{ma2024medsam}；
-  \item 应用软组织窗（window level = 40, width = 400）进行强度归一化，增强腹部器官的对比度；
-  \item 将处理后的数据存储为 NPY 格式，便于高效批量加载。
+  \item \textbf{CT 值窗化}：应用腹部软组织窗（window level = 40 HU, window width = 400 HU，即 CT 值截断至 $[-160, 240]$ HU 范围），增强腹部器官与周围组织的对比度，随后线性归一化至 $[0, 255]$。
+  \item \textbf{小目标过滤}：在三维连通域分析中去除体素数 $< 1000$ 的微小区域（cc3d, 26-连通），在逐切片二维分析中去除像素数 $< 100$ 的噪声区域（cc3d, 8-连通），以消除因标注噪声或部分容积效应导致的碎片化前景。
+  \item \textbf{前景切片筛选}：仅保留含有非零标注的 2D 切片，丢弃纯背景切片，减少无效训练样本。
+  \item \textbf{空间标准化}：将每张 2D 切片从原始分辨率双三次插值（order=3）至 $1024 \times 1024$ 像素，标签图使用最近邻插值（order=0）以保持标签边界清晰，匹配 MedSAM 的 ViT-Base 输入规格\cite{ma2024medsam}。
+  \item \textbf{通道扩展与归一化}：将单通道灰度图复制为三通道 RGB 格式，像素值归一化至 $[0, 1]$。
+  \item \textbf{存储格式}：每张处理后的 2D 切片以 NPY 格式独立存储（图像存入 \texttt{imgs/} 子目录，标签存入 \texttt{gts/} 子目录），同时为每个 3D 病例保存包含所有前景切片的 NPZ 压缩包（含图像、标签和体素间距），分别用于训练阶段的高效随机采样和测试阶段的逐体积推理。
 \end{enumerate}
 
-测试阶段严格划分出 FLARE22 中 \textbf{10 例}未参与训练的独立病例进行同口径联合评估，确保所有实验方案在完全相同的数据分布上进行公平对比。
+\subsubsection{测试条件说明}
 
-需要说明的是，本文所有实验的推理阶段均使用真实标注导出的 bounding box 作为提示（ground-truth box prompt），这与 FLARE22 挑战赛中的全自动分割方法不同。Box prompt 为模型提供了器官级别的空间先验信息，因此本文报告的性能指标不宜与 FLARE22 排行榜上的全自动方法进行直接对比。此外，本文的 10 例测试集系从 FLARE22 公开训练集中自行划分，而非挑战赛的官方封闭测试集。上述设定旨在保证内部消融实验的公平可比性，而非追求与外部基准的横向对比。
+需要说明的是，本文所有实验的推理阶段均使用真实标注导出的 bounding box 作为提示（ground-truth box prompt, GT box），这与 FLARE22 挑战赛中的全自动分割方法不同。GT box 为模型提供了器官级别的精确空间先验信息，因此本文报告的性能指标不宜与 FLARE22 排行榜上的全自动方法进行直接对比。此外，本文的 10 例测试集系从 FLARE22 公开训练集中自行划分（后 10 例），而非挑战赛的官方封闭测试集。上述设定旨在保证内部消融实验的公平可比性，而非追求与外部基准的横向对比。
 
 \subsection{评价指标}
 
@@ -38,7 +72,7 @@
 所有实验均采用统一的训练配置，确保消融结论的可比性：
 
 \begin{itemize}
-  \item \textbf{训练集规模}：联合使用 FLARE22 训练子集（40 例 CT 病例）与 AMOS22\cite{ji2022amos} CT 子集，合计数千张含前景标注的 2D CT 切片
+  \item \textbf{训练集规模}：联合使用 FLARE22 训练子集（40 例）与 AMOS22 CT 子集（200 例），经预处理后合计数千张含前景标注的 2D CT 切片（详见表~\ref{tab:data_split}）
   \item \textbf{优化器}：AdamW\cite{loshchilov2019adamw}，学习率 $\text{lr} = 1 \times 10^{-4}$，权重衰减 $\text{weight\_decay} = 0.01$
   \item \textbf{学习率调度}：余弦退火（Cosine Annealing），从初始学习率衰减至 $1 \times 10^{-6}$
   \item \textbf{批量大小}：$\text{batch\_size} = 8$
