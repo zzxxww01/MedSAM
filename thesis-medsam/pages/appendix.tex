@@ -99,6 +99,9 @@ class LGAdapter(nn.Module):
     权重衰减 & 0.01 & 0.01 & 0.01 & 0.01 & 0.01 \\
     Batch size & 8 & 8 & 8 & 8 & 8 \\
     Epochs & 200 & 200 & 200 & 200 & 200 \\
+    数据增强 & Flip & Flip & Flip & Flip & Flip \\
+    随机种子 & 2025 & 2025 & 2025 & 2025 & 2025 \\
+    评估 checkpoint & best & best & best & best & best \\
     \hline
     $\alpha$ (Inter-CBL) & -- & -- & 0.5 & 0.5 & 0.5 \\
     $\beta$ (Intra-CBL) & -- & 1.0 & 1.0 & 1.0 & 1.0 \\
