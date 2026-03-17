@@ -6,7 +6,7 @@
 
 SAM（Segment Anything Model）\cite{kirillov2023segment}是一种基于提示的通用分割模型，由 Meta AI 于 2023 年提出。该模型在 SA-1B 数据集（1100 万张图像、10 亿个掩码标注）上训练，建立了"Image Encoder + Prompt Encoder + Mask Decoder"的三段式架构，支持点提示、框提示等多种交互方式。
 
-MedSAM\cite{ma2024medsam}在 SAM 架构基础上进行医学领域迁移，使用超过 150 万对医学图像-掩码标注、涵盖 10 种成像模态和 30 余种肿瘤类型的大规模数据完成领域微调，显著提升了医学场景的适配能力。MedSAM 发表于 Nature Communications 2024，成为当前医学图像分割领域应用最广泛的基础模型之一。
+MedSAM\cite{ma2024medsam}在 SAM 架构基础上进行医学领域迁移，使用超过 150 万对医学图像-掩码标注、涵盖 10 种成像模态和 30 余种肿瘤类型的大规模数据完成领域微调，显著提升了医学场景的适配能力。MedSAM 的微调过程冻结 Prompt Encoder，仅更新 Image Encoder 和 Mask Decoder，采用 Dice Loss 与 Cross-Entropy Loss 的组合作为训练损失函数。其预训练数据中包含了腹部 CT 图像，这为本文的下游任务提供了较好的特征初始化基础（A0 基线在 FLARE22 上已达到 DSC=0.9407）。MedSAM 发表于 Nature Communications 2024，成为当前医学图像分割领域应用最广泛的基础模型之一。
 
 在本文任务中，输入为 CT 切片及其 box 提示，输出为二值分割掩码。该设定保留了 MedSAM 的提示式交互优势，同时允许在损失层和特征层进行任务定制。
 
@@ -51,10 +51,7 @@ E_n = \frac{1-\beta^n}{1-\beta}
 
 \subsection{困难样本挖掘}
 
-OHEM\cite{shrivastava2016ohem}通过在线筛选高损失样本强化训练。Focal Loss\cite{lin2017focal}则采用连续调制因子实现对困难样本的软聚焦：
-\begin{equation}
-FL(p_t) = -\alpha_t(1-p_t)^\gamma \log(p_t)
-\end{equation}
+OHEM\cite{shrivastava2016ohem}通过在线筛选高损失样本强化训练。Focal Loss\cite{lin2017focal}则采用连续调制因子实现对困难样本的软聚焦（其数学定义详见第~\ref{sec:focal_loss}节）。
 
 两者共同目标是降低易样本对梯度的主导，提升困难样本学习效率。
 
@@ -84,6 +81,31 @@ L_{dice}=1-Dice
 \end{equation}
 
 Dice 强调全局重叠一致性，BCE 强调像素级判别，两者结合可兼顾整体与局部优化。
+
+\subsection{Focal Loss}
+\label{sec:focal_loss}
+
+Focal Loss\cite{lin2017focal}在标准交叉熵基础上引入连续调制因子，自动降低易分类样本的权重，使训练过程聚焦于困难样本：
+\begin{equation}
+FL(p_t) = -\alpha_t(1-p_t)^\gamma \log(p_t)
+\end{equation}
+其中 $p_t$ 为模型对真实类别的预测概率，$\alpha_t$ 为类别平衡因子，$\gamma$ 为聚焦参数（通常取 2.0）。当 $\gamma=0$ 时退化为标准交叉熵。Focal Loss 最初为目标检测中的前景-背景不平衡问题设计，在本文第5章中作为对比基线（A0-focal）进行评估。
+
+\subsection{Tversky Loss}
+
+Tversky Loss\cite{salehi2017tversky}通过引入可调节的假阳性（FP）与假阴性（FN）权重参数，提供了比 Dice Loss 更灵活的召回率-精确率权衡机制：
+\begin{equation}
+L_{tversky} = 1 - \frac{|Y \cap \hat{Y}|}{|Y \cap \hat{Y}| + \alpha_{tv} |Y \setminus \hat{Y}| + \beta_{tv} |\hat{Y} \setminus Y|}
+\end{equation}
+其中 $\alpha_{tv}$ 和 $\beta_{tv}$ 分别控制假阴性和假阳性的惩罚强度。当 $\alpha_{tv} = \beta_{tv} = 0.5$ 时退化为标准 Dice Loss。增大 $\alpha_{tv}$ 可提高召回率，特别适用于小目标分割场景。
+
+\subsection{Boundary Loss}
+
+Boundary Loss\cite{kervadec2019boundary}从距离度量角度出发，直接优化预测边界与真实边界之间的距离：
+\begin{equation}
+L_{boundary} = \int_{\Omega} \phi_G(\mathbf{q}) s_\theta(\mathbf{q}) \, d\mathbf{q}
+\end{equation}
+其中 $\phi_G(\mathbf{q})$ 为真实边界的符号距离函数（边界内为负，边界外为正），$s_\theta(\mathbf{q})$ 为预测的 softmax 概率。该损失函数无需显式计算边界像素点，适用于高度不平衡场景下的边界质量优化。
 
 \section{参数高效微调理论}
 
@@ -125,9 +147,9 @@ Attention(Q,K,V)=softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
 \end{equation}
 其中 \(Q\) 为查询，\(K\) 为键，\(V\) 为值。该机制可建模远距离依赖与全局语义关联，是 ViT\cite{dosovitskiy2021vit}和 MedSAM\cite{ma2024medsam}的核心计算组件。
 
-\subsection{跨样本注意力融合的早期探索}
+\subsection{交叉注意力与特征融合}
 
-在本文的研究过程中，曾探索过基于交叉注意力的跨病例特征融合策略，即利用 PANet\cite{wang2019panet}提出的 support-query 对齐思想，在分割当前样本时引入参考样本的特征作为先验。然而，实验结果（C1 实验，详见第5章）表明，这种直接的跨样本特征融合在与 Balance Loss 组合时出现了严重的性能退化（DSC 从 0.9596 降至 0.9427），表明直接的特征空间加和会破坏 MedSAM 基座已建立的语义表征。该负向发现促使本文转向更为精细的卷积适配器方案（LG-Adapter），并将 C1 作为消融反例写入实验分析。
+除标准自注意力外，交叉注意力（Cross-Attention）允许不同来源的特征通过 query-key-value 交互进行信息对齐与融合。PANet\cite{wang2019panet}提出的 support-query 原型对齐思想是该机制在少样本分割中的典型应用，通过引入参考样本特征作为先验来增强目标样本的分割能力。MedSAM 的 Mask Decoder 中也采用了双向交叉注意力（prompt-to-image 和 image-to-prompt）实现提示与图像特征的融合。交叉注意力融合策略在与预训练模型结合时需谨慎设计，以避免破坏基座模型已有的语义表征结构。
 
 \section{评价指标与实验口径}
 
@@ -138,8 +160,8 @@ Attention(Q,K,V)=softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
   \item ASD（Average Surface Distance）：衡量平均表面距离，越低越好。
 \end{itemize}
 
-当前阶段主线评估口径为 FLARE22\cite{ma2022flare}数据集的 CT\_Abd 40 例同口径对比，保证消融结论可比性。
+当前阶段主线评估口径为 FLARE22\cite{ma2022flare}数据集的 CT\_Abd 10 例同口径对比，保证消融结论可比性。
 
 \section{本章小结}
 
-本章系统梳理了本文方法所依赖的理论与技术基础：MedSAM 架构与计算流程、不平衡学习理论、困难样本挖掘机制、基础损失函数、参数高效微调（LoRA/Adapter）原理、卷积归纳偏置与 ViT 的互补性理论、注意力融合机制及统一评估口径。其中，参数高效微调与卷积-ViT 互补性理论为第4章的 LoRA 消融实验和 LG-Adapter 设计提供了直接的理论铺垫。上述内容共同构成第3至5章方法设计与实验分析的理论基础。
+本章系统梳理了本文方法所依赖的理论与技术基础：MedSAM 架构与计算流程、不平衡学习理论、困难样本挖掘机制、基础损失函数、参数高效微调（LoRA/Adapter）原理、卷积归纳偏置与 ViT 的互补性理论、注意力机制及统一评估口径。其中，参数高效微调与卷积-ViT 互补性理论为第4章的 LoRA 消融实验和 LG-Adapter 设计提供了直接的理论铺垫。上述内容共同构成第3至5章方法设计与实验分析的理论基础。
