@@ -109,7 +109,7 @@ class LGAdapter(nn.Module):
     stage1\_epochs & -- & -- & 50 & 50 & 50 \\
     \hline
     LoRA rank & -- & -- & -- & 4 & -- \\
-    LoRA $\alpha$ & -- & -- & -- & 1.0 & -- \\
+    LoRA $\alpha_{lora}$ & -- & -- & -- & 1.0 & -- \\
     主干冻结 & 否 & 否 & 否 & 是 & 否 \\
     LG-Adapter & 否 & 否 & 否 & 否 & 是 \\
     \hline
@@ -119,7 +119,7 @@ class LGAdapter(nn.Module):
 \section{实验环境}
 
 \begin{itemize}
-  \item \textbf{GPU}：NVIDIA A100（80GB 显存）
+  \item \textbf{GPU}：4$\times$ NVIDIA V100（32GB 显存），单次训练约 52 小时
   \item \textbf{深度学习框架}：PyTorch 2.0
   \item \textbf{操作系统}：Ubuntu 20.04 LTS
   \item \textbf{Python 版本}：3.10

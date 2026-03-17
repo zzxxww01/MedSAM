@@ -64,6 +64,11 @@ else
     echo "  请先运行: bash scripts/save_all_predictions.sh"
 fi
 
+# ── 4. 逐器官可视化图（直接使用论文表格数据） ──
+echo ""
+echo "=== 阶段 4: 逐器官可视化 ==="
+python scripts/generate_fig10_per_organ_dsc.py
+
 # ── 汇总 ──
 echo ""
 echo "======================================"
