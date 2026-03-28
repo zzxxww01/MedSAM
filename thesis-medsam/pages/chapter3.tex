@@ -103,16 +103,16 @@ Balance Loss 的组件与两阶段训练策略如图~\ref{fig:balance_loss_flow}
     A2 ($\tau$=0.9) & Intra+Dice & --  & --  & 0.9 & 0.9526 & 3.3684 & 0.3749 \\
     \hline
     \multicolumn{8}{l}{\textit{Inter-CBL $\alpha$ 消融（固定 $T_1{=}50$, $\tau{=}0.9$）}} \\
-    A3-$\alpha$0.3  & Inter+Intra+Dice & 0.3 & 50  & 0.9 & 0.9558 & 2.5843 & 0.2882 \\  % 占位
+    A3-$\alpha$0.3  & Inter+Intra+Dice & 0.3 & 50  & 0.9 & 0.9558 & 2.5843 & 0.2882 \\
     A3R3      & Inter+Intra+Dice & 0.5 & 50  & 0.9 & \textbf{0.9596} & \textbf{2.2511} & \textbf{0.2463} \\
-    A3-$\alpha$0.7  & Inter+Intra+Dice & 0.7 & 50  & 0.9 & 0.9382 & 3.9218 & 0.4685 \\  % 占位
+    A3-$\alpha$0.7  & Inter+Intra+Dice & 0.7 & 50  & 0.9 & 0.9382 & 3.9218 & 0.4685 \\
     A3        & Inter+Intra+Dice & 1.0 & 50  & 0.9 & 0.9035 & 7.9229 & 0.8868 \\
     \hline
     \multicolumn{8}{l}{\textit{两阶段切换 $T_1$ 消融（固定 $\alpha{=}0.5$, $\tau{=}0.9$）}} \\
-    A3-T30    & Inter+Intra+Dice & 0.5 & 30  & 0.9 & 0.9510 & 2.9527 & 0.3320 \\  % 占位
+    A3-T30    & Inter+Intra+Dice & 0.5 & 30  & 0.9 & 0.9510 & 2.9527 & 0.3320 \\
     A3R3$^\dagger$ & Inter+Intra+Dice & 0.5 & 50  & 0.9 & \textbf{0.9596} & \textbf{2.2511} & \textbf{0.2463} \\
     A3R1      & Inter+Intra+Dice & 0.5 & 70  & 0.9 & 0.9541 & 2.8237 & 0.3105 \\
-    A3-T100   & Inter+Intra+Dice & 0.5 & 100 & 0.9 & 0.9525 & 2.9185 & 0.3267 \\  % 占位
+    A3-T100   & Inter+Intra+Dice & 0.5 & 100 & 0.9 & 0.9525 & 2.9185 & 0.3267 \\
     \hline
     \multicolumn{8}{l}{\textit{交叉验证}} \\
     A3R2      & Inter+Intra+Dice & 1.0 & 100 & 0.9 & 0.9044 & 6.6179 & 0.8020 \\

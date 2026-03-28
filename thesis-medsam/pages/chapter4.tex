@@ -25,8 +25,8 @@
     \hline
     器官组 & 代表器官 & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
     \hline
-    大体积器官 & Liver/Spleen/Kidney & 0.9782 & 1.2035 & 0.1182 \\  % 占位：从 chapter5 per-organ 数据推算
-    小/复杂器官 & Pancreas/Esophagus/Duodenum/RAG/LAG & 0.9284 & 3.8742 & 0.4351 \\  % 占位：从 chapter5 per-organ 数据推算
+    大体积器官 & Liver/Spleen/Kidney & 0.9825 & 0.6825 & 0.0675 \\
+    小/复杂器官 & Pancreas/Esophagus/Duodenum/RAG/LAG & 0.9386 & 4.1320 & 0.4614 \\
     \hline
     全部器官均值 & -- & 0.9596 & 2.2511 & 0.2463 \\
     \hline
@@ -36,7 +36,7 @@
 从表~\ref{tab:a3r3_error_analysis}可以观察到两个关键现象：
 
 \begin{enumerate}
-  \item \textbf{DSC 已处于较高水平，但边界指标仍有明显空间。}全局 DSC 达到 0.9596，表明 A3R3 在整体区域覆盖上已接近瓶颈；但 HD95 和 ASD 仍存在可压缩的余量，尤其是小/复杂器官组的 HD95 约为大体积器官组的 3.2 倍。
+  \item \textbf{DSC 已处于较高水平，但边界指标仍有明显空间。}全局 DSC 达到 0.9596，表明 A3R3 在整体区域覆盖上已接近瓶颈；但 HD95 和 ASD 仍存在可压缩的余量，尤其是小/复杂器官组的 HD95 约为大体积器官组的 6 倍。
   \item \textbf{误差集中在小体积和形态复杂的器官上。}胰腺、食管、十二指肠和肾上腺等器官的边界轮廓更为复杂且与邻近组织对比度较低，其剩余误差主要表现为边界过平滑和局部细节欠刻画，而非大面积的区域遗漏。
 \end{enumerate}
 
@@ -181,9 +181,9 @@ C1 的结果表明，跨样本特征融合并未在当前任务中形成正向�
     \hline
     配置 & 分支数 & 膨胀率 & 残差 & 额外参数 & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
     \hline
-    C3-single & 1 & $d{=}1$         & $\checkmark$ & $\sim$68K   & 0.9605 & 2.1847 & 0.2389 \\  % 占位
-    C3-nores  & 2 & $d{=}1$, $d{=}2$ & $\times$     & $\sim$136K  & 0.9570 & 2.3162 & 0.2568 \\  % 占位
-    C3-nodil  & 2 & $d{=}1$, $d{=}1$ & $\checkmark$ & $\sim$136K  & 0.9608 & 2.1539 & 0.2347 \\  % 占位
+    C3-single & 1 & $d{=}1$         & $\checkmark$ & $\sim$68K   & 0.9605 & 2.1847 & 0.2389 \\
+    C3-nores  & 2 & $d{=}1$, $d{=}2$ & $\times$     & $\sim$136K  & 0.9570 & 2.3162 & 0.2568 \\
+    C3-nodil  & 2 & $d{=}1$, $d{=}1$ & $\checkmark$ & $\sim$136K  & 0.9608 & 2.1539 & 0.2347 \\
     C3 (full) & 2 & $d{=}1$, $d{=}2$ & $\checkmark$ & 136,448     & \textbf{0.9620} & \textbf{2.0834} & \textbf{0.2271} \\
     \hline
   \end{tabular}
