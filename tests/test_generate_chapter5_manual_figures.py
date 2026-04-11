@@ -1,4 +1,5 @@
 import importlib.util
+import tarfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -191,6 +192,40 @@ class Chapter5FigureScriptTests(unittest.TestCase):
             self.assertTrue((output_dir / "mask.pdf").exists())
             self.assertTrue((output_dir / "boundary.pdf").exists())
             self.assertTrue((output_dir / "failure.pdf").exists())
+
+    def test_can_generate_preview_bundle_and_archive(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            data_root, pred_roots = write_case(root, case_name="FLARE22_Tr_0001.npz")
+            output_root = root / "bundle"
+
+            config = {
+                "data_root": str(data_root),
+                "pred_dirs": {name: str(path) for name, path in pred_roots.items()},
+                "titles": {"GT": "GT", "A0": "Baseline", "A3R3": "BL", "C3": "BL+MSL"},
+            }
+
+            bundle_info = module.generate_preview_bundle(
+                config,
+                str(output_root),
+                slice_stride=1,
+                failure_limit=10,
+                organ_ids=[4, 12],
+                reference_experiment="A0",
+                archive=True,
+            )
+
+            self.assertTrue((output_root / "mask_previews").exists())
+            self.assertTrue((output_root / "failure_previews").exists())
+            self.assertTrue((output_root / "failure_candidates.txt").exists())
+            self.assertGreater(bundle_info["mask_count"], 0)
+            self.assertGreater(bundle_info["failure_count"], 0)
+            self.assertTrue(Path(bundle_info["archive_path"]).exists())
+
+            with tarfile.open(bundle_info["archive_path"], "r:gz") as tar:
+                names = tar.getnames()
+            self.assertTrue(any(name.endswith("failure_candidates.txt") for name in names))
 
 
 if __name__ == "__main__":
