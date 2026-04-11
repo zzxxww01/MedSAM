@@ -1,0 +1,72 @@
+{
+  "data_root": "data/npy/CT_Abd",
+  "pred_dirs": {
+    "A0": "work_dir/eval_predictions/A0",
+    "A3R3": "work_dir/eval_predictions/A3R3",
+    "C3": "work_dir/eval_predictions/C3"
+  },
+  "titles": {
+    "GT": "GT",
+    "A0": "Baseline",
+    "A3R3": "BL",
+    "C3": "BL+MSL"
+  },
+  "fig5_1": {
+    "case_name": "CT_Abd_FLARE22_Tr_0008.npz",
+    "slice_idx": 53,
+    "columns": [
+      "GT",
+      "A0",
+      "A3R3",
+      "C3"
+    ],
+    "show_slice_dice": true,
+    "output_path": "thesis-medsam/figures/mask_comparison.png"
+  },
+  "fig5_2": {
+    "case_name": "CT_Abd_FLARE22_Tr_0008.npz",
+    "slice_idx": 53,
+    "columns": [
+      "GT",
+      "A0",
+      "A3R3",
+      "C3"
+    ],
+    "roi": [
+      150,
+      310,
+      140,
+      320
+    ],
+    "output_path": "thesis-medsam/figures/boundary_detail_try1.png"
+  },
+  "fig5_3": {
+    "columns": [
+      "GT",
+      "A0",
+      "A3R3",
+      "C3"
+    ],
+    "output_path": "thesis-medsam/figures/failure_cases.png",
+    "rows": [
+      {
+        "case_name": "CT_Abd_FLARE22_Tr_0001.npz",
+        "slice_idx": 24,
+        "organ_id": 4,
+        "row_label": "(a) Weak boundary\n(Pancreas)"
+      },
+      {
+        "case_name": "CT_Abd_FLARE22_Tr_0031.npz",
+        "slice_idx": 100,
+        "organ_id": 10,
+        "row_label": "(b) Small organ\n(Esophagus)"
+      },
+      {
+        "case_name": "CT_Abd_FLARE22_Tr_0010.npz",
+        "slice_idx": 36,
+        "organ_id": 12,
+        "row_label": "(c) Adjacent organs\n(Duodenum)"
+      }
+    ]
+  }
+}
