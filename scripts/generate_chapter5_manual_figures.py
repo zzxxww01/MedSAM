@@ -98,6 +98,14 @@ class CaseIndex:
         self.pred_paths = pred_paths
 
 
+def shorten_case_list(case_names: list[str], limit: int = 12) -> str:
+    if not case_names:
+        return "(no cases)"
+    shown = case_names[:limit]
+    suffix = "" if len(case_names) <= limit else f" ... ({len(case_names) - limit} more)"
+    return ", ".join(shown) + suffix
+
+
 def ensure_parent_dir(path_str: str) -> None:
     Path(path_str).parent.mkdir(parents=True, exist_ok=True)
 
@@ -188,6 +196,34 @@ def build_case_index(data_root: str | None, pred_dirs: dict[str, str]) -> CaseIn
     return CaseIndex(data_root, pred_dirs, case_names, data_paths, pred_paths)
 
 
+def resolve_case_name(index: CaseIndex, case_query: str) -> str:
+    if case_query in index.case_names:
+        return case_query
+
+    query = case_query.lower()
+    query_stem = Path(case_query).stem.lower()
+
+    stem_matches = [name for name in index.case_names if Path(name).stem.lower() == query_stem]
+    if len(stem_matches) == 1:
+        return stem_matches[0]
+
+    substring_matches = [name for name in index.case_names if query in name.lower()]
+    if len(substring_matches) == 1:
+        return substring_matches[0]
+
+    if len(stem_matches) > 1 or len(substring_matches) > 1:
+        ambiguous = stem_matches if len(stem_matches) > 1 else substring_matches
+        raise KeyError(
+            "case query is ambiguous: "
+            f"{case_query}. Matches: {shorten_case_list(sorted(ambiguous), limit=20)}"
+        )
+
+    raise KeyError(
+        "case not found: "
+        f"{case_query}. Available cases include: {shorten_case_list(index.case_names, limit=20)}"
+    )
+
+
 def load_npz(path_str: str) -> dict[str, np.ndarray]:
     data = np.load(path_str, allow_pickle=True)
     return {key: data[key] for key in data.files}
@@ -201,8 +237,7 @@ def first_present(arrays: dict[str, np.ndarray], names: list[str]) -> np.ndarray
 
 
 def get_reference_arrays(index: CaseIndex, case_name: str) -> dict[str, np.ndarray]:
-    if case_name not in index.case_names:
-        raise KeyError(f"case not found: {case_name}")
+    case_name = resolve_case_name(index, case_name)
 
     if case_name in index.data_paths:
         arrays = load_npz(index.data_paths[case_name])
@@ -221,6 +256,7 @@ def get_reference_arrays(index: CaseIndex, case_name: str) -> dict[str, np.ndarr
 
 
 def get_prediction_arrays(index: CaseIndex, case_name: str, exp_name: str) -> dict[str, np.ndarray]:
+    case_name = resolve_case_name(index, case_name)
     return load_npz(index.pred_paths[exp_name][case_name])
 
 
@@ -402,6 +438,7 @@ def resolve_titles(selection: dict, global_titles: dict | None = None) -> dict:
 
 
 def validate_case_and_slice(index: CaseIndex, case_name: str, slice_idx: int) -> None:
+    case_name = resolve_case_name(index, case_name)
     ref = get_reference_arrays(index, case_name)
     gts = first_present(ref, ["gts", "gt", "mask"])
     if gts is None:
@@ -411,6 +448,7 @@ def validate_case_and_slice(index: CaseIndex, case_name: str, slice_idx: int) ->
 
 
 def load_case_slices(index: CaseIndex, case_name: str, slice_idx: int) -> dict[str, np.ndarray | None]:
+    case_name = resolve_case_name(index, case_name)
     validate_case_and_slice(index, case_name, slice_idx)
     ref_arrays = get_reference_arrays(index, case_name)
     imgs = first_present(ref_arrays, ["imgs", "img", "image"])
@@ -428,8 +466,24 @@ def load_case_slices(index: CaseIndex, case_name: str, slice_idx: int) -> dict[s
     return slices
 
 
+def list_cases(index: CaseIndex, contains: str | None = None, limit: int = 100) -> list[str]:
+    case_names = index.case_names
+    if contains:
+        needle = contains.lower()
+        case_names = [name for name in case_names if needle in name.lower()]
+    return case_names[:limit]
+
+
+def print_cases(case_names: list[str]) -> None:
+    if not case_names:
+        print("[WARN] no cases matched the filter")
+        return
+    for idx, name in enumerate(case_names):
+        print(f"{idx:4d}  {name}")
+
+
 def render_mask_comparison(index: CaseIndex, selection: dict, global_titles: dict | None = None) -> str:
-    case_name = selection["case_name"]
+    case_name = resolve_case_name(index, selection["case_name"])
     slice_idx = int(selection["slice_idx"])
     output_path = selection["output_path"]
     columns = selection.get("columns", DEFAULT_COLUMNS)
@@ -463,7 +517,7 @@ def render_mask_comparison(index: CaseIndex, selection: dict, global_titles: dic
 
 
 def render_boundary_detail(index: CaseIndex, selection: dict, global_titles: dict | None = None) -> str:
-    case_name = selection["case_name"]
+    case_name = resolve_case_name(index, selection["case_name"])
     slice_idx = int(selection["slice_idx"])
     output_path = selection["output_path"]
     columns = selection.get("columns", DEFAULT_COLUMNS)
@@ -514,7 +568,7 @@ def render_failure_cases(index: CaseIndex, selection: dict, global_titles: dict 
         axes = axes.reshape(len(rows), 1)
 
     for row_idx, row_cfg in enumerate(rows):
-        case_name = row_cfg["case_name"]
+        case_name = resolve_case_name(index, row_cfg["case_name"])
         slice_idx = int(row_cfg["slice_idx"])
         organ_id = int(row_cfg["organ_id"])
         row_label = row_cfg["row_label"]
@@ -628,6 +682,7 @@ def render_from_config(config: dict, figure_key: str) -> None:
 
 
 def preview_case(index: CaseIndex, case_name: str, slice_idx: int, output_path: str) -> None:
+    case_name = resolve_case_name(index, case_name)
     render_mask_comparison(
         index,
         {
@@ -656,6 +711,11 @@ def parse_args() -> argparse.Namespace:
     lst.add_argument("--min-area", type=int, default=50)
     lst.add_argument("--limit", type=int, default=100)
     lst.add_argument("--reference-experiment", default="C3")
+
+    lcs = subparsers.add_parser("list-cases", help="list available case names")
+    lcs.add_argument("--config", required=True, help="path to config JSON")
+    lcs.add_argument("--contains", default=None, help="optional substring filter")
+    lcs.add_argument("--limit", type=int, default=100)
 
     prv = subparsers.add_parser("preview", help="render a one-off preview for a chosen case/slice")
     prv.add_argument("--config", required=True, help="path to config JSON")
@@ -696,6 +756,10 @@ def main() -> None:
             reference_experiment=args.reference_experiment,
         )
         print_failure_candidates(records)
+        return
+
+    if args.command == "list-cases":
+        print_cases(list_cases(index, contains=args.contains, limit=args.limit))
         return
 
     if args.command == "preview":

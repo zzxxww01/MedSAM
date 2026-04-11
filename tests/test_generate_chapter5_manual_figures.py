@@ -63,6 +63,26 @@ def write_case(root: Path, case_name: str = "Case001.npz"):
 
 
 class Chapter5FigureScriptTests(unittest.TestCase):
+    def test_case_name_can_be_resolved_by_stem_or_substring(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            data_root, pred_roots = write_case(root, case_name="FLARE22_Tr_0001.npz")
+
+            index = module.build_case_index(
+                str(data_root),
+                {name: str(path) for name, path in pred_roots.items()},
+            )
+
+            self.assertEqual(
+                module.resolve_case_name(index, "FLARE22_Tr_0001"),
+                "FLARE22_Tr_0001.npz",
+            )
+            self.assertEqual(
+                module.resolve_case_name(index, "0001"),
+                "FLARE22_Tr_0001.npz",
+            )
+
     def test_can_list_candidates_and_build_case_index(self):
         module = load_module()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -88,6 +108,7 @@ class Chapter5FigureScriptTests(unittest.TestCase):
             self.assertTrue(candidates)
             self.assertEqual(candidates[0]["case_name"], "Case001.npz")
             self.assertEqual(candidates[0]["organ_id"], 4)
+            self.assertEqual(module.list_cases(index, contains="Case", limit=5), ["Case001.npz"])
 
     def test_can_render_mask_boundary_and_failure_figures(self):
         module = load_module()
