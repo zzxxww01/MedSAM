@@ -498,6 +498,9 @@ def render_mask_comparison(index: CaseIndex, selection: dict, global_titles: dic
     case_name = resolve_case_name(index, selection["case_name"])
     slice_idx = int(selection["slice_idx"])
     output_path = selection["output_path"]
+    dpi = int(selection.get("dpi", 300))
+    width_per_col = float(selection.get("width_per_col", 3.6))
+    fig_height = float(selection.get("fig_height", 3.8))
     columns = selection.get("columns", DEFAULT_COLUMNS)
     titles = resolve_titles(selection, global_titles)
     show_slice_dice = bool(selection.get("show_slice_dice", False))
@@ -505,7 +508,7 @@ def render_mask_comparison(index: CaseIndex, selection: dict, global_titles: dic
     slices = load_case_slices(index, case_name, slice_idx)
     gt_slice = slices["GT"]
 
-    fig, axes = plt.subplots(1, len(columns), figsize=(3.6 * len(columns), 3.8))
+    fig, axes = plt.subplots(1, len(columns), figsize=(width_per_col * len(columns), fig_height))
     if len(columns) == 1:
         axes = [axes]
 
@@ -522,7 +525,7 @@ def render_mask_comparison(index: CaseIndex, selection: dict, global_titles: dic
     fig.suptitle("Prediction Mask Comparison", fontsize=14, fontweight="bold", y=1.02)
     fig.tight_layout()
     ensure_parent_dir(output_path)
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
     plt.close(fig)
     print(f"[OK] Saved fig5.1 candidate/final: {output_path}")
     return output_path
@@ -532,6 +535,9 @@ def render_boundary_detail(index: CaseIndex, selection: dict, global_titles: dic
     case_name = resolve_case_name(index, selection["case_name"])
     slice_idx = int(selection["slice_idx"])
     output_path = selection["output_path"]
+    dpi = int(selection.get("dpi", 300))
+    width_per_col = float(selection.get("width_per_col", 3.6))
+    fig_height = float(selection.get("fig_height", 7.2))
     columns = selection.get("columns", DEFAULT_COLUMNS)
     titles = resolve_titles(selection, global_titles)
 
@@ -539,7 +545,7 @@ def render_boundary_detail(index: CaseIndex, selection: dict, global_titles: dic
     fallback_key = "A3R3" if "A3R3" in columns else columns[0]
     y1, y2, x1, x2 = resolve_roi(selection, slices[fallback_key])
 
-    fig, axes = plt.subplots(2, len(columns), figsize=(3.6 * len(columns), 7.2))
+    fig, axes = plt.subplots(2, len(columns), figsize=(width_per_col * len(columns), fig_height))
     if len(columns) == 1:
         axes = np.asarray([[axes[0]], [axes[1]]])
 
@@ -561,7 +567,7 @@ def render_boundary_detail(index: CaseIndex, selection: dict, global_titles: dic
     fig.suptitle("Boundary Detail Comparison", fontsize=14, fontweight="bold", y=1.02)
     fig.tight_layout()
     ensure_parent_dir(output_path)
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
     plt.close(fig)
     print(f"[OK] Saved fig5.2 candidate/final: {output_path}")
     return output_path
@@ -569,11 +575,19 @@ def render_boundary_detail(index: CaseIndex, selection: dict, global_titles: dic
 
 def render_failure_cases(index: CaseIndex, selection: dict, global_titles: dict | None = None) -> str:
     output_path = selection["output_path"]
+    dpi = int(selection.get("dpi", 300))
     rows = selection["rows"]
     columns = selection.get("columns", DEFAULT_COLUMNS)
     titles = resolve_titles(selection, global_titles)
+    width_per_col = float(selection.get("width_per_col", 2.8))
+    height_per_row = float(selection.get("height_per_row", 2.6))
+    extra_height = float(selection.get("extra_height", 0.8))
 
-    fig, axes = plt.subplots(len(rows), len(columns), figsize=(2.8 * len(columns), 2.6 * len(rows) + 0.8))
+    fig, axes = plt.subplots(
+        len(rows),
+        len(columns),
+        figsize=(width_per_col * len(columns), height_per_row * len(rows) + extra_height),
+    )
     if len(rows) == 1:
         axes = np.asarray([axes])
     if len(columns) == 1:
@@ -615,7 +629,7 @@ def render_failure_cases(index: CaseIndex, selection: dict, global_titles: dict 
     fig.legend(handles=legend, loc="lower center", ncol=3, fontsize=10, frameon=True, bbox_to_anchor=(0.5, -0.01))
     plt.tight_layout(rect=[0.08, 0.04, 1.0, 1.0])
     ensure_parent_dir(output_path)
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    fig.savefig(output_path, dpi=dpi, bbox_inches="tight")
     plt.close(fig)
     print(f"[OK] Saved fig5.3 candidate/final: {output_path}")
     return output_path
@@ -682,6 +696,10 @@ def generate_preview_bundle(
     failure_limit: int = 200,
     organ_ids: list[int] | None = None,
     reference_experiment: str = "C3",
+    preview_dpi: int = 500,
+    mask_width_per_col: float = 4.8,
+    failure_width_per_col: float = 4.0,
+    failure_height_per_row: float = 3.8,
     archive: bool = False,
 ) -> dict:
     organ_ids = organ_ids or [4, 7, 8, 10, 12]
@@ -713,6 +731,9 @@ def generate_preview_bundle(
                 "columns": DEFAULT_COLUMNS,
                 "titles": titles,
                 "show_slice_dice": True,
+                "dpi": preview_dpi,
+                "width_per_col": mask_width_per_col,
+                "fig_height": 4.6,
             }
             with contextlib.redirect_stdout(io.StringIO()):
                 render_mask_comparison(index, selection, titles)
@@ -752,6 +773,10 @@ def generate_preview_bundle(
             ),
             "columns": DEFAULT_COLUMNS,
             "titles": titles,
+            "dpi": preview_dpi,
+            "width_per_col": failure_width_per_col,
+            "height_per_row": failure_height_per_row,
+            "extra_height": 0.9,
             "rows": [
                 {
                     "case_name": item["case_name"],
@@ -839,6 +864,10 @@ def parse_args() -> argparse.Namespace:
     bnd.add_argument("--failure-limit", type=int, default=200, help="max failure preview rows to render")
     bnd.add_argument("--organ-id", type=int, action="append", dest="organ_ids", help="organ ids for failure search")
     bnd.add_argument("--reference-experiment", default="C3", help="which experiment to rank failure candidates by")
+    bnd.add_argument("--preview-dpi", type=int, default=500, help="dpi for preview images")
+    bnd.add_argument("--mask-width-per-col", type=float, default=4.8, help="mask preview figure width per column")
+    bnd.add_argument("--failure-width-per-col", type=float, default=4.0, help="failure preview figure width per column")
+    bnd.add_argument("--failure-height-per-row", type=float, default=3.8, help="failure preview figure height per row")
     bnd.add_argument("--archive", action="store_true", help="also create output-root.tar.gz")
 
     prv = subparsers.add_parser("preview", help="render a one-off preview for a chosen case/slice")
@@ -894,6 +923,10 @@ def main() -> None:
             failure_limit=args.failure_limit,
             organ_ids=args.organ_ids,
             reference_experiment=args.reference_experiment,
+            preview_dpi=args.preview_dpi,
+            mask_width_per_col=args.mask_width_per_col,
+            failure_width_per_col=args.failure_width_per_col,
+            failure_height_per_row=args.failure_height_per_row,
             archive=args.archive,
         )
         print(f"[OK] output_root = {info['output_root']}")

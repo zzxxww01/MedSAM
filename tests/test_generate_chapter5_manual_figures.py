@@ -213,6 +213,10 @@ class Chapter5FigureScriptTests(unittest.TestCase):
                 failure_limit=10,
                 organ_ids=[4, 12],
                 reference_experiment="A0",
+                preview_dpi=450,
+                mask_width_per_col=4.2,
+                failure_width_per_col=3.8,
+                failure_height_per_row=3.2,
                 archive=True,
             )
 
