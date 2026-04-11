@@ -30,9 +30,13 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import glob
+import io
 import json
+import logging
 import os
+import tarfile
 from pathlib import Path
 
 import matplotlib
@@ -46,6 +50,7 @@ from matplotlib.patches import Circle, Rectangle
 
 plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei", "serif"]
 plt.rcParams["axes.unicode_minus"] = False
+logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 
 ORGAN_COLORS = [
     [0, 0, 0],
@@ -482,6 +487,13 @@ def print_cases(case_names: list[str]) -> None:
         print(f"{idx:4d}  {name}")
 
 
+def make_archive(source_dir: str, archive_path: str) -> str:
+    ensure_parent_dir(archive_path)
+    with tarfile.open(archive_path, "w:gz") as tar:
+        tar.add(source_dir, arcname=Path(source_dir).name)
+    return archive_path
+
+
 def render_mask_comparison(index: CaseIndex, selection: dict, global_titles: dict | None = None) -> str:
     case_name = resolve_case_name(index, selection["case_name"])
     slice_idx = int(selection["slice_idx"])
@@ -663,6 +675,109 @@ def print_failure_candidates(records: list[dict]) -> None:
         )
 
 
+def generate_preview_bundle(
+    config: dict,
+    output_root: str,
+    slice_stride: int = 1,
+    failure_limit: int = 200,
+    organ_ids: list[int] | None = None,
+    reference_experiment: str = "C3",
+    archive: bool = False,
+) -> dict:
+    organ_ids = organ_ids or [4, 7, 8, 10, 12]
+    index = build_case_index(config.get("data_root"), config["pred_dirs"])
+    titles = config.get("titles", DEFAULT_TITLES)
+
+    out_root = Path(output_root)
+    mask_dir = out_root / "mask_previews"
+    fail_dir = out_root / "failure_previews"
+    mask_dir.mkdir(parents=True, exist_ok=True)
+    fail_dir.mkdir(parents=True, exist_ok=True)
+
+    mask_count = 0
+    for case_name in index.case_names:
+        ref = get_reference_arrays(index, case_name)
+        gt_volume = first_present(ref, ["gts", "gt", "mask"])
+        if gt_volume is None:
+            continue
+
+        for slice_idx in range(0, gt_volume.shape[0], max(1, int(slice_stride))):
+            gt_slice = get_volume_slice(gt_volume, slice_idx)
+            if gt_slice is None or np.max(gt_slice) == 0:
+                continue
+
+            selection = {
+                "case_name": case_name,
+                "slice_idx": slice_idx,
+                "output_path": str(mask_dir / f"{Path(case_name).stem}_slice{slice_idx:03d}.png"),
+                "columns": DEFAULT_COLUMNS,
+                "titles": titles,
+                "show_slice_dice": True,
+            }
+            with contextlib.redirect_stdout(io.StringIO()):
+                render_mask_comparison(index, selection, titles)
+            mask_count += 1
+
+    records = list_failure_candidates(
+        index,
+        organ_ids=organ_ids,
+        dice_lower=0.0,
+        dice_upper=1.0,
+        min_area=5,
+        limit=failure_limit,
+        reference_experiment=reference_experiment,
+    )
+
+    candidates_path = out_root / "failure_candidates.txt"
+    with open(candidates_path, "w", encoding="utf-8") as fh:
+        fh.write(f"{'rank':<6}{'organ':<14}{'case':<32}{'slice':>8}{'id':>6}{'dice':>10}{'area':>8}\n")
+        fh.write("-" * 90 + "\n")
+        for idx, item in enumerate(records):
+            fh.write(
+                f"{idx:<6}{item['organ_name']:<14}{item['case_name']:<32}"
+                f"{item['slice_idx']:>8}{item['organ_id']:>6}"
+                f"{item['dice']:>10.4f}{item['area']:>8}\n"
+            )
+
+    failure_count = 0
+    for idx, item in enumerate(records):
+        organ_name = item["organ_name"].replace(".", "")
+        selection = {
+            "output_path": str(
+                fail_dir
+                / (
+                    f"{idx:03d}_{Path(item['case_name']).stem}_slice{item['slice_idx']:03d}_"
+                    f"organ{item['organ_id']}_{organ_name}.png"
+                )
+            ),
+            "columns": DEFAULT_COLUMNS,
+            "titles": titles,
+            "rows": [
+                {
+                    "case_name": item["case_name"],
+                    "slice_idx": item["slice_idx"],
+                    "organ_id": item["organ_id"],
+                    "row_label": f"{item['organ_name']}\nDice={item['dice']:.3f}",
+                }
+            ],
+        }
+        with contextlib.redirect_stdout(io.StringIO()):
+            render_failure_cases(index, selection, titles)
+        failure_count += 1
+
+    archive_path = None
+    if archive:
+        archive_path = str(make_archive(str(out_root), str(out_root) + ".tar.gz"))
+
+    return {
+        "output_root": str(out_root),
+        "mask_count": mask_count,
+        "failure_count": failure_count,
+        "candidates_path": str(candidates_path),
+        "archive_path": archive_path,
+    }
+
+
 def render_from_config(config: dict, figure_key: str) -> None:
     index = build_case_index(config.get("data_root"), config["pred_dirs"])
     global_titles = config.get("titles", DEFAULT_TITLES)
@@ -717,6 +832,15 @@ def parse_args() -> argparse.Namespace:
     lcs.add_argument("--contains", default=None, help="optional substring filter")
     lcs.add_argument("--limit", type=int, default=100)
 
+    bnd = subparsers.add_parser("bundle-previews", help="generate all preview images and optional tar.gz bundle")
+    bnd.add_argument("--config", required=True, help="path to config JSON")
+    bnd.add_argument("--output-root", required=True, help="directory to store generated previews")
+    bnd.add_argument("--slice-stride", type=int, default=1, help="sample every Nth slice for mask previews")
+    bnd.add_argument("--failure-limit", type=int, default=200, help="max failure preview rows to render")
+    bnd.add_argument("--organ-id", type=int, action="append", dest="organ_ids", help="organ ids for failure search")
+    bnd.add_argument("--reference-experiment", default="C3", help="which experiment to rank failure candidates by")
+    bnd.add_argument("--archive", action="store_true", help="also create output-root.tar.gz")
+
     prv = subparsers.add_parser("preview", help="render a one-off preview for a chosen case/slice")
     prv.add_argument("--config", required=True, help="path to config JSON")
     prv.add_argument("--case-name", required=True)
@@ -760,6 +884,24 @@ def main() -> None:
 
     if args.command == "list-cases":
         print_cases(list_cases(index, contains=args.contains, limit=args.limit))
+        return
+
+    if args.command == "bundle-previews":
+        info = generate_preview_bundle(
+            config,
+            output_root=args.output_root,
+            slice_stride=args.slice_stride,
+            failure_limit=args.failure_limit,
+            organ_ids=args.organ_ids,
+            reference_experiment=args.reference_experiment,
+            archive=args.archive,
+        )
+        print(f"[OK] output_root = {info['output_root']}")
+        print(f"[OK] mask_previews = {info['mask_count']}")
+        print(f"[OK] failure_previews = {info['failure_count']}")
+        print(f"[OK] failure_candidates = {info['candidates_path']}")
+        if info["archive_path"]:
+            print(f"[OK] archive = {info['archive_path']}")
         return
 
     if args.command == "preview":
