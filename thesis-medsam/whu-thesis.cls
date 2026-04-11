@@ -22,6 +22,7 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesExplClass {whu-thesis} {2025-03-17} {v2.4.0}
   {Thesis template for Wuhan University}
+\renewcommand{\cleardoublepage}{\clearpage}
 
 
 %tag 简化-msg-模块的函数
@@ -1048,6 +1049,7 @@
     \fancyhead [CE] { 武汉大学硕士学位论文 }
     \fancyhead [CO] { \l__whu_info_header_title_tl }
     \fancyfoot [C]  { \zihao{5} \Roman{page} }
+    \renewcommand \headrulewidth { 0pt }
   }
 \fancypagestyle { master-mainmatter  }
   {
@@ -1055,6 +1057,7 @@
     \fancyhead [CE] { 武汉大学硕士学位论文 }
     \fancyhead [CO] { \l__whu_info_header_title_tl }
     \fancyfoot [C]  { \zihao{5} \arabic{page} }
+    \renewcommand \headrulewidth { 0pt }
   }
 %tag 博士
 % 页眉从中文摘要开始至论文末，偶数页码内容为“武汉大学博士学位论文”，奇数页码内容为学位论文题目。
@@ -1659,8 +1662,8 @@
       {
         \begin{tabular}{c}
           \includegraphics[width=4cm]{./logo/whu-logo.pdf} \\[3pt]
-          \zihao{-2}\l__whu_info_department_en_tl \\[3pt]
-          \zihao{-2}\textsc{Wuhan~University}
+          \zihao{4}\l__whu_info_department_en_tl \\[3pt]
+          \zihao{4}\textsc{Wuhan~University}
         \end{tabular}
       };
   }
@@ -1670,7 +1673,7 @@
     \node [anchor = south] (date) at
       ([ shift = { ( 0 , 0.01\textheight ) } ] current~page~text~area.south)
       {
-        \zihao{-2}
+        \zihao{4}
         \__whu_month_cover_to_english_version:V \l__whu_info_month_int, \c_space_tl \int_use:N\l__whu_info_year_int
       };
   }
@@ -2214,6 +2217,8 @@
     % \dim_set:Nn \cftchapnumwidth { 1.5em }
     \dim_set:Nn \cftsecnumwidth { 2em }
     \dim_set:Nn \cftsubsecnumwidth { 2.8em }
+    \cftsetindents{section}{1.5em}{2.2em}
+    \cftsetindents{subsection}{3.5em}{2.2em}
     % chapter前的额外垂直间距
     % \dim_set:Nn \cftbeforechapskip { 0.5\baselineskip }
     % section前的额外垂直间距
