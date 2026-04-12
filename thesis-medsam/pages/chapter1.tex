@@ -12,9 +12,9 @@
 
 \subsection{医学图像分割模型发展}
 
-医学图像分割方法经历了从传统方法到深度学习，再到视觉基础模型迁移的演进\cite{wang2022medseg_survey}。U-Net\cite{ronneberger2015unet}通过编码器—解码器结构和跳跃连接机制，奠定了医学分割的经典范式。3D U-Net\cite{cicek20163dunet}将该架构扩展到体数据分割。此后，UNet++\cite{zhou2018unetpp}、Attention U-Net\cite{oktay2018attention}等工作围绕多尺度融合和注意力建模持续改进。nnU-Net\cite{isensee2021nnunet}通过自动化配置成为医学分割的强基线，MedNeXt\cite{roy2023mednext}进一步探索了ConvNet的现代化设计。
+医学图像分割方法经历了从传统方法到深度学习，再到视觉基础模型迁移的演进\cite{wang2022medseg_survey}。U-Net\cite{ronneberger2015unet}通过编码器—解码器结构和跳跃连接机制，奠定了医学分割的经典范式。此后，UNet++\cite{zhou2018unetpp}、Attention U-Net\cite{oktay2018attention}等工作围绕多尺度融合和注意力建模持续改进。nnU-Net\cite{isensee2021nnunet}通过自动化配置成为医学分割的强基线。
 
-随着 Transformer 架构进入视觉领域，SETR\cite{zheng2021setr}、SegFormer\cite{xie2021segformer}等方法在自然图像分割上验证了纯Transformer架构的有效性。在医学领域，TransUNet\cite{chen2021transunet}、Swin-Unet\cite{cao2022swinunet}、UNETR\cite{hatamizadeh2022unetr}等方法验证了长距离依赖建模的重要性。SAM\cite{kirillov2023segment}及其后续版本SAM 2\cite{ravi2024sam2}推动了提示式分割的发展，MedSAM\cite{ma2024medsam}将其迁移到医学场景。围绕医学任务适配，SAMed\cite{zhang2024samed}、SAM-Med3D\cite{wang2023sammed3d}、Medical SAM Adapter\cite{wu2023medsamadapter}等工作探索了基础模型的高效适配方式\cite{mazurowski2023sam_survey}。
+随着 Transformer 架构进入视觉领域，TransUNet\cite{chen2021transunet}、Swin-Unet\cite{cao2022swinunet}、UNETR\cite{hatamizadeh2022unetr}等方法验证了长距离依赖建模的重要性。SAM\cite{kirillov2023segment}推动了提示式分割的发展，MedSAM\cite{ma2024medsam}将其迁移到医学场景。围绕医学任务适配，SAMed\cite{zhang2024samed}、Medical SAM Adapter\cite{wu2023medsamadapter}等工作探索了基础模型的高效适配方式\cite{mazurowski2023sam_survey}。
 
 已有研究表明：基础模型迁移为医学分割提供了新起点，但任务特异性的损失设计与局部结构补强仍然必要。本文选择以 MedSAM 为基座，重点在于当前研究价值更集中于在已有强初始化基础上补足任务特异性短板。
 
@@ -24,7 +24,7 @@
 
 针对类别间不平衡，Class-Balanced Loss\cite{cui2019classbalanced}通过有效样本数建模多数类信息冗余，给出了系统化的类别重加权方法。针对困难样本学习，OHEM\cite{shrivastava2016ohem}提出在线困难样本挖掘策略，Focal Loss\cite{lin2017focal}通过连续调制因子降低易样本权重。
 
-在损失函数设计方面，Dice Loss\cite{milletari2016vnet}因其对不平衡数据的天然鲁棒性而被广泛使用。Generalised Dice Loss\cite{sudre2017generalised}通过类别加权进一步改进了不平衡处理能力。Tversky Loss\cite{salehi2017tversky}通过可调参数平衡假阳性和假阴性，Lovász-Softmax Loss\cite{berman2018lovasz}直接优化IoU指标。Unified Focal Loss\cite{yeung2022unified}统一了Dice和交叉熵损失的优势。Boundary Loss\cite{kervadec2019boundary}从距离度量角度直接优化边界质量，Active Boundary Loss\cite{wang2022activeboundaryloss}通过动态聚焦边界区域提高边界预测精度。
+在损失函数设计方面，Dice Loss\cite{milletari2016vnet}因其对不平衡数据的天然鲁棒性而被广泛使用。Boundary Loss\cite{kervadec2019boundary}从距离度量角度直接优化边界质量，Active Boundary Loss\cite{wang2022activeboundaryloss}通过动态聚焦边界区域提高边界预测精度。
 
 现有方法大多从“重叠度优化”或“连续调制”角度缓解不平衡，但对类别间重平衡与类别内困难像素加权的联合、可解释建模仍有改进空间。本文第 3 章正是在这一问题上，对 MedSAM 的训练信号进行任务驱动的重构。
 

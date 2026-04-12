@@ -58,9 +58,9 @@
 
 为保证路线比较的公平性，本文在固定 BL 损失主干的基础上，对不同结构增强方案采用相同的数据、训练轮数和评估协议，仅改变微调方式或附加结构。通过这种设置，性能差异可以更直接地反映不同结构路线与当前任务需求之间的匹配程度。
 
-对于 Cross-Attention 路线（BL+CA），本文在 Image Encoder 输出与 Mask Decoder 输入之间的桥接位置插入一个标准 Cross-Attention 模块（单头，隐藏维度 256，额外参数约 263K）。该模块以当前样本的编码器特征为 Query，以同一训练批次中随机选取的另一个样本（针对同一器官类别）的编码器特征为 Key 和 Value，通过交叉注意力机制引入跨样本参考信息。该设计旨在考察少样本分割中常用的 support-query 对齐策略\cite{wang2019panet}是否能为已有强基线带来额外增益。
+对于 Cross-Attention 路线（BL+CA），本文在 Image Encoder 输出与 Mask Decoder 输入之间的桥接位置插入一个标准 Cross-Attention 模块（单头，隐藏维度 256，额外参数约 263K）。该模块以当前样本的编码器特征为 Query，以同一训练批次中随机选取的另一个样本（针对同一器官类别）的编码器特征为 Key 和 Value，通过交叉注意力机制引入跨样本参考信息。该设计旨在考察少样本分割中常用的 support-query 对齐策略\cite{wang2019panet}以及通用分割中的跨样本参考机制\cite{butoi2023universeg}是否能为已有强基线带来额外增益。
 
-对于 LoRA 路线，本文将其作为具有代表性的参数高效微调对照纳入实验。具体而言，LoRA 插入至 Image Encoder 的注意力投影层，冻结原始主干参数，仅更新低秩旁路矩阵以及下游解码相关参数；损失函数、优化器和训练轮数均与 BL 保持一致，仅改变 LoRA 秩 $r$。这样的设置有助于回答一个具体问题：在当前腹部多器官分割任务中，是否可以仅依赖参数高效微调，而不开放主干特征继续适配。
+对于 LoRA 路线，本文将其作为具有代表性的参数高效微调对照纳入实验。具体而言，LoRA 插入至 Image Encoder 的注意力投影层，冻结原始主干参数，仅更新低秩旁路矩阵以及下游解码相关参数；损失函数、优化器和训练轮数均与 BL 保持一致，仅改变 LoRA 秩 $r$。LoRA\cite{hu2022lora}最初在自然语言处理任务上取得成功，后续被广泛应用于视觉模型的高效微调\cite{ding2022peftsurvey}。这样的设置有助于回答一个具体问题：在当前腹部多器官分割任务中，是否可以仅依赖参数高效微调，而不开放主干特征继续适配。
 
 对于局部适配器路线（BL+MSL），本文在 Image Encoder 与 Mask Decoder 之间的桥接位置插入一个轻量级卷积模块（Multi-Scale Local Adapter，简称 MSL-Adapter），用于显式补充局部高频纹理与边界响应。该模块采用双路径设计（膨胀率 $d=1$ 和 $d=2$），通过深度可分离卷积在不同感受野下捕获局部模式，额外参数约 136K。与 Cross-Attention 和 LoRA 不同，MSL-Adapter 不依赖跨样本参考或冻结主干假设，而是直接在特征传递路径上进行局部增强。该路线的详细设计将在第 4.5 节展开。
 
@@ -132,7 +132,7 @@ BL+MSL 的性能增益同时受益于两个因素：主干全参更新对特征�
 
 \subsection{模块结构}
 
-本文最终保留的局部适配器为 Multi-Scale Local Adapter（MSL-Adapter）。设 Image Encoder 输出特征图为 $\mathbf{x} \in \mathbb{R}^{B \times 256 \times 64 \times 64}$，其前向计算过程如下。
+本文最终保留的局部适配器为 Multi-Scale Local Adapter（MSL-Adapter）。已有研究表明，局部卷积与全局注意力机制具有互补性\cite{dai2021coatnet}，在视觉Transformer中引入局部归纳偏置可以提升空间建模能力\cite{li2021localvit}。设 Image Encoder 输出特征图为 $\mathbf{x} \in \mathbb{R}^{B \times 256 \times 64 \times 64}$，其前向计算过程如下。
 
 \textbf{第一步：双路径局部特征提取。}
 \begin{equation}
@@ -221,7 +221,7 @@ BL+MSL 的性能增益同时受益于两个因素：主干全参更新对特征�
 
 \subsection{推理开销分析}
 
-由于局部适配器仅工作在 $64\times64$ 的桥接特征图上，其附加计算量较低。在实际测试中（单张 V100 GPU，batch\_size=1），MedSAM 基线单样本推理延迟约 42 ms，插入适配器后增至约 43 ms，额外开销不超过 1 ms（相对增加约 2.4\%）。相比之下，BL+CA 路线需要在推理阶段额外编码参考样本，实际部署负担更大。
+由于局部适配器仅工作在 $64\times64$ 的桥接特征图上，其附加计算量较低。在实际测试中（单张 V100 GPU，batch\_size=1），MedSAM 基线单样本推理延迟约 42 ms，插入适配器后增至约 43 ms，额外开销不超过 1 ms（相对增加约 2.4\%）。相比之下，BL+CA 路线需要在推理阶段额外编码参考样本，实际部署负担更大。这一轻量化设计与深度可分离卷积\cite{howard2017mobilenets}的高效性密切相关。
 
 \section{本章小结}
 
