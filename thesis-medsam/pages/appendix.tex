@@ -1,33 +1,33 @@
-\chapter{附录}
+\chapter{补充材料}
 
-\section{Balance Loss 核心算法伪代码}
+\section{Balance Loss 计算流程}
 
-算法~\ref{alg:balance_loss}给出了 Balance Loss 框架中 Inter-CBL 和 Intra-CBL 的计算流程。
+表~\ref{tab:balance_loss_flow}给出了 Balance Loss 框架中 Inter-CBL 和 Intra-CBL 的计算流程。
 
 \begin{table}[htbp]
 \centering
-\caption{Balance Loss 核心算法伪代码}
-\label{alg:balance_loss}
-\begin{tabular}{p{0.92\textwidth}}
+\caption{Balance Loss 计算流程}
+\label{tab:balance_loss_flow}
+\begin{tabular}{p{0.88\textwidth}}
 \hline
-\textbf{算法}：Balance Loss 计算流程 \\
+\textbf{流程}：Balance Loss 计算流程 \\
 \hline
 \textbf{输入}：预测概率图 $\mathbf{p} \in [0,1]^{H \times W}$，真实标签 $\mathbf{y} \in \{0,1\}^{H \times W}$，\\
 \quad\quad\quad 超参数 $\alpha, \beta, \gamma, \tau, w_h, \text{neg\_ratio}$ \\
 \textbf{输出}：总损失 $L_{balance}$ \\
 \hline
-// \textbf{Step 1: Inter-CBL（类别间平衡损失）} \\
+\textbf{Step 1: Inter-CBL（类别间平衡损失）} \\
 1. 分离前景像素集合 $F = \{i : y_i = 1\}$ 和背景像素集合 $B = \{i : y_i = 0\}$ \\
 2. 计算所有背景像素的前景预测概率 $\{p_j\}_{j \in B}$ \\
 3. 按前景概率降序排列背景像素，取前 $|F| \times \text{neg\_ratio}$ 个作为困难背景集合 $H_B$ \\
 4. 计算 $L_{inter} = \frac{1}{2}\left(\frac{1}{|F|}\sum_{i \in F} \ell_i + \frac{1}{|H_B|}\sum_{j \in H_B} \ell_j\right)$ \\
 \\
-// \textbf{Step 2: Intra-CBL（类别内难度加权损失）} \\
+\textbf{Step 2: Intra-CBL（类别内难度加权损失）} \\
 5. 计算每个像素的置信度误差 $e_i = |p_i - y_i|$ \\
 6. 按阈值 $\tau$ 划分：难样本 $H = \{i : e_i > \tau\}$，易样本 $E = \{i : e_i \leq \tau\}$ \\
 7. 计算 $L_{intra} = 1.0 \cdot \frac{1}{|E|}\sum_{i \in E} \ell_i + w_h \cdot \frac{1}{|H|}\sum_{j \in H} \ell_j$ \\
 \\
-// \textbf{Step 3: 损失组合} \\
+\textbf{Step 3: 损失组合} \\
 8. 计算 Dice 损失 $L_{dice} = 1 - \frac{2|\mathbf{y} \cap \hat{\mathbf{y}}|}{|\mathbf{y}| + |\hat{\mathbf{y}}|}$ \\
 9. \textbf{return} $L_{balance} = \alpha \cdot L_{inter} + \beta \cdot L_{intra} + \gamma \cdot L_{dice}$ \\
 \hline
@@ -41,16 +41,18 @@
   \item \textbf{Stage 2}（Epoch $T_1$ 至终止）：引入完整的 $\alpha L_{inter} + \beta L_{intra} + \gamma L_{dice}$。此时模型已具备基础判别能力，Inter-CBL 的困难背景挖掘可以产生有效的梯度信号。
 \end{itemize}
 
-\section{LG-Adapter 核心代码}
+$T_1=50$ 的选择基于初步实验观察：在前 50 个 epoch 内，模型预测逐渐从随机状态收敛至基础判别能力，此后引入 Inter-CBL 可避免早期噪声梯度的干扰。
 
-以下为 Local-Global Adapter 模块的 PyTorch 实现代码：
+\section{局部适配器核心代码}
 
-\begin{verbatim}
+以下为局部适配器模块的 PyTorch 实现代码：
+
+\begin{lstlisting}
 import torch
 import torch.nn as nn
 
-class LGAdapter(nn.Module):
-    """Local-Global Adapter: dual-path depthwise separable
+class MSLAdapter(nn.Module):
+    """Multi-Scale Local Adapter: dual-path depthwise separable
     convolution for multi-scale local feature enhancement."""
 
     def __init__(self, embed_dim=256):
@@ -60,7 +62,8 @@ class LGAdapter(nn.Module):
             embed_dim, embed_dim, kernel_size=3,
             padding=1, groups=embed_dim, bias=True
         )
-        # Path 2: dilated 3x3 depthwise conv (semi-global)
+        # Path 2: dilated 3x3 depthwise conv
+        #          (larger local receptive field)
         self.conv2 = nn.Conv2d(
             embed_dim, embed_dim, kernel_size=3,
             padding=2, dilation=2, groups=embed_dim, bias=True
@@ -74,11 +77,11 @@ class LGAdapter(nn.Module):
     def forward(self, x):
         # x: (B, 256, 64, 64) from Image Encoder
         f1 = self.act(self.conv1(x))   # local features
-        f2 = self.act(self.conv2(x))   # semi-global features
+        f2 = self.act(self.conv2(x))   # larger-scale local features
         f_cat = torch.cat([f1, f2], dim=1)  # (B, 512, 64, 64)
         f_out = self.pointwise(f_cat)       # (B, 256, 64, 64)
         return x + f_out  # residual connection
-\end{verbatim}
+\end{lstlisting}
 
 \textbf{参数量统计}：conv1 = 2,560，conv2 = 2,560，pointwise = 131,328，总计 \textbf{136,448} 个参数（占 MedSAM 93.7M 总参数的 0.15\%）。
 
@@ -90,43 +93,68 @@ class LGAdapter(nn.Module):
   \centering
   \caption{各实验方案超参数配置}
   \label{tab:hyperparams}
-  \begin{tabular}{lcccccc}
+  \footnotesize
+  \setlength{\tabcolsep}{2.5pt}
+  \begin{tabular}{lccccccc}
     \hline
-    参数 & A0 & A2 & A3R3 & C2 & C3 \\
+    参数 & Baseline & Intra-$\tau$0.9 & BL & BL+CA & BL+LoRA-r4 & BL+LoRA-r8 & BL+MSL \\
     \hline
-    优化器 & AdamW & AdamW & AdamW & AdamW & AdamW \\
-    学习率 & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ \\
-    权重衰减 & 0.01 & 0.01 & 0.01 & 0.01 & 0.01 \\
-    Batch size & 8 & 8 & 8 & 8 & 8 \\
-    Epochs & 200 & 200 & 200 & 200 & 200 \\
-    数据增强 & Flip & Flip & Flip & Flip & Flip \\
-    随机种子 & 2025 & 2025 & 2025 & 2025 & 2025 \\
-    评估 checkpoint & best & best & best & best & best \\
+    \multicolumn{8}{l}{\textit{共享训练配置$^*$}} \\
+    优化器 & \multicolumn{7}{c}{AdamW（lr=$10^{-4}$, weight\_decay=0.01）} \\
+    训练轮数 / Batch size & \multicolumn{7}{c}{200 epochs / 8} \\
+    学习率调度 & \multicolumn{7}{c}{余弦退火} \\
+    数据增强 & \multicolumn{7}{c}{H-Flip($p$=0.5) + V-Flip($p$=0.5) + Rot90} \\
+    提示扰动 & \multicolumn{7}{c}{GT box 四边各 $[0, 20]$ px 随机外扩（仅训练阶段）} \\
+    随机种子 & \multicolumn{7}{c}{2025} \\
+    评估 checkpoint & \multicolumn{7}{c}{best（训练损失最低的 epoch）} \\
     \hline
-    $\alpha$ (Inter-CBL) & -- & -- & 0.5 & 0.5 & 0.5 \\
-    $\beta$ (Intra-CBL) & -- & 1.0 & 1.0 & 1.0 & 1.0 \\
-    $\gamma$ (Dice) & -- & 1.0 & 1.0 & 1.0 & 1.0 \\
-    $\tau$ (threshold) & -- & 0.9 & 0.9 & 0.9 & 0.9 \\
-    $w_h$ (hard weight) & -- & 2.0 & 2.0 & 2.0 & 2.0 \\
-    neg\_ratio & -- & -- & 3.0 & 3.0 & 3.0 \\
-    stage1\_epochs & -- & -- & 50 & 50 & 50 \\
+    $\alpha$ (Inter-CBL) & -- & -- & 0.5 & 0.5 & 0.5 & 0.5 & 0.5 \\
+    $\beta$ (Intra-CBL) & -- & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+    $\gamma$ (Dice) & -- & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 & 1.0 \\
+    $\tau$ (threshold) & -- & 0.9 & 0.9 & 0.9 & 0.9 & 0.9 & 0.9 \\
+    $w_h$ (hard weight) & -- & 2.0 & 2.0 & 2.0 & 2.0 & 2.0 & 2.0 \\
+    neg\_ratio & -- & -- & 3.0 & 3.0 & 3.0 & 3.0 & 3.0 \\
+    stage1\_epochs & -- & -- & 50 & 50 & 50 & 50 & 50 \\
     \hline
-    LoRA rank & -- & -- & -- & 4 & -- \\
-    LoRA $\alpha_{lora}$ & -- & -- & -- & 1.0 & -- \\
-    主干冻结 & 否 & 否 & 否 & 是 & 否 \\
-    LG-Adapter & 否 & 否 & 否 & 否 & 是 \\
+    LoRA rank & -- & -- & -- & -- & 4 & 8 & -- \\
+    LoRA $\alpha_{lora}$ & -- & -- & -- & -- & 1.0 & 1.0 & -- \\
+    主干冻结$^\dag$ & 否 & 否 & 否 & 否 & 是 & 是 & 否 \\
+    Cross-Attention & 否 & 否 & 否 & 是 & 否 & 否 & 否 \\
+    局部适配器 & 否 & 否 & 否 & 否 & 否 & 否 & 是 \\
     \hline
   \end{tabular}
+  \vspace{2pt}
+  \parbox{\textwidth}{\footnotesize $^*$所有方案共享上述训练配置，仅在损失参数与微调方式上存在差异。\\
+  $^\dag$“主干冻结”指 Image Encoder 参数冻结；Prompt Encoder 在所有方案中均保持冻结。BL+LoRA-r16（rank=16）配置与 r4/r8 一致，因表宽限制未单独列出。BL+CA 的额外参数来自 Cross-Attention 模块（$\sim$263K），推理时需额外编码参考样本。}
 \end{table}
 
 \section{实验环境}
 
 \begin{itemize}
-  \item \textbf{GPU}：4$\times$ NVIDIA V100（32GB 显存），单次训练约 52 小时
+  \item \textbf{GPU}：4$\times$ NVIDIA V100（32GB 显存）
+  \item \textbf{典型训练时间}：BL+MSL 约 52 小时/200 epochs（详见第5章表~\ref{tab:training_overhead}）
   \item \textbf{深度学习框架}：PyTorch 2.0
   \item \textbf{操作系统}：Ubuntu 20.04 LTS
   \item \textbf{Python 版本}：3.10
   \item \textbf{CUDA 版本}：11.8
+  \item \textbf{主要依赖库}：numpy 1.24, scipy 1.10, monai 1.2, opencv-python 4.7
   \item \textbf{基座模型}：MedSAM（基于 ViT-Base，93.7M 参数）
   \item \textbf{预训练权重}：MedSAM 官方发布权重\cite{ma2024medsam}
 \end{itemize}
+
+\section{器官列表}
+
+本文实验涉及的 13 个腹部器官如下：
+
+\begin{itemize}
+  \item \textbf{实质器官}（6 个）：肝脏（Liver）、脾脏（Spleen）、左肾（Left Kidney）、右肾（Right Kidney）、胰腺（Pancreas）、胆囊（Gallbladder）
+  \item \textbf{空腔器官}（3 个）：食管（Esophagus）、胃（Stomach）、十二指肠（Duodenum）
+  \item \textbf{血管}（2 个）：主动脉（Aorta）、下腔静脉（Inferior Vena Cava, IVC）
+  \item \textbf{内分泌器官}（2 个）：右侧肾上腺（Right Adrenal Gland, RAG）、左侧肾上腺（Left Adrenal Gland, LAG）
+\end{itemize}
+
+\textbf{说明}：本文使用的 AMOS22 数据集原始标注含 15 类器官，已排除 Bladder（膀胱）与 Prostate/Uterus（前列腺/子宫）后保留 13 类，与 FLARE22 的 13 类标签体系一致。
+
+\section{代码与数据可用性说明}
+
+本文所涉及的 Balance Loss 实现代码、MSL-Adapter 模块定义、训练与评估脚本均基于 MedSAM\cite{ma2024medsam}开源代码库进行开发。数据集方面，本文使用的 AMOS22 CT 子集可通过官方渠道申请获取。

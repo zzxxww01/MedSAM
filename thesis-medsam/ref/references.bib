@@ -3,7 +3,7 @@
 % ============================================================
 
 @article{ma2024medsam,
-  title   = {Segment anything in medical images},
+  title   = {{Segment Anything} in Medical Images},
   author  = {Ma, Jun and He, Yichi and Li, Feifei and Han, Lin and You, Chenyu and Wang, Bo},
   journal = {Nature Communications},
   volume  = {15},
@@ -21,11 +21,12 @@
   doi       = {10.1109/ICCV51070.2023.00371}
 }
 
-@article{ravi2024sam2,
-  title   = {{SAM} 2: Segment Anything in Images and Videos},
-  author  = {Ravi, Nikhila and Gabber, Valentin and Hu, Yuan-Ting and Hu, Ronghang and Ryali, Chaitanya and Ma, Tengyu and Khedr, Haitham and R{\"a}dle, Roman and Rolland, Chloe and Gustafson, Laura and Mintun, Eric and Pan, Junting and Alwala, Kalyan Vasudev and Carion, Nicolas and Wu, Chao-Yuan and Girshick, Ross and Doll{\'a}r, Piotr and Feichtenhofer, Christoph},
-  journal = {arXiv preprint arXiv:2408.00714},
-  year    = {2024}
+@inproceedings{ravi2024sam2,
+  title     = {{SAM} 2: Segment Anything in Images and Videos},
+  author    = {Ravi, Nikhila and Gabber, Valentin and Hu, Yuan-Ting and Hu, Ronghang and Ryali, Chaitanya and Ma, Tengyu and Khedr, Haitham and R{\"a}dle, Roman and Rolland, Chloe and Gustafson, Laura and Mintun, Eric and Pan, Junting and Alwala, Kalyan Vasudev and Carion, Nicolas and Wu, Chao-Yuan and Girshick, Ross and Doll{\'a}r, Piotr and Feichtenhofer, Christoph},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {37},
+  year      = {2024}
 }
 
 @inproceedings{dosovitskiy2021vit,
@@ -40,7 +41,7 @@
 % ============================================================
 
 @inproceedings{ronneberger2015unet,
-  title     = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
+  title     = {{U-Net}: Convolutional Networks for Biomedical Image Segmentation},
   author    = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
   booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
   pages     = {234--241},
@@ -67,12 +68,13 @@
 }
 
 @inproceedings{cao2022swinunet,
-  title     = {Swin-Unet: Unet-like Pure Transformer for Medical Image Segmentation},
+  title     = {{Swin-Unet}: {U}net-like Pure Transformer for Medical Image Segmentation},
   author    = {Cao, Hu and Wang, Yueyue and Chen, Joy and Jiang, Dongsheng and Zhang, Xiaopeng and Tian, Qi and Wang, Manning},
   booktitle = {European Conference on Computer Vision (ECCV) Workshops},
   pages     = {205--218},
   year      = {2022},
-  doi       = {10.1007/978-3-031-25066-8_9}
+  doi       = {10.1007/978-3-031-25066-8_9},
+  note      = {Cited by conference year; Springer proceedings volume published later.}
 }
 
 % ============================================================
@@ -80,18 +82,22 @@
 % ============================================================
 
 @inproceedings{zhang2024samed,
-  title     = {{SAMed}: A General and Efficient Medical Image Segmentation Framework Based on Segment Anything Model},
+  title     = {Customized Segment Anything Model for Medical Image Segmentation},
   author    = {Zhang, Kaidong and Liu, Dong},
-  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
-  year      = {2024}
+  booktitle = {arXiv preprint arXiv:2304.13785},
+  year      = {2023},
+  note      = {Preprint; this work introduces the SAMed method. [访问日期: 2026-04-12]},
+  url       = {https://arxiv.org/abs/2304.13785}
 }
 
 @inproceedings{wei2024imedsam,
   title     = {{I-MedSAM}: Implicit Medical Image Segmentation with Segment Anything},
   author    = {Wei, Xiaobao and Cao, Jiajun and Jin, Yizhu and Lu, Ming and Wang, Guangyu and Zhang, Shanghang},
   booktitle = {European Conference on Computer Vision (ECCV)},
+  pages     = {93--111},
   year      = {2024},
-  note      = {arXiv:2311.17081}
+  doi       = {10.1007/978-3-031-72684-2_6},
+  note      = {Cited by conference year; earlier version available as arXiv:2311.17081.}
 }
 
 @article{wu2023medsamadapter,
@@ -140,7 +146,7 @@
 % ============================================================
 
 @inproceedings{milletari2016vnet,
-  title     = {V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation},
+  title     = {{V-Net}: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation},
   author    = {Milletari, Fausto and Navab, Nassir and Ahmadi, Seyed-Ahmad},
   booktitle = {2016 Fourth International Conference on 3D Vision (3DV)},
   pages     = {565--571},
@@ -200,16 +206,9 @@
   title   = {MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications},
   author  = {Howard, Andrew G. and Zhu, Menglong and Chen, Bo and Kalenichenko, Dmitry and Wang, Weijun and Weyand, Tobias and Andreetto, Marco and Adam, Hartmut},
   journal = {arXiv preprint arXiv:1704.04861},
-  year    = {2017}
-}
-
-@inproceedings{chollet2017xception,
-  title     = {Xception: Deep Learning with Depthwise Separable Convolutions},
-  author    = {Chollet, Fran{\c{c}}ois},
-  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages     = {1251--1258},
-  year      = {2017},
-  doi       = {10.1109/CVPR.2017.195}
+  year    = {2017},
+  note    = {Preprint; widely cited but no formal peer-reviewed venue publication. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/1704.04861}
 }
 
 @inproceedings{chen2018deeplabv3plus,
@@ -409,7 +408,9 @@
   title   = {{SAM-Med2D}},
   author  = {Cheng, Junlong and Ye, Jin and Deng, Zhongying and Chen, Jianpin and Li, Tianbin and Wang, Haoyu and Su, Yanzhou and Huang, Ziyan and Chen, Jilong and Jiang, Lei and others},
   journal = {arXiv preprint arXiv:2308.16184},
-  year    = {2023}
+  year    = {2023},
+  note    = {Preprint; no peer-reviewed publication identified as of 2026. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/2308.16184}
 }
 
 @article{wang2023sammed3d,
@@ -424,7 +425,7 @@
 }
 
 @article{mazurowski2023sam_survey,
-  title   = {Segment Anything Model for Medical Image Analysis: An Experimental Study},
+  title     = {Segment Anything Model for Medical Image Analysis: An Experimental Study},
   author  = {Mazurowski, Maciej A. and Dong, Haoyu and Gu, Hanxue and Yang, Jichen and Konz, Nicholas and Zhang, Yixin},
   journal = {Medical Image Analysis},
   volume  = {89},
@@ -433,7 +434,17 @@
   doi     = {10.1016/j.media.2023.102918}
 }
 
-% --- 损失函数 (新增) ---
+% --- 损失函数与不平衡学习 (新增) ---
+
+@article{yeung2022unified,
+  title   = {Unified Focal Loss: Generalising Dice and Cross Entropy-based Losses to Handle Class Imbalanced Medical Image Segmentation},
+  author  = {Yeung, Michael and Sala, Evis and Sch{\"o}nlieb, Carola-Bibiane and Rundo, Leonardo},
+  journal = {Computerized Medical Imaging and Graphics},
+  volume  = {95},
+  pages   = {102026},
+  year    = {2022},
+  doi     = {10.1016/j.compmedimag.2021.102026}
+}
 
 @inproceedings{salehi2017tversky,
   title     = {Tversky Loss Function for Image Segmentation Using {3D} Fully Convolutional Deep Networks},
@@ -470,7 +481,8 @@
   author    = {Chen, Shoufa and Ge, Chongjian and Tong, Zhan and Wang, Jiangliu and Song, Yibing and Wang, Jue and Luo, Ping},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
   volume    = {35},
-  year      = {2022}
+  year      = {2022},
+  doi       = {10.5555/3600270.3603115}
 }
 
 @inproceedings{jia2022vpt,
@@ -489,7 +501,8 @@
   author    = {Ji, Yuanfeng and Bai, Haotian and Ge, Chongjian and Yang, Jie and Zhu, Ye and Zhang, Ruimao and Li, Zhen and Zhang, Lingyan and Ma, Wanling and Wan, Xiang and Luo, Ping},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
   volume    = {35},
-  year      = {2022}
+  year      = {2022},
+  doi       = {10.5555/3600270.3604561}
 }
 
 @article{wasserthal2023totalsegmentator,
@@ -514,15 +527,6 @@
   doi       = {10.1109/CVPR.2017.243}
 }
 
-@inproceedings{liu2021swin,
-  title     = {Swin Transformer: Hierarchical Vision Transformer using Shifted Windows},
-  author    = {Liu, Ze and Lin, Yutong and Cao, Yue and Hu, Han and Wei, Yixuan and Zhang, Zheng and Lin, Stephen and Guo, Baining},
-  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
-  pages     = {10012--10022},
-  year      = {2021},
-  doi       = {10.1109/ICCV48922.2021.00986}
-}
-
 @inproceedings{zhao2017pspnet,
   title     = {Pyramid Scene Parsing Network},
   author    = {Zhao, Hengshuang and Shi, Jianping and Qi, Xiaojuan and Wang, Xiaogang and Jia, Jiaya},
@@ -532,20 +536,13 @@
   doi       = {10.1109/CVPR.2017.660}
 }
 
-@article{chen2017deeplabv3,
-  title   = {Rethinking Atrous Convolution for Semantic Image Segmentation},
-  author  = {Chen, Liang-Chieh and Papandreou, George and Schroff, Florian and Adam, Hartmut},
-  journal = {arXiv preprint arXiv:1706.05587},
-  year    = {2017}
-}
-
-@inproceedings{tang2022selfpre,
-  title     = {Self-Supervised Pre-Training of Swin Transformers for {3D} Medical Image Analysis},
-  author    = {Tang, Yucheng and Yang, Dong and Li, Wenqi and Roth, Holger R. and Landman, Bennett and Xu, Daguang and Nath, Vishwesh and Hatamizadeh, Ali},
-  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages     = {20730--20740},
-  year      = {2022},
-  doi       = {10.1109/CVPR52688.2022.02007}
+@inproceedings{chen2017deeplabv3,
+  title     = {Rethinking Atrous Convolution for Semantic Image Segmentation},
+  author    = {Chen, Liang-Chieh and Papandreou, George and Schroff, Florian and Adam, Hartmut},
+  booktitle = {arXiv preprint arXiv:1706.05587},
+  year      = {2017},
+  note      = {Preprint; the published version is DeepLabV3+ (ECCV 2018). [访问日期: 2026-04-12]},
+  url       = {https://arxiv.org/abs/1706.05587}
 }
 
 % ============================================================
@@ -554,32 +551,15 @@
 
 % --- 边界损失 ---
 
-@inproceedings{kervadec2019boundary,
-  title     = {Boundary Loss for Highly Unbalanced Segmentation},
+@article{kervadec2019boundary,
+  title     = {Boundary loss for highly unbalanced segmentation},
   author    = {Kervadec, Hoel and Bouchtiba, Jihene and Desrosiers, Christian and Granger, Eric and de Guise, Jacques and Bhatt, Ismail Ben Ayed},
-  booktitle = {Medical Imaging with Deep Learning (MIDL)},
-  pages     = {285--296},
-  year      = {2019}
-}
-
-% --- 课程学习 ---
-
-@article{bengio2009curriculum,
-  title   = {Curriculum Learning},
-  author  = {Bengio, Yoshua and Louradour, J{\'e}r{\^o}me and Collobert, Ronan and Weston, Jason},
-  journal = {Proceedings of the 26th International Conference on Machine Learning (ICML)},
-  pages   = {41--48},
-  year    = {2009}
-}
-
-@article{yeung2022unified,
-  title   = {Unified Focal Loss: Generalising Dice and Cross Entropy-based Losses to Handle Class Imbalanced Medical Image Segmentation},
-  author  = {Yeung, Michael and Sala, Evis and Sch{\"o}nlieb, Carola-Bibiane and Rundo, Leonardo},
-  journal = {Computerized Medical Imaging and Graphics},
-  volume  = {95},
-  pages   = {102026},
-  year    = {2022},
-  doi     = {10.1016/j.compmedimag.2021.102026}
+  journal   = {Medical Image Analysis},
+  volume    = {67},
+  pages     = {101851},
+  year      = {2021},
+  doi       = {10.1016/j.media.2020.101851},
+  note      = {Journal version of the original MIDL 2019 work.}
 }
 
 @article{chen2024masam,
@@ -592,16 +572,172 @@
   doi     = {10.1016/j.media.2024.103310}
 }
 
-@inproceedings{cheng2024hsam,
-  title     = {{H-SAM}: Hierarchical {SAM} for Multi-class Medical Image Segmentation},
-  author    = {Cheng, Zhihao and Ma, Jieyu and Li, Lei and Zhu, Yiwen and Zhang, Dandan and Li, Hao},
-  booktitle = {European Conference on Computer Vision (ECCV)},
-  year      = {2024}
+@book{goodfellow2016deeplearning,
+  title     = {Deep Learning},
+  author    = {Goodfellow, Ian and Bengio, Yoshua and Courville, Aaron},
+  publisher = {MIT Press},
+  year      = {2016},
+  url       = {http://www.deeplearningbook.org}
 }
 
-@article{ma2024litemedsam,
-  title   = {Segment Anything in Medical Images on Laptop},
-  author  = {Ma, Jun and Kim, Sumin and Li, Feifei and Baharoon, Mohammed and Asakereh, Reza and Lyu, Hongwei and Wang, Bo},
-  journal = {arXiv preprint arXiv:2410.10858},
-  year    = {2024}
+@inproceedings{wu2021cvt,
+  title     = {{CvT}: Introducing Convolutions to Vision Transformers},
+  author    = {Wu, Haiping and Xiao, Bin and Codella, Noel and Liu, Mengchen and Dai, Xiyang and Yuan, Lu and Zhang, Lei},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  pages     = {22--31},
+  year      = {2021},
+  doi       = {10.1109/ICCV48922.2021.00009}
 }
+
+@article{li2021localvit,
+  title   = {{LocalViT}: Bringing Locality to Vision Transformers},
+  author  = {Li, Yawei and Zhang, Kai and Cao, Jiezhang and Timofte, Radu and Van Gool, Luc},
+  journal = {arXiv preprint arXiv:2104.05707},
+  year    = {2021},
+  note    = {Preprint; cited for methodological contribution to local-global hybrid design. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/2104.05707}
+}
+
+% ============================================================
+%  2025 补充文献
+% ============================================================
+
+@article{zhu2024medsam2,
+  title   = {Medical {SAM} 2: Segment Medical Images As Video Via Segment Anything Model 2},
+  author  = {Zhu, Jiayuan and Qi, Yunli and Wu, Junde},
+  journal = {arXiv preprint arXiv:2408.00874},
+  year    = {2024},
+  note    = {Preprint; representative SAM 2 medical adaptation work. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/2408.00874}
+}
+
+@article{chen2023sam_survey_med,
+  title   = {SAM Fails to Segment Anything? -- {SAM}-Adapter: Adapting {SAM} in Underperformed Scenes},
+  author  = {Chen, Tianrun and Zhu, Lanyun and Deng, Chaotao and Cao, Runlong and Wang, Yan and Zhang, Shangzhan and Li, Zejian and Sun, Lingyun and Zang, Ying and Mao, Papa},
+  journal = {arXiv preprint arXiv:2304.09148},
+  year    = {2023},
+  note    = {Preprint; adapter-based SAM adaptation for challenging domains. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/2304.09148}
+}
+
+@inproceedings{wang2022activeboundaryloss,
+  title     = {Active Boundary Loss for Semantic Segmentation},
+  author    = {Wang, Chi and Zhang, Yunlong and Cui, Miaomiao and Ren, Peijun and Yang, Yin and Xie, Xuansong and Hua, Xian-Sheng and Bao, Hujun and Huang, Weiwei},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {36},
+  number    = {2},
+  pages     = {2397--2405},
+  year      = {2022},
+  doi       = {10.1609/aaai.v36i2.20139}
+}
+
+@article{ding2022peftsurvey,
+  title   = {Parameter-Efficient Fine-Tuning of Large-Scale Pre-Trained Language Models},
+  author  = {Ding, Ning and Qin, Yujia and Yang, Guang and Wei, Fuchao and Yang, Zonghan and Su, Yusheng and Hu, Shengding and Chen, Yulin and Chan, Chi-Min and Chen, Weizhi and others},
+  journal = {Nature Machine Intelligence},
+  volume  = {5},
+  pages   = {220--235},
+  year    = {2023},
+  doi     = {10.1038/s42256-023-00626-4}
+}
+
+% ============================================================
+%  2026 补充文献：医学分割新进展、损失函数、适配器、基础模型、统计方法
+% ============================================================
+
+% --- 医学图像分割新进展 ---
+
+@inproceedings{roy2023mednext,
+  title     = {{MedNeXt}: Transformer-driven Scaling of {ConvNets} for Medical Image Segmentation},
+  author    = {Roy, Saikat and Koehler, Gregor and Baumgartner, Michael and Ulrich, Constantin and Isensee, Fabian and Jaeger, Paul F. and Maier-Hein, Klaus H.},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
+  pages     = {405--415},
+  year      = {2023},
+  doi       = {10.1007/978-3-031-43901-8_39}
+}
+
+@inproceedings{butoi2023universeg,
+  title     = {{UniverSeg}: Universal Medical Image Segmentation},
+  author    = {Butoi, Victor Ion and Ortiz, Jose Javier Gonzalez and Ma, Tianyu and Sabuncu, Mert R. and Guttag, John and Dalca, Adrian V.},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  pages     = {21438--21451},
+  year      = {2023},
+  doi       = {10.1109/ICCV51070.2023.01961}
+}
+
+@inproceedings{wong2024scribbleprompt,
+  title     = {{ScribblePrompt}: Fast and Flexible Interactive Segmentation for Any Biomedical Image},
+  author    = {Wong, Hallee E. and Rakic, Marianne and Guttag, John and Dalca, Adrian V.},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  pages     = {207--225},
+  year      = {2024},
+  doi       = {10.1007/978-3-031-73661-2_12},
+  note      = {Cited by conference year; Springer proceedings volume published later.}
+}
+
+% --- 损失函数设计 ---
+
+@article{taghanaki2019combo,
+  title   = {Combo Loss: Handling Input and Output Imbalance in Multi-Organ Segmentation},
+  author  = {Taghanaki, Saeid Asgari and Zheng, Yefeng and Zhou, S. Kevin and Georgescu, Bogdan and Sharma, Puneet and Xu, Daguang and Comaniciu, Dorin and Hamarneh, Ghassan},
+  journal = {Computerized Medical Imaging and Graphics},
+  volume  = {75},
+  pages   = {24--33},
+  year    = {2019},
+  doi     = {10.1016/j.compmedimag.2019.04.005}
+}
+
+@inproceedings{sudre2017generalised,
+  title     = {Generalised {Dice} Overlap as a Deep Learning Loss Function for Highly Unbalanced Segmentations},
+  author    = {Sudre, Carole H. and Li, Wenqi and Vercauteren, Tom and Ourselin, Sebastien and Jorge Cardoso, M.},
+  booktitle = {Deep Learning in Medical Image Analysis and Multimodal Learning for Clinical Decision Support (DLMIA)},
+  pages     = {240--248},
+  year      = {2017},
+  doi       = {10.1007/978-3-319-67558-9_28}
+}
+
+% --- 适配器/微调方向 ---
+
+@article{paranjape2024adaptivesam,
+  title   = {Adaptivesam: Towards Efficient Tuning of {SAM} for Surgical Scene Segmentation},
+  author  = {Paranjape, Jay N. and Nair, Nithin Gopalakrishnan and Sikder, Shameema and Vedula, S. Swaroop and Patel, Vishal M.},
+  journal = {arXiv preprint arXiv:2308.03726},
+  year    = {2023},
+  note    = {Preprint; SAM adaptation for surgical instruments. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/2308.03726}
+}
+
+@article{shaharabany2023autosam,
+  title   = {{AutoSAM}: Adapting {SAM} to Medical Images by Overloading the Prompt Encoder},
+  author  = {Shaharabany, Tal and Dahan, Aviad and Giryes, Raja and Wolf, Lior},
+  journal = {arXiv preprint arXiv:2306.06370},
+  year    = {2023},
+  note    = {Preprint; prompt-encoder-based SAM adaptation. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/2306.06370}
+}
+
+% --- 基础模型相关 ---
+
+@article{moor2023foundation,
+  title   = {Foundation Models for Generalist Medical Artificial Intelligence},
+  author  = {Moor, Michael and Banerjee, Oishi and Abad, Zahra Shakeri Hossein and Krumholz, Harlan M. and Leskovec, Jure and Topol, Eric J. and Rajpurkar, Pranav},
+  journal = {Nature},
+  volume  = {616},
+  number  = {7956},
+  pages   = {259--265},
+  year    = {2023},
+  doi     = {10.1038/s41586-023-05881-4}
+}
+
+@article{bommasani2021foundation,
+  title   = {On the Opportunities and Risks of Foundation Models},
+  author  = {Bommasani, Rishi and Hudson, Drew A. and Adeli, Ehsan and Altman, Russ and Arber, Simran and von Arx, Sydney and Bernstein, Michael S. and Bohg, Jeannette and Bosselut, Antoine and Brunskill, Emma and others},
+  journal = {arXiv preprint arXiv:2108.07258},
+  year    = {2021},
+  note    = {Preprint; seminal survey on foundation models. [访问日期: 2026-04-12]},
+  url     = {https://arxiv.org/abs/2108.07258}
+}
+
+% --- 统计方法 ---
+
+% --- 补充：交互式分割与提示工程 ---

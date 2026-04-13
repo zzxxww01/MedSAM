@@ -48,7 +48,8 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Circle, Rectangle
 
 
-plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei", "serif"]
+plt.rcParams["font.family"] = ["Times New Roman", "SimSun", "serif"]
+plt.rcParams["mathtext.fontset"] = "stix"
 plt.rcParams["axes.unicode_minus"] = False
 logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
 
@@ -948,3 +949,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

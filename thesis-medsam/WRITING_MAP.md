@@ -21,7 +21,7 @@
 | `pages/chapter1.tex` | `docs/THESIS_PLAN.md`、`docs/THESIS_TECHNICAL_REPORT.md` | 绪论与创新点 |
 | `pages/chapter2.tex` | `docs/THESIS_TECHNICAL_REPORT.md` | 理论基础与关键公式 |
 | `pages/chapter3.tex` | `docs/EXPERIMENT_LOG.md`、`docs/THESIS_TECHNICAL_REPORT.md` | Balance 损失方法与 A3R3 结果 |
-| `pages/chapter4.tex` | `docs/THESIS_TECHNICAL_REPORT.md`、`docs/FULL_EXPERIMENT_PLAN.md` | 架构创新设计 (LoRA 与 LG-Adapter) |
+| `pages/chapter4.tex` | `docs/THESIS_TECHNICAL_REPORT.md`、`docs/FULL_EXPERIMENT_PLAN.md` | 架构创新设计 (LoRA 与 MSL-Adapter) |
 | `pages/chapter5.tex` | `docs/FULL_EXPERIMENT_PLAN.md`、`docs/WEEKLY_TASKS.md` | 综合实验组织、消融分析与 SOTA 对比 |
 | `pages/chapter6.tex` | `docs/THESIS_MASTER_GUIDE.md` | 总结与展望 |
 

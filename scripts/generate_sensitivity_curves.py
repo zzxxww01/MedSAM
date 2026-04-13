@@ -5,15 +5,15 @@
 """
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.rcParams['font.family'] = 'Times New Roman'
+matplotlib.rcParams['font.family'] = ['Times New Roman', 'SimSun', 'serif']
 matplotlib.rcParams['mathtext.fontset'] = 'stix'
 
 fig_dir = 'thesis-medsam/figures'
 
 # ============ 图A: α 敏感性 ============
 alphas = [0.3, 0.5, 0.7, 1.0]
-dsc_a  = [0.9516, 0.9543, 0.9436, 0.9278]
-hd95_a = [3.4285, 3.1847, 4.1835, 5.5417]
+dsc_a  = [0.9529, 0.9538, 0.9462, 0.9294]
+hd95_a = [3.2146, 3.2419, 4.0668, 5.6182]
 
 fig, ax1 = plt.subplots(figsize=(4.5, 3.2))
 color_dsc, color_hd = '#2166AC', '#B2182B'
@@ -55,8 +55,8 @@ plt.close()
 
 # ============ 图B: T1 敏感性 ============
 t1s    = [0, 30, 50, 70, 100]
-dsc_t  = [0.9463, 0.9501, 0.9543, 0.9530, 0.9512]
-hd95_t = [3.7524, 3.4182, 3.1847, 3.2714, 3.3842]
+dsc_t  = [0.9470, 0.9527, 0.9538, 0.9535, 0.9519]
+hd95_t = [3.7085, 3.3148, 3.2419, 3.2275, 3.2861]
 
 fig, ax1 = plt.subplots(figsize=(4.5, 3.2))
 
@@ -94,3 +94,4 @@ fig.savefig(f'{fig_dir}/sensitivity_t1.pdf', bbox_inches='tight', dpi=300)
 plt.close()
 
 print("Done: sensitivity_alpha.pdf, sensitivity_t1.pdf")
+

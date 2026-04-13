@@ -1,0 +1,165 @@
+thesis-medsam/pages/chapter4.tex:28:    大体积器官 & Liver/Spleen/R.Kidney/L.Kidney & 0.9817 & 0.7375 & 0.0825 \\
+thesis-medsam/pages/chapter4.tex:29:    小/复杂器官 & Pancreas/Esophagus/Duodenum/RAG/LAG & 0.9260 & 6.1960 & 0.6680 \\
+thesis-medsam/pages/chapter4.tex:31:    全部器官均值 & -- & 0.9538 & 3.2419 & 0.3716 \\
+thesis-medsam/pages/chapter4.tex:39:  \item \textbf{DSC 已处于较高水平，但边界指标仍有明显空间。}全局 DSC 达到 0.9538，表明 BL 在整体区域覆盖上已接近瓶颈；但 HD95 和 ASD 仍存在可压缩的余量，尤其是小/复杂器官组的 HD95 约为大体积器官组的 8 倍。
+thesis-medsam/pages/chapter4.tex:77:    BL & 最优损失主干 & 0 & 0.9538$\pm$0.015 & 3.2419$\pm$0.49 & 0.3716$\pm$0.038 \\
+thesis-medsam/pages/chapter4.tex:78:    BL+CA & BL + Cross-Attention 融合 & $\sim$263K$^*$ & 0.9468$\pm$0.018 & 3.6241$\pm$0.65 & 0.4073$\pm$0.050 \\
+thesis-medsam/pages/chapter4.tex:79:    BL+LoRA-r4  & BL + LoRA（冻结主干） & 147,456 & 0.9328$\pm$0.027 & 4.7411$\pm$0.79 & 0.5214$\pm$0.061 \\
+thesis-medsam/pages/chapter4.tex:80:    BL+LoRA-r8  & BL + LoRA（冻结主干） & 294,912 & 0.9386$\pm$0.020 & 4.2063$\pm$0.66 & 0.5037$\pm$0.049 \\
+thesis-medsam/pages/chapter4.tex:81:    BL+LoRA-r16 & BL + LoRA（冻结主干） & 589,824 & 0.9417$\pm$0.022 & 4.2489$\pm$0.58 & 0.4689$\pm$0.052 \\
+thesis-medsam/pages/chapter4.tex:82:    BL+MSL & BL + 局部适配器（主干全参更新） & 136,448 & \textbf{0.9562$\pm$0.015} & \textbf{3.0127$\pm$0.44} & \textbf{0.3418$\pm$0.034} \\
+thesis-medsam/pages/chapter4.tex:90:从表~\ref{tab:route_selection}可以看出，Cross-Attention 路线和冻结主干的 LoRA 路线均未优于 BL。其中，BL+CA 相比 BL 出现明显回落，说明在当前实现方式下，直接引入跨样本参考特征并未转化为稳定增益；LoRA-r4（0.9312）显著低于 Baseline 基线（0.9411，详见第5章），r8（0.9378）仍未恢复基线水平，即便 r16（0.9421）已略超 Baseline，但与 BL（0.9538）仍有较大差距，说明仅依赖冻结主干与低秩旁路，难以完成当前多器官分割任务所需的充分特征适配。
+thesis-medsam/pages/chapter4.tex:96:需要说明的是，BL+MSL 的性能增益同时受益于两个因素：主干全参更新对特征空间的充分适配，以及 MSL-Adapter 对局部边界表征的定向补强。由于 LoRA 路线冻结了主干参数，其与 BL+MSL 的性能差距不能完全归因于适配器结构本身，而部分来自主干是否开放更新这一训练策略差异。为更精确地评估 MSL-Adapter 结构本身的贡献，可参考表~\ref{tab:main_results}中 BL 与 BL+MSL 的直接对比：两者均采用主干全参更新，唯一差异在于是否引入适配器模块，因此 BL$\to$BL+MSL 的增量（DSC +0.0024, HD95 $-$0.2292, ASD $-$0.0298）可以更纯粹地归因于 MSL-Adapter 的结构贡献。需要指出的是，该增量幅度较小（DSC 提升不足 0.3\%），在第5章的统计检验中未通过 Bonferroni 校正后的显著性阈值，因此应将其理解为方向稳定但幅度有限的边界补强，而非大幅度的整体跃升。而 LoRA 路线的低表现则表明，即便在已有 BL 优化训练信号的前提下，冻结主干所导致的特征适配不充分仍是比结构增强更根本的限制因素。
+thesis-medsam/pages/chapter4.tex:104:LoRA 路线的结果则呈现出”增大秩虽有收益，但整体仍受限制”的一致趋势：$r=16$ 时 DSC（0.9421）已略超 Baseline 基线（0.9411），但与 BL（0.9538）仍有明显差距。这表明问题并不只是秩不够大，而是冻结主干这一前提本身限制了对医学图像域特征的充分重塑。本文关注的关键难点是复杂器官边界与细粒度轮廓的持续重建，此类误差要求主干特征在空间表征上进行更充分的再适配，因此参数高效并不等同于任务高效。
+thesis-medsam/pages/chapter4.tex:155:  \includegraphics[width=0.7\textwidth]{figures/lg_adapter_arch.pdf}
+thesis-medsam/pages/chapter4.tex:162:  \includegraphics[width=0.85\textwidth]{figures/adapter_pipeline.pdf}
+thesis-medsam/pages/chapter4.tex:169:此外，本文适配器采用二维卷积操作，仅在单张切片的特征图上进行局部增强，未利用 CT 体积数据中相邻切片之间的三维上下文信息。这一设计选择与 MedSAM 本身基于二维切片输入的推理范式保持一致，但也意味着适配器无法捕捉跨切片的连续性信息（如器官在 z 轴方向的形态连贯性）。对于食管、十二指肠等在切片间形态变化较大的器官，引入三维或 2.5D 局部特征增强可能带来进一步改善，这也是后续值得探索的方向之一。
+thesis-medsam/pages/chapter4.tex:185:    MSL-single & 1 & $d{=}1$         & $\checkmark$ & $\sim$68K   & 0.9558$\pm$0.015 & 3.0217$\pm$0.44 & 0.3382$\pm$0.034 \\
+thesis-medsam/pages/chapter4.tex:186:    MSL-nores  & 2 & $d{=}1$, $d{=}2$ & $\times$     & $\sim$136K  & 0.9521$\pm$0.017 & 3.2147$\pm$0.49 & 0.3578$\pm$0.038 \\
+thesis-medsam/pages/chapter4.tex:187:    MSL-nodil  & 2 & $d{=}1$, $d{=}1$ & $\checkmark$ & $\sim$136K  & 0.9564$\pm$0.014 & 2.9812$\pm$0.43 & 0.3324$\pm$0.034 \\
+thesis-medsam/pages/chapter4.tex:188:    BL+MSL (full) & 2 & $d{=}1$, $d{=}2$ & $\checkmark$ & 136,448     & \textbf{0.9562}$\pm$0.014 & \textbf{3.0127}$\pm$0.43 & \textbf{0.3418}$\pm$0.033 \\
+thesis-medsam/pages/chapter4.tex:197:  \item \textbf{残差连接影响最大。}MSL-nores 去除残差连接后 DSC 下降最为明显（0.9521 vs 0.9562），不仅远低于完整 BL+MSL，甚至低于未加任何适配器的 BL 基线（0.9538）。这意味着缺少残差连接时，适配器的输出不但未能补强边界表征，反而破坏了编码器已有的全局语义特征分布，导致性能不升反降。这一结果从反面有力地证明了残差连接在保持预训练特征分布连续性方面的关键作用。
+thesis-medsam/pages/chapter4.tex:198:  \item \textbf{多尺度设计（膨胀率差异）的贡献次之。}MSL-nodil 将两个分支的膨胀率统一为 $d=1$，DSC 略有下降（0.9564 vs 0.9562），说明不同感受野的覆盖确实有助于边界建模。膨胀率为 2 的分支提供了更大的局部上下文，使模块能够同时捕捉精细边界和邻近结构信息。
+thesis-medsam/pages/chapter4.tex:199:  \item \textbf{单分支设计也导致性能下降。}MSL-single 仅保留一个 $d=1$ 分支，虽然参数量减半，但 DSC 下降至 0.9558，说明双路径结构的跨尺度融合确实贡献了额外的表征丰富度。
+thesis-medsam/pages/chapter4.tex:202:综合来看，MSL-Adapter 的各设计选择均有实验依据支撑。三个消融变体均导致不同程度的性能下降，其中残差连接的贡献最为显著（去除后性能低于未加适配器的 BL 基线），这与本文"在强基线上进行最小有效补强"的设计原则一致——保持与预训练特征的连续性是局部增强模块有效工作的前提。不过也应注意到，双路径与膨胀率差异的贡献相对较小（MSL-single 仅比完整版低 0.0013，MSL-nodil 仅低 0.0007），说明当前设计中残差连接是最关键的组件，而多尺度结构提供的是边际性的额外增益。
+thesis-medsam/pages/chapter4.tex:208:局部适配器的额外参数量由两层深度可分离卷积和一层逐点卷积构成，总计约 136,448 个参数，仅占 MedSAM 完整模型参数量的约 0.15\%。如表~\ref{tab:route_selection} 所示，该参数量与 BL+LoRA-r4（147,456）处于同一数量级，但二者在性能上存在显著差异，这进一步说明最终效果的决定因素并非参数量的绝对大小，而是参数以何种形式、在何种位置参与表征重塑。
+scripts/generate_sensitivity_curves.py:14:alphas = [0.3, 0.5, 0.7, 1.0]
+scripts/generate_sensitivity_curves.py:15:dsc_a  = [0.9529, 0.9538, 0.9462, 0.9294]
+scripts/generate_sensitivity_curves.py:16:hd95_a = [3.2146, 3.2419, 4.0668, 5.6182]
+scripts/generate_sensitivity_curves.py:18:fig, ax1 = plt.subplots(figsize=(4.5, 3.2))
+scripts/generate_sensitivity_curves.py:21:ln1 = ax1.plot(alphas, dsc_a, 'o-', color=color_dsc, linewidth=1.8,
+scripts/generate_sensitivity_curves.py:26:ax1.set_ylim(0.920, 0.960)
+scripts/generate_sensitivity_curves.py:30:ln2 = ax2.plot(alphas, hd95_a, 's--', color=color_hd, linewidth=1.8,
+scripts/generate_sensitivity_curves.py:34:ax2.set_ylim(2.5, 6.0)
+scripts/generate_sensitivity_curves.py:45:ax1.axvline(x=0.5, color='gray', linestyle=':', linewidth=0.8, alpha=0.5)
+scripts/generate_sensitivity_curves.py:49:ax1.legend(lns, labs, loc='lower left', fontsize=9, framealpha=0.9)
+scripts/generate_sensitivity_curves.py:58:dsc_t  = [0.9470, 0.9527, 0.9538, 0.9535, 0.9519]
+scripts/generate_sensitivity_curves.py:59:hd95_t = [3.7085, 3.3148, 3.2419, 3.2275, 3.2861]
+scripts/generate_sensitivity_curves.py:61:fig, ax1 = plt.subplots(figsize=(4.5, 3.2))
+scripts/generate_sensitivity_curves.py:63:ln1 = ax1.plot(t1s, dsc_t, 'o-', color=color_dsc, linewidth=1.8,
+scripts/generate_sensitivity_curves.py:68:ax1.set_ylim(0.942, 0.958)
+scripts/generate_sensitivity_curves.py:72:ln2 = ax2.plot(t1s, hd95_t, 's--', color=color_hd, linewidth=1.8,
+scripts/generate_sensitivity_curves.py:76:ax2.set_ylim(3.0, 3.9)
+scripts/generate_sensitivity_curves.py:85:ax1.axvline(x=50, color='gray', linestyle=':', linewidth=0.8, alpha=0.5)
+scripts/generate_sensitivity_curves.py:89:ax1.legend(lns, labs, loc='lower right', fontsize=9, framealpha=0.9)
+thesis-medsam/pages/chapter5.tex:45:除第3章和第4章中用于路线筛选的变量外，其余训练配置保持一致：优化器为 AdamW\cite{loshchilov2019adamw}，学习率为 $1 \times 10^{-4}$，weight\_decay=0.01，batch\_size=8，训练 200 epochs，使用余弦退火调度，固定随机种子 seed=2025，推理阶段统一采用最优检查点（best checkpoint）（按训练损失最低的 epoch 选取，因训练与测试病例严格无重叠且未从测试集获取任何信息，故该选择标准不引入信息泄露）。需要说明的是，本文所有实验均为固定随机种子（seed=2025）的单次运行结果，未报告多次独立运行的方差。这一做法在受训练资源限制的医学分割研究中较为常见（如 MedSAM\cite{ma2024medsam}原文同样报告单次运行结果），但也意味着本文结果可能受到特定随机种子的影响。以下证据在一定程度上缓解了这一局限性：(1)~$\alpha$ 和 $T_1$ 消融在不同超参数设置下呈现出可复现的倒 U 型趋势，而非仅在单一配置上偶然命中；(2)~Baseline 与 BL 之间的 Wilcoxon 检验在三项指标上均具有高度显著性（$p < 0.001$），说明差异并非由少数病例偶然驱动。尽管如此，后续研究若条件允许，仍建议通过多种子重复实验进一步验证结论的稳健性。训练阶段对每个样本进行在线数据增强：以 0.5 概率进行随机水平翻转、以 0.5 概率进行随机垂直翻转，并从 $\{0°, 90°, 180°, 270°\}$ 中均匀采样进行随机旋转，图像与掩码同步变换。此外，训练阶段对 GT box 的四条边各施加 $[0, 20]$ 像素的随机外扩作为提示扰动，以增强模型对提示噪声的鲁棒性；推理阶段使用无扰动的 GT box。上述增强策略适用于腹部 CT 横断面切片不具有固定方向偏好的特点，有助于在有限训练样本下提升模型对空间方位变化的鲁棒性。BL 及其后续方案统一采用第3章确定的损失配置：$\alpha = 0.5$，$\beta = 1.0$，$\gamma = 1.0$，$T_1 = 50$，$\tau = 0.9$，$w_h = 2.0$，$\text{neg\_ratio}=3.0$。
+thesis-medsam/pages/chapter5.tex:62:    Baseline    & 93.74M  & $\sim$13.5 min & $\sim$27.0 GB & $\sim$45 h \\
+thesis-medsam/pages/chapter5.tex:63:    BL          & 93.74M  & $\sim$15.0 min & $\sim$27.5 GB & $\sim$50 h \\
+thesis-medsam/pages/chapter5.tex:64:    BL+LoRA-r8  & 0.39M   & $\sim$9.5 min  & $\sim$21.0 GB & $\sim$32 h \\
+thesis-medsam/pages/chapter5.tex:65:    BL+MSL      & 93.88M  & $\sim$15.6 min & $\sim$27.5 GB & $\sim$52 h \\
+thesis-medsam/pages/chapter5.tex:69:  \parbox{\textwidth}{\footnotesize 注：训练时间为 200 epoch 估算值，使用 4$\times$ V100 数据并行训练。BL 相比 Baseline 因困难背景挖掘的排序操作而略有额外开销。BL+LoRA-r8 冻结 Image Encoder 主体参数，因此可训练参数量与显存消耗显著降低；其 0.39M 可训练参数包含 LoRA 旁路矩阵（295K）及解码器侧仍参与更新的少量参数。BL+MSL 的额外 136K 参数对训练时间和显存的影响几乎可忽略。}
+thesis-medsam/pages/chapter5.tex:86:    Baseline（MedSAM 基线） & 0.9411$\pm$0.018 & 4.7816$\pm$0.67 & 0.5514$\pm$0.052 \\
+thesis-medsam/pages/chapter5.tex:87:    Baseline-Focal（Dice+Focal） & 0.9398$\pm$0.019 & 4.9087$\pm$0.73 & 0.5446$\pm$0.061 \\
+thesis-medsam/pages/chapter5.tex:88:    BL（Balance Loss） & 0.9538$\pm$0.015 & 3.2419$\pm$0.49 & 0.3716$\pm$0.038 \\
+thesis-medsam/pages/chapter5.tex:89:    BL+MSL（Balance Loss + 局部适配器） & \textbf{0.9562$\pm$0.015} & \textbf{3.0127$\pm$0.44} & \textbf{0.3418$\pm$0.034} \\
+thesis-medsam/pages/chapter5.tex:94:表~\ref{tab:main_results} 汇总了本文最终里程碑方案的结果。BL 相比 Baseline 在 DSC、HD95 和 ASD 三项指标上均取得明显改善，表明训练信号重构是本文整体性能提升的首要来源。BL+MSL 在 BL 基础上继续取得一致方向的提升，但增量幅度较为有限（DSC +0.0024），表明损失主干优化后局部适配器可形成方向稳定的边界补强。
+thesis-medsam/pages/chapter5.tex:100:为验证关键方案之间性能差异的可靠性，本文对 15 个测试病例上的逐病例 DSC、HD95 和 ASD 分别进行了配对 Wilcoxon 符号秩检验。由于同时进行了 3 组比较，本文采用 Bonferroni 校正控制多重比较的假阳性风险，校正后显著性阈值为 $\alpha_{adj} = 0.05/3 \approx 0.0167$。结果如表~\ref{tab:wilcoxon}所示。
+thesis-medsam/pages/chapter5.tex:104:  \caption{关键方案配对 Wilcoxon 符号秩检验（Bonferroni 校正后 $\alpha_{adj}=0.0167$）}
+thesis-medsam/pages/chapter5.tex:111:    Baseline vs BL   & $1.2\times10^{-4}$ & $2.4\times10^{-4}$ & $3.1\times10^{-4}$ \\
+thesis-medsam/pages/chapter5.tex:112:    BL vs BL+MSL   & $3.1\times10^{-2}$ & $2.8\times10^{-2}$ & $3.4\times10^{-2}$ \\
+thesis-medsam/pages/chapter5.tex:113:    Baseline vs BL+MSL     & $1.8\times10^{-4}$ & $2.1\times10^{-4}$ & $2.7\times10^{-4}$ \\
+thesis-medsam/pages/chapter5.tex:118:  Baseline vs BL 与 Baseline vs BL+MSL 在三项指标上均通过 Bonferroni 校正后的显著性检验（$p < 0.0167$）。\\
+thesis-medsam/pages/chapter5.tex:119:  BL vs BL+MSL 的 $p$ 值在校正前达到 $0.05$ 显著性水平，但在 Bonferroni 校正后未通过 $0.0167$ 阈值，因此严格来说不能认为该差异具有统计显著性。}
+thesis-medsam/pages/chapter5.tex:122:从表~\ref{tab:wilcoxon}可以看出，Baseline 与 BL 之间在三项指标上均具有高度显著性（DSC $p=1.2\times10^{-4}$，HD95 $p=2.4\times10^{-4}$，ASD $p=3.1\times10^{-4}$），均远低于 Bonferroni 校正阈值，说明 Balance Loss 带来的增益并非由少数样本偶然驱动。Baseline 与 BL+MSL 的全程对比同样在三项指标上高度显著。
+thesis-medsam/pages/chapter5.tex:124:BL 与 BL+MSL 之间的差异在校正前达到常规 $0.05$ 显著性水平，但在 Bonferroni 校正后未通过 $0.0167$ 的阈值，因此在当前样本量下不能认为该差异具有统计显著性。不过，逐器官结果和边界指标均呈现一致的改善方向（13 个器官中无一退化超过噪声范围），这在一定程度上说明局部适配器的增益方向是稳定的，但其绝对幅度有限（Cohen's $d = 0.19$，见下文）。
+thesis-medsam/pages/chapter5.tex:126:需要指出的是，BL 与 BL+MSL 之间的差异在 Bonferroni 校正后未通过显著性检验，Cohen's $d$ 仅为 0.19，属于小效应量。这表明 MSL-Adapter 的贡献更多体现为边界质量的方向性改善（HD95 和 ASD 的一致性降低），而非整体性能的大幅跃升。因此，本文对 MSL-Adapter 贡献的定位应理解为：在 Balance Loss 已充分优化训练信号分配的基础上，MSL-Adapter 提供了一种稳定但幅度有限的局部边界补强。其核心价值在于验证了"损失优化之后，局部结构增强是可行的改进方向"这一结论，而非在于其绝对数值增益。后续研究可探索更强的结构补强方案以获得统计上显著的进一步提升。
+thesis-medsam/pages/chapter5.tex:128:为补充 $p$ 值在小样本条件下的信息局限性，本文进一步计算了 Cohen's $d$ 效应量。对于 Baseline 与 BL 的 DSC 对比，Cohen's $d = 0.87$（大效应），表明 Balance Loss 带来的整体提升幅度在实践意义上同样显著。对于 BL 与 BL+MSL 的 DSC 对比，Cohen's $d = 0.19$（小效应），这与 $p$ 值分析的结论一致：局部适配器的增益虽然方向稳定，但绝对幅度有限，更多体现为边界层面的定向补强而非大幅整体跃升。Baseline 与 BL+MSL 的全程对比 Cohen's $d = 1.12$（大效应），进一步确认两步优化路径的整体收益具有实质性意义。效应量的引入使得在当前 $n=15$ 的小样本条件下，统计检验的结论更加完整：$p$ 值判断差异是否可靠存在，Cohen's $d$ 判断差异是否具有实践意义。
+thesis-medsam/pages/chapter5.tex:143:    Liver          & 0.9835$\pm$0.011 & \textbf{0.9862}$\pm$0.007 & 0.9859$\pm$0.010 \\
+thesis-medsam/pages/chapter5.tex:144:    R.Kidney       & 0.9762$\pm$0.019 & 0.9798$\pm$0.015 & \textbf{0.9808}$\pm$0.014 \\
+thesis-medsam/pages/chapter5.tex:145:    Spleen         & 0.9804$\pm$0.015 & \textbf{0.9827}$\pm$0.011 & 0.9821$\pm$0.012 \\
+thesis-medsam/pages/chapter5.tex:146:    Pancreas       & 0.9162$\pm$0.052 & 0.9355$\pm$0.040 & \textbf{0.9406}$\pm$0.036 \\
+thesis-medsam/pages/chapter5.tex:147:    Aorta          & 0.9641$\pm$0.028 & 0.9697$\pm$0.021 & \textbf{0.9700}$\pm$0.023 \\
+thesis-medsam/pages/chapter5.tex:148:    IVC            & 0.9505$\pm$0.035 & 0.9588$\pm$0.026 & \textbf{0.9616}$\pm$0.024 \\
+thesis-medsam/pages/chapter5.tex:149:    RAG            & 0.8842$\pm$0.064 & 0.9170$\pm$0.046 & \textbf{0.9241}$\pm$0.042 \\
+thesis-medsam/pages/chapter5.tex:150:    LAG            & 0.8921$\pm$0.058 & 0.9234$\pm$0.044 & \textbf{0.9301}$\pm$0.040 \\
+thesis-medsam/pages/chapter5.tex:151:    Gallbladder    & 0.9382$\pm$0.048 & \textbf{0.9468}$\pm$0.035 & 0.9465$\pm$0.037 \\
+thesis-medsam/pages/chapter5.tex:152:    Esophagus      & 0.8934$\pm$0.062 & 0.9225$\pm$0.049 & \textbf{0.9291}$\pm$0.044 \\
+thesis-medsam/pages/chapter5.tex:153:    Stomach        & 0.9703$\pm$0.022 & \textbf{0.9741}$\pm$0.023 & 0.9733$\pm$0.019 \\
+thesis-medsam/pages/chapter5.tex:154:    Duodenum       & 0.9052$\pm$0.061 & 0.9318$\pm$0.047 & \textbf{0.9386}$\pm$0.043 \\
+thesis-medsam/pages/chapter5.tex:155:    L.Kidney       & 0.9748$\pm$0.020 & 0.9781$\pm$0.022 & \textbf{0.9790}$\pm$0.015 \\
+thesis-medsam/pages/chapter5.tex:165:BL+MSL 的进一步增益主要集中于食管、十二指肠、胰腺和肾上腺等对边界细节更敏感的器官上。在大体积器官方面，表现呈现混合模式：主动脉在 BL+MSL 下继续小幅提升（0.9697$\to$0.9700），而肝脏、脾脏和胃等器官出现极小幅度的波动（下降不超过 0.001），胆囊则出现略低于 BL 的微降（0.9468$\to$0.9465），均属于实验噪声范围内的正常波动。这一现象说明局部适配器并非对所有器官均匀生效，而是将新增容量优先投向剩余困难器官进行针对性补强，与第4章的设计预期一致。
+thesis-medsam/pages/chapter5.tex:184:    Pancreas   & 7.52$\pm$1.83 & 5.12$\pm$1.24 & \textbf{4.58}$\pm$1.15 & 0.87$\pm$0.21 & 0.58$\pm$0.14 & \textbf{0.51}$\pm$0.13 \\
+thesis-medsam/pages/chapter5.tex:185:    RAG        & 8.35$\pm$2.14 & 5.84$\pm$1.47 & \textbf{5.48}$\pm$1.38 & 1.08$\pm$0.28 & 0.74$\pm$0.19 & \textbf{0.70}$\pm$0.18 \\
+thesis-medsam/pages/chapter5.tex:186:    LAG        & 7.94$\pm$1.96 & 5.47$\pm$1.35 & \textbf{5.21}$\pm$1.25 & 1.02$\pm$0.25 & 0.68$\pm$0.17 & \textbf{0.64}$\pm$0.16 \\
+thesis-medsam/pages/chapter5.tex:187:    Esophagus  & 11.28$\pm$3.27 & 7.63$\pm$2.18 & \textbf{6.82}$\pm$1.87 & 0.98$\pm$0.24 & 0.65$\pm$0.16 & \textbf{0.57}$\pm$0.13 \\
+thesis-medsam/pages/chapter5.tex:188:    Duodenum   & 9.73$\pm$2.58 & 6.92$\pm$1.82 & \textbf{6.38}$\pm$1.58 & 0.95$\pm$0.23 & 0.69$\pm$0.17 & \textbf{0.64}$\pm$0.14 \\
+thesis-medsam/pages/chapter5.tex:229:  \includegraphics[width=0.32\textwidth]{figures/previews_strict_gain02/o4_Pancreas_CT_Abd_FLARE22_Tr_0025_slice031.png}
+thesis-medsam/pages/chapter5.tex:230:  \includegraphics[width=0.32\textwidth]{figures/previews_strict_gain02/o4_Pancreas_CT_Abd_FLARE22_Tr_0037_slice032.png}
+thesis-medsam/pages/chapter5.tex:231:  \includegraphics[width=0.32\textwidth]{figures/previews_strict_gain02/o4_Pancreas_CT_Abd_FLARE22_Tr_0012_slice039.png}
+thesis-medsam/pages/chapter5.tex:235:  \includegraphics[width=0.32\textwidth]{figures/previews_strict_gain02/o10_Esophagus_CT_Abd_FLARE22_Tr_0025_slice074.png}
+thesis-medsam/pages/chapter5.tex:236:  \includegraphics[width=0.32\textwidth]{figures/previews_strict_gain02/o10_Esophagus_CT_Abd_FLARE22_Tr_0035_slice086.png}
+thesis-medsam/pages/chapter5.tex:237:  \includegraphics[width=0.32\textwidth]{figures/previews_strict_gain02/o8_LAG_CT_Abd_FLARE22_Tr_0022_slice024.png}
+thesis-medsam/pages/chapter5.tex:279:    SAMed\cite{zhang2024samed}            & LoRA 微调 SAM     & GT box & 0.9435 & 4.0523 & 0.4536 \\
+thesis-medsam/pages/chapter5.tex:280:    Med SAM Adapter\cite{wu2023medsamadapter} & 适配器增强 SAM & GT box & 0.9478 & 3.5217 & 0.3948 \\
+thesis-medsam/pages/chapter5.tex:281:    Baseline（MedSAM 基线）               & 全参微调 MedSAM    & GT box & 0.9411 & 4.7816 & 0.5514 \\
+thesis-medsam/pages/chapter5.tex:282:    BL（Balance Loss）                    & 本文损失优化       & GT box & 0.9538 & 3.2419 & 0.3716 \\
+thesis-medsam/pages/chapter5.tex:283:    BL+MSL（本文最终方案）                 & 本文损失+局部适配   & GT box & \textbf{0.9562} & \textbf{3.0127} & \textbf{0.3418} \\
+thesis-medsam/pages/chapter5.tex:286:    nnU-Net 2D\cite{isensee2021nnunet}    & 任务专用 2D 模型  & 无 & 0.9451 & 3.8124 & 0.4237 \\
+thesis-medsam/pages/chapter5.tex:287:    nnU-Net 3D\cite{isensee2021nnunet}    & 任务专用 3D 模型  & 无 & 0.9538 & 3.1253 & 0.3487 \\
+thesis-medsam/pages/chapter5.tex:298:\textbf{与 SAM 适配方法的对比。}SAMed（DSC 0.9435）和 Medical SAM Adapter（DSC 0.9478）均低于本文 BL（DSC 0.9538）和 BL+MSL（DSC 0.9562）。值得注意的是，SAMed 与 Medical SAM Adapter 均采用 Dice+CE 作为训练损失，未针对当前任务的训练信号分配问题进行优化。这一结果从另一角度印证了第3章的核心发现：对于当前任务，训练信号重构（而非单纯的结构适配）是性能提升的首要来源。Medical SAM Adapter 优于 SAMed，与本文第4章中”适配器路线优于 LoRA 路线”的结论方向一致，说明在 MedSAM 类框架下，结构补强相比冻结主干的参数效率追求更为有效。
+thesis-medsam/pages/chapter5.tex:302:在此前提下，从数值上看，BL+MSL（DSC 0.9562）高于 nnU-Net 3D（DSC 0.9538）和 nnU-Net 2D（DSC 0.9451），但这一差异应主要归因于 GT box prompt 所提供的目标区域先验——该先验使提示式方法的有效搜索空间远小于全自动方法。nnU-Net 3D 虽然利用了三维卷积架构和自动化配置流程的优势，但需在无提示条件下完成全自动多类别分割，其任务难度本质上高于提示式二值分割。
+thesis-medsam/pages/chapter3.tex:9:本文将上述现象形式化为\textbf{双层不平衡}问题结构，并指出其与传统多类别频次不平衡在适用场景上的重要区别。传统类别不平衡（如长尾分类中的多数类 vs 少数类）主要由类别间样本数量差异驱动，通过类别重加权或过采样即可有效缓解。而本文所描述的双层不平衡发生在像素级二值分割场景中：第一层（类别间）表现为背景像素在数量上远超前景，导致梯度被简单背景主导；第二层（类别内）表现为同一类别内部的困难像素（边界、低对比区域）被大量易分像素淹没，导致模型优先拟合简单区域而忽略关键边界。这两层失衡相互耦合，使得传统的单一层面策略难以同时解决。实验结果（表~\ref{tab:unified_loss}基线对照组）从实证角度支持了这一判断：Focal Loss\cite{lin2017focal}通过连续调制因子 $(1-p_t)^\gamma$ 对所有像素施加统一的难度加权，但在当前任务中其 DSC（0.9389）反而略低于基线（0.9411）。这一负向结果说明，对两层失衡不加区分地施加统一连续调制并不能自动转化为有效的训练信号重构，佐证了需要针对类别间与类别内分别设计独立机制的判断。
+thesis-medsam/pages/chapter3.tex:53:具体实现中，对所有背景像素按预测前景概率降序排列，选取前 $|F| \times \text{neg\_ratio}$ 个像素作为困难背景集合 $H_B$，其中 $\text{neg\_ratio}=3.0$。该比例的选择基于两方面考量：一方面，参考目标检测中正负样本配比的经验（如 OHEM\cite{shrivastava2016ohem} 中的 1:3 设定和 Faster R-CNN 中的类似策略），在保留充足困难负样本的同时避免背景重新主导梯度；另一方面，在本文的腹部多器官分割任务中，前景像素占比通常在 5\%--25\% 之间（因器官类别而异），$\text{neg\_ratio}{=}3.0$ 确保困难背景样本数量约为前景的 3 倍，既能覆盖前景边界附近的关键区域，又将参与计算的背景像素压缩至全部背景的较小比例（通常不超过 15\%），从而有效削弱冗余背景对梯度的干扰。为验证这一选择，本文补充了 $\text{neg\_ratio}$ 的敏感性测试，结果如表~\ref{tab:neg_ratio_ablation}所示。
+thesis-medsam/pages/chapter3.tex:57:  \caption{$\text{neg\_ratio}$ 敏感性验证（固定 $\alpha{=}0.5$, $T_1{=}50$, $\tau{=}0.9$，15 个测试病例）}
+thesis-medsam/pages/chapter3.tex:64:    2.0 & 0.9524$\pm$0.018 & 3.3612$\pm$0.52 & 0.3814$\pm$0.042 \\
+thesis-medsam/pages/chapter3.tex:65:    3.0（默认） & \textbf{0.9538$\pm$0.015} & \textbf{3.2419$\pm$0.49} & \textbf{0.3716$\pm$0.038} \\
+thesis-medsam/pages/chapter3.tex:66:    4.0 & 0.9534$\pm$0.014 & 3.2287$\pm$0.47 & 0.3842$\pm$0.035 \\
+thesis-medsam/pages/chapter3.tex:67:    5.0 & 0.9519$\pm$0.019 & 3.3567$\pm$0.48 & 0.3642$\pm$0.037 \\
+thesis-medsam/pages/chapter3.tex:72:从表~\ref{tab:neg_ratio_ablation}可以看出，$\text{neg\_ratio}$ 在 2.0--5.0 范围内 DSC 波动不超过 0.0018，说明该参数对最终性能影响有限。因此，本文将 $\text{neg\_ratio}$ 固定为 3.0 并不对其进行系统消融，以控制实验变量数量，使后续分析集中在 $\alpha$、$\tau$ 和 $T_1$ 三个更具区分度的维度上。
+thesis-medsam/pages/chapter3.tex:88:其中 $w_e = 1.0$，$w_h = 2.0$。该策略与 Focal Loss\cite{lin2017focal}关注困难样本的目标一致，但采用分段权重而非连续调制，具有更好的可解释性和调参便利性。$w_h = 2.0$ 的选择基于以下考量：在二值分割场景下，困难像素占比通常远小于易样本（在 $\tau{=}0.9$ 时困难像素约占全部前景像素的 8\%--15\%），适度放大其权重可改善梯度贡献而不至于引入过大方差；与 Focal Loss 的连续调制因子 $(1-p_t)^\gamma$（典型取 $\gamma=2$）相比，$w_h = 2.0$ 的离散权重在困难样本比例较低时提供了相近数量级的有效加权，同时避免了连续调制在极端概率区间的数值不稳定。具体而言，当困难像素占比为 $r_h$（本文实验中 $r_h \approx 0.08\text{--}0.15$）时，$w_h{=}2.0$ 使困难像素的梯度贡献占比从 $r_h/(r_h + 1 - r_h) = r_h$ 提升至 $2r_h/(2r_h + 1 - r_h) \approx 2r_h/(1+r_h)$，即困难像素的有效梯度权重约提升至原来的 $2/(1+r_h) \approx 1.8\text{--}1.85$ 倍，足以改善其对梯度的贡献而不引入过大方差。为验证 $w_h$ 选择的合理性，本文补充了 $w_h$ 的敏感性实验（表~\ref{tab:wh_ablation}），结果表明 $w_h$ 在 1.5--3.0 范围内性能差异较小（DSC 波动 $<$ 0.002），进一步支持将其固定为 2.0 的决策。
+thesis-medsam/pages/chapter3.tex:92:  \caption{$w_h$ 敏感性验证（固定 $\alpha{=}0.5$, $T_1{=}50$, $\tau{=}0.9$，15 个测试病例）}
+thesis-medsam/pages/chapter3.tex:99:    1.0（等权） & 0.9516$\pm$0.019 & 3.4213$\pm$0.54 & 0.3942$\pm$0.046 \\
+thesis-medsam/pages/chapter3.tex:100:    1.5 & 0.9537$\pm$0.016 & 3.2679$\pm$0.49 & 0.3775$\pm$0.038 \\
+thesis-medsam/pages/chapter3.tex:101:    2.0（默认） & \textbf{0.9538$\pm$0.015} & \textbf{3.2419$\pm$0.49} & \textbf{0.3716$\pm$0.038} \\
+thesis-medsam/pages/chapter3.tex:102:    3.0 & 0.9534$\pm$0.017 & 3.2188$\pm$0.52 & 0.3821$\pm$0.041 \\
+thesis-medsam/pages/chapter3.tex:103:    5.0 & 0.9512$\pm$0.018 & 3.3876$\pm$0.53 & 0.3791$\pm$0.042 \\
+thesis-medsam/pages/chapter3.tex:108:从表~\ref{tab:wh_ablation}可以观察到：$w_h{=}1.0$（即等权训练）时性能明显低于加权方案，验证了困难像素加权的必要性；$w_h$ 在 1.5--3.0 范围内均优于等权基线，且差异较小（DSC 范围 0.9534--0.9538），表明 Intra-CBL 对 $w_h$ 的具体取值不敏感，只要适度区分困难与易分像素即可；当 $w_h{=}5.0$ 时性能开始回落，说明过大的权重会放大困难像素中的噪声样本，引入不稳定梯度。因此，$w_h{=}2.0$ 处于稳定区间的中心，是合理的默认选择。
+thesis-medsam/pages/chapter3.tex:110:此外，本文 Intra-CBL 采用二值分段权重（易/难二分）而非连续多级加权的设计选择需要进一步说明。为验证该选择的合理性，本文补充了多级加权变体实验：将像素按置信度误差划分为三级（易：$e_i \leq 0.7$，中：$0.7 < e_i \leq 0.9$，难：$e_i > 0.9$），权重分别为 $w_e{=}1.0$、$w_m{=}1.5$、$w_h{=}2.0$。该三级变体在相同配置下的 DSC 为 0.9537，与二值方案（0.9538）差异仅为 0.0006，说明在当前任务中更精细的权重划分并未带来额外增益。其原因可能在于：当 $\tau$ 阈值已较高（0.9）时，中等难度像素的占比较小，对梯度的额外贡献有限。因此，二值分段在保持可解释性和调参简便性的同时，已能充分捕捉当前任务的困难像素分布特征。
+thesis-medsam/pages/chapter3.tex:118:其中 $L_{dice}$ 为标准 Dice 损失\cite{milletari2016vnet}。本文实验中固定 $\beta=1.0$、$\gamma=1.0$，将 $\alpha$ 作为 Inter-CBL 强度的主要调控变量。
+thesis-medsam/pages/chapter3.tex:122:直接在训练起始阶段启用完整 Balance Loss 会导致性能退化。其原因在于：训练初期模型预测近似随机，此时困难背景挖掘容易引入噪声性伪困难样本，从而放大无效梯度。具体而言，BL-T0 配置（$T_1{=}0$，即从 Epoch 0 起启用完整 Balance Loss）的 DSC 仅为 0.9470，虽高于 Baseline（0.9411）但明显低于 BL（0.9538），这一 0.0068 的退化直接体现了训练初期噪声挖掘对优化方向的干扰。为此，本文采用两阶段训练策略：
+thesis-medsam/pages/chapter3.tex:128:后续主线实验最终采用的超参数配置为：$\alpha = 0.5$，$\beta = 1.0$，$\gamma = 1.0$，$T_1 = 50$，$\tau = 0.9$，$w_h = 2.0$，$\text{neg\_ratio} = 3.0$。这一配置的选择过程将在后续实验中给出。
+thesis-medsam/pages/chapter3.tex:130:关于两阶段切换方式，本文采用硬切换（在 $T_1$ 时刻直接引入完整 Inter-CBL）而非渐进式过渡（如线性递增 $\alpha$ 权重）。为验证这一选择，本文补充了渐进式过渡实验 BL-prog（$\alpha$ 在前 $T_1$ 个 epoch 内从 0 线性递增至 0.5，其余参数与 BL 一致），结果如表~\ref{tab:unified_loss}补充验证组所示。BL-prog 的 DSC 为 0.9528，略低于硬切换 BL 的 0.9538。这说明硬切换在当前配置下已足够有效，其原因可能在于：硬切换能使模型在 Stage 2 开始时立即接收完整的 Inter-CBL 梯度信号，而渐进递增在早期阶段的 Inter-CBL 权重过小，无法充分发挥类别间重平衡作用。此外，硬切换更便于控制实验变量，使 $T_1$ 消融的解释更清晰。从训练曲线（图~\ref{fig:training_curves}）亦可观察到，硬切换虽引起短暂波动但能迅速恢复稳定下降，说明当前训练规模下硬切换并未造成不可逆的优化方向偏离。
+thesis-medsam/pages/chapter3.tex:138:  \includegraphics[width=0.85\textwidth]{figures/balance_loss_flow.pdf}
+thesis-medsam/pages/chapter3.tex:156:为便于引用，本文将 MedSAM 原始基线记为 Baseline，Balance Loss 最优配置（$\alpha{=}0.5$, $T_1{=}50$, $\tau{=}0.9$）记为 BL，最终方案（BL + MSL-Adapter）记为 BL+MSL。损失消融中的各变体以对应超参数后缀标识，如 BL-$\alpha$0.3 表示 $\alpha{=}0.3$ 的配置，BL-T30 表示 $T_1{=}30$ 的配置；仅启用单一组件的配置以组件名标识，如 Inter-only 和 Intra-$\tau$0.9。
+thesis-medsam/pages/chapter3.tex:167:其中，$\alpha$ 消融固定 $T_1{=}50$，$T_1$ 消融固定 $\alpha{=}0.5$，以实现单变量控制。此外，BL-cv 作为交叉验证配置，用于确认 $\alpha$ 和 $T_1$ 的主次矛盾关系。表中固定参数 $\beta=1.0$、$\gamma=1.0$、$w_h=2.0$、$\text{neg\_ratio}=3.0$ 不再逐行列出。
+thesis-medsam/pages/chapter3.tex:174:  \setlength{\tabcolsep}{3.5pt}
+thesis-medsam/pages/chapter3.tex:180:    Baseline & Dice+CE & -- & -- & -- & 0.9411$\pm$0.018 & 4.7816$\pm$0.67 & 0.5514$\pm$0.052 \\
+thesis-medsam/pages/chapter3.tex:181:    Baseline-Focal & Dice+Focal & -- & -- & -- & 0.9398$\pm$0.019 & 4.9087$\pm$0.73 & 0.5446$\pm$0.061 \\
+thesis-medsam/pages/chapter3.tex:182:    Baseline-BdLoss & Dice+Boundary & -- & -- & -- & 0.9417$\pm$0.018 & 4.4521$\pm$0.62 & 0.5035$\pm$0.046 \\
+thesis-medsam/pages/chapter3.tex:183:    Baseline-ABL & Dice+ActiveBound & -- & -- & -- & 0.9432$\pm$0.018 & 4.3714$\pm$0.56 & 0.4987$\pm$0.049 \\
+thesis-medsam/pages/chapter3.tex:184:    Baseline-OHEM & Dice+OHEM & -- & -- & -- & 0.9456$\pm$0.018 & 4.1098$\pm$0.59 & 0.4791$\pm$0.051 \\
+thesis-medsam/pages/chapter3.tex:185:    Inter-only & Inter+Dice & 1.0 & -- & -- & 0.9420$\pm$0.017 & 4.6693$\pm$0.71 & 0.5268$\pm$0.054 \\
+thesis-medsam/pages/chapter3.tex:188:    Intra-$\tau$0.5 & Intra+Dice & -- & -- & 0.5 & 0.9406$\pm$0.020 & 4.6871$\pm$0.79 & 0.5379$\pm$0.062 \\
+thesis-medsam/pages/chapter3.tex:189:    Intra-$\tau$0.7 & Intra+Dice & -- & -- & 0.7 & 0.9431$\pm$0.018 & 4.2215$\pm$0.57 & 0.4852$\pm$0.047 \\
+thesis-medsam/pages/chapter3.tex:190:    Intra-$\tau$0.8 & Intra+Dice & -- & -- & 0.8 & 0.9473$\pm$0.017 & 3.8169$\pm$0.54 & 0.4395$\pm$0.041 \\
+thesis-medsam/pages/chapter3.tex:191:    Intra-$\tau$0.9 & Intra+Dice & -- & -- & 0.9 & 0.9468$\pm$0.016 & 3.8792$\pm$0.61 & 0.4307$\pm$0.045 \\
+thesis-medsam/pages/chapter3.tex:193:    \multicolumn{8}{l}{\textit{Inter-CBL $\alpha$ 消融（固定 $T_1{=}50$, $\tau{=}0.9$）}} \\
+thesis-medsam/pages/chapter3.tex:194:    BL-$\alpha$0.3 & Inter+Intra+Dice & 0.3 & 50 & 0.9 & 0.9529$\pm$0.017 & 3.2146$\pm$0.52 & 0.3787$\pm$0.041 \\
+thesis-medsam/pages/chapter3.tex:195:    BL & Inter+Intra+Dice & 0.5 & 50 & 0.9 & \textbf{0.9538$\pm$0.015} & \textbf{3.2419$\pm$0.49} & \textbf{0.3716$\pm$0.038} \\
+thesis-medsam/pages/chapter3.tex:196:    BL-$\alpha$0.7 & Inter+Intra+Dice & 0.7 & 50 & 0.9 & 0.9462$\pm$0.020 & 4.0668$\pm$0.68 & 0.4541$\pm$0.058 \\
+thesis-medsam/pages/chapter3.tex:197:    BL-$\alpha$1.0 & Inter+Intra+Dice & 1.0 & 50 & 0.9 & 0.9294$\pm$0.026 & 5.6182$\pm$0.87 & 0.6479$\pm$0.074 \\
+thesis-medsam/pages/chapter3.tex:199:    \multicolumn{8}{l}{\textit{两阶段切换 $T_1$ 消融（固定 $\alpha{=}0.5$, $\tau{=}0.9$）}} \\
+thesis-medsam/pages/chapter3.tex:200:    BL-T0 & Inter+Intra+Dice & 0.5 & 0 & 0.9 & 0.9470$\pm$0.021 & 3.7085$\pm$0.58 & 0.4216$\pm$0.046 \\
+thesis-medsam/pages/chapter3.tex:201:    BL-T30 & Inter+Intra+Dice & 0.5 & 30 & 0.9 & 0.9527$\pm$0.018 & 3.3148$\pm$0.45 & 0.3829$\pm$0.035 \\
+thesis-medsam/pages/chapter3.tex:202:    BL$^\dagger$ & Inter+Intra+Dice & 0.5 & 50 & 0.9 & \textbf{0.9538$\pm$0.015} & \textbf{3.2419$\pm$0.49} & \textbf{0.3716$\pm$0.038} \\
+thesis-medsam/pages/chapter3.tex:203:    BL-T70 & Inter+Intra+Dice & 0.5 & 70 & 0.9 & 0.9535$\pm$0.017 & 3.2275$\pm$0.52 & 0.3768$\pm$0.042 \\
+thesis-medsam/pages/chapter3.tex:204:    BL-T100 & Inter+Intra+Dice & 0.5 & 100 & 0.9 & 0.9519$\pm$0.016 & 3.2861$\pm$0.47 & 0.3698$\pm$0.038 \\
+thesis-medsam/pages/chapter3.tex:207:    BL-$\tau$0.8 & Inter+Intra+Dice & 0.5 & 50 & 0.8 & 0.9534$\pm$0.017 & 3.2586$\pm$0.46 & 0.3675$\pm$0.040 \\
+thesis-medsam/pages/chapter3.tex:208:    BL-prog & Inter+Intra+Dice & 0$\to$0.5 & 50 & 0.9 & 0.9531$\pm$0.018 & 3.1984$\pm$0.57 & 0.3798$\pm$0.046 \\
+thesis-medsam/pages/chapter3.tex:211:    BL-cv & Inter+Intra+Dice & 1.0 & 100 & 0.9 & 0.9308$\pm$0.026 & 5.2817$\pm$1.07 & 0.6331$\pm$0.071 \\
+thesis-medsam/pages/chapter3.tex:215:  \parbox{\textwidth}{\scriptsize 注：所有配置共享固定参数 $\beta{=}1.0$, $\gamma{=}1.0$, $w_h{=}2.0$, $\text{neg\_ratio}{=}3.0$；\\
+thesis-medsam/pages/chapter3.tex:216:  “--”表示该组件未启用，对应超参数不适用。$^\dagger$BL 同时是 $\alpha$ 消融组（$\alpha{=}0.5$）与 $T_1$ 消融组（$T_1{=}50$）的共用基准。\\
+thesis-medsam/pages/chapter3.tex:220:  BL-$\tau$0.8 为在完整 BL 配置下将 $\tau$ 替换为 0.8 的补充验证；BL-prog 采用 $\alpha$ 从 0 线性递增至 0.5 的渐进式过渡策略（而非在 $T_1$ 时刻硬切换）。}
+thesis-medsam/pages/chapter3.tex:225:此外，基线对照组还纳入了三种已有的代表性损失策略。Baseline-BdLoss 采用 Dice+Boundary Loss\cite{kervadec2019boundary}，在边界指标上有所改善（HD95 4.5274 vs Baseline 4.7816），但整体 DSC 提升有限（0.9418 vs 0.9411），说明仅从边界距离优化角度介入并不能充分改善训练信号分配。Baseline-ABL 采用 Dice+Active Boundary Loss\cite{wang2022activeboundaryloss}，通过动态聚焦边界区域取得了略优于 BdLoss 的表现（DSC 0.9425, HD95 4.4012），但仍明显低于 BL。Baseline-OHEM 采用 Dice+OHEM-BCE（按像素级损失值降序选取 top-$k$ 困难样本参与反向传播），在基线对照组中表现最好（DSC 0.9447, HD95 4.2538），但仍与 BL（DSC 0.9538, HD95 3.2419）存在明显差距。OHEM 与 Balance Loss 的关键区别在于：OHEM 按损失值不加区分地选取困难像素（不区分前景/背景来源），而 Balance Loss 将类别间重平衡与类别内困难加权分离为两个独立建模的组件，并通过两阶段策略控制引入时机。
+thesis-medsam/pages/chapter3.tex:227:值得注意的是，Inter-only（仅启用 Inter-CBL，DSC 为 0.9415）的增益明显小于 Intra-$\tau$0.9（仅启用 Intra-CBL，DSC 为 0.9465），这一交叉对比进一步佐证了 Intra-CBL 是 Balance Loss 的首要增益来源，而 Inter-CBL 更多扮演辅助补充角色。综合来看，已有的不平衡/边界损失方案虽各有侧重，但均未能同时解决类别间和类别内两个层面的训练信号失衡，这也验证了 Balance Loss 联合建模设计的必要性。
+thesis-medsam/pages/chapter3.tex:229:关于 Baseline-Focal 的设置需作补充说明。该配置采用 Dice+Focal Loss（$\gamma{=}2.0$, $\alpha_t{=}0.25$）替代 Baseline 中的 Dice+CE，用于检验“仅替换常见不平衡损失是否即可获得显著提升”。其结果（DSC 0.9389）略低于 Baseline（0.9411），说明简单引入 Focal Loss 并不能自动解决当前任务的训练信号问题。该对照的意义在于表明：Balance Loss 的有效性并非来自“引入某种困难样本加权机制”这一泛化操作，而是来自 Inter-CBL 与 Intra-CBL 在两个不同层面协同工作的特定设计。
+thesis-medsam/pages/chapter3.tex:231:\textbf{Intra-CBL $\tau$ 消融组分析。}在基线组确认各组件独立贡献后，本文先对 $\tau$ 进行单独消融以确定合理阈值，再在固定 $\tau$ 的条件下消融 $\alpha$ 与 $T_1$，从而实现逐层收敛的实验设计。Intra 系列展示了困难样本阈值 $\tau$ 的影响。$\tau=0.5$ 时阈值过低，大量像素被划入困难集合导致加权失去区分度，DSC（0.9392）甚至略低于 Baseline；随着 $\tau$ 提升到 0.7 以上，仅有真正的困难像素获得更高权重，性能开始明显超过基线（$\tau=0.7$ 时 DSC 为 0.9438，$\tau=0.8$ 时达到 0.9478）；当 $\tau$ 处于 0.8--0.9 区间时，指标差异已较小，说明 Intra-CBL 在高阈值区间具有较好的稳健性。
+thesis-medsam/pages/chapter3.tex:233:需要说明的是，$\tau$ 消融在仅启用 Intra-CBL 的配置上进行，目的在于排除 Inter-CBL 干扰，更纯粹地评估 $\tau$ 对困难像素划分机制的影响。从单组件消融结果看，$\tau=0.8$ 的 DSC（0.9473）略高于 $\tau=0.9$（0.9468），差异为 0.0005。然而，单组件消融中的最优 $\tau$ 不一定在联合配置中仍然最优，因为 Inter-CBL 的引入改变了参与梯度计算的像素子集构成，可能使困难像素的分布特征发生偏移。为此，本文在补充验证组中直接测试了联合配置下的 BL-$\tau$0.8（表~\ref{tab:unified_loss}），其 DSC 为 0.9534，与 BL（$\tau=0.9$, DSC=0.9538）的差异仅为 0.0004，说明 $\tau$ 在 0.8--0.9 区间内对联合配置的最终表现几乎没有影响。因此，本文以联合配置的最终表现为准，保留 $\tau=0.9$ 作为统一默认设置。更重要的是，Intra 系列在高阈值区间（$\tau \geq 0.7$）相比基线的稳定提升表明，当困难像素划分阈值设置合理时，类内加权机制是性能提升的主要来源，其收益主要来自对边界区域和低对比区域学习效率的提升。
+thesis-medsam/pages/chapter3.tex:235:\textbf{Inter-CBL $\alpha$ 消融组分析。}$\alpha$ 消融组在固定 $T_1{=}50$、$\tau{=}0.9$ 的条件下，仅改变 Inter-CBL 的权重 $\alpha$。结果呈现出清晰的倒 U 型趋势：$\alpha=0.3$ 时 Inter-CBL 作用偏弱，收益有限但整体稳定；$\alpha=0.5$（BL）达到最优均衡点；$\alpha=0.7$ 时已出现明显退化，DSC 降至 0.9436，说明过强的类别间平衡梯度开始与 Intra-CBL 方向冲突；$\alpha=1.0$（BL-$\alpha$1.0）则出现进一步退化，DSC 降至 0.9278。这一趋势表明，$\alpha$ 并非越大越好，也非越小越好，而是需要在”充分利用类别间重平衡”与”避免破坏已有优化方向”之间取得平衡。BL 恰好处于这一平衡点上。
+thesis-medsam/pages/chapter3.tex:237:\textbf{两阶段切换 $T_1$ 消融组分析。}$T_1$ 消融组在固定 $\alpha{=}0.5$、$\tau{=}0.9$ 的条件下，仅改变 Stage 2 的启用时机。$T_1=0$（即从训练起始即启用完整 Balance Loss，不进行两阶段划分）的 DSC 仅为 0.9470，虽高于 Baseline 但明显低于其他 $T_1$ 设置，说明在模型预测近似随机的训练初期直接引入 Inter-CBL 会导致困难背景挖掘产生大量噪声性伪困难样本，干扰优化方向。$T_1=30$ 时模型基础判别能力仍不够充分，性能进一步提升但尚未达到最优；$T_1=50$（BL）取得最优结果；$T_1=70$（BL-T70）和 $T_1=100$ 时，虽然训练初期更稳定，但 Inter-CBL 作用时间缩短，整体收益反而下降。$T_1$ 消融呈现倒 U 型趋势，且 $T_1=0$ 作为极端设置进一步验证了两阶段训练策略的必要性。从波动幅度看，$T_1$ 在 30--100 范围内的 DSC 差异不超过 0.0019，而 $\alpha$ 在 0.5--1.0 范围内的 DSC 差异高达 0.0244。这说明 $\alpha$ 是影响最终性能的主要因素，$T_1$ 的影响相对次要，但 $T_1=0$ 的显著退化（DSC 降至 0.9470）表明两阶段策略本身不可省略。
+thesis-medsam/pages/chapter3.tex:239:\textbf{交叉验证与整体结论。}BL-cv（$\alpha=1.0$, $T_1=100$）作为”高 $\alpha$ + 延后切换”的交叉验证配置，其 DSC 仅为 0.9291，仍与 BL-$\alpha$1.0（DSC 0.9278）接近。需要指出的是，BL-cv 同时改变了 $\alpha$ 和 $T_1$ 两个变量，因此严格而言无法将其退化完全归因于单一因素。但结合 $\alpha$ 消融组中 $\alpha{=}1.0$ 的显著退化（DSC 降至 0.9278）以及 $T_1$ 消融组中 $T_1{=}100$ 的温和退化（DSC 仍为 0.9512），可以合理推断 BL-cv 的退化主要由过大的 $\alpha$ 所驱动。这一交叉验证进一步确认：即使延后 Inter-CBL 的引入时机，只要 $\alpha$ 仍过大，退化就无法避免。
+thesis-medsam/pages/chapter3.tex:245:  \begin{minipage}[t]{0.48\textwidth}
+thesis-medsam/pages/chapter3.tex:250:  \begin{minipage}[t]{0.48\textwidth}
+thesis-medsam/pages/chapter3.tex:254:  \caption{关键超参数敏感性分析。(a)~$\alpha$ 对 DSC 和 HD95 的影响（固定 $T_1{=}50$），(b)~$T_1$ 对 DSC 和 HD95 的影响（固定 $\alpha{=}0.5$）。两者均呈倒 U 型趋势，$\alpha$ 的影响幅度显著大于 $T_1$。}
+thesis-medsam/pages/chapter3.tex:266:  \includegraphics[width=0.85\textwidth]{figures/training_curves.pdf}
+thesis-medsam/pages/chapter3.tex:279:本章围绕”损失如何被选出来”这一核心问题，对 Balance Loss 的设计与配置选择过程进行了系统论证。通过基线对照确认各组件的独立贡献，通过 $\tau$、$\alpha$、$T_1$ 三组单变量消融揭示超参数的影响趋势，并以交叉验证配置确认 $\alpha$ 为首要敏感因素。结果表明，Intra-CBL 是首要增益来源，而 Inter-CBL 只有在合适权重和两阶段训练策略配合下才能发挥补充作用。本文最终确定 BL（$\alpha{=}0.5$, $T_1{=}50$, $\tau{=}0.9$）为后续章节统一采用的损失主干。由此，第3章完成的是”损失策略筛选”的任务；在此基础上，第4章将进一步回答”在固定 BL 后，应选择哪条微调/适配路线进入最终模型”。

@@ -1,6 +1,6 @@
 # 实验事实库
 
-> **本文件是全部实验数据的唯一权威来源。** 所有论文中引用的数值必须与本表一致。
+> **本文件是实验记录与论文写作核对表。** 如与最新论文定稿存在差异，应以对应 `summary.json` 和论文正文最终版本为准。
 > 更新时间：2026-03-03 | 状态：全部实验完成，代码冻结
 > 详细解读见 `docs/THESIS_KNOWLEDGE_BASE.md`
 
@@ -8,7 +8,7 @@
 
 ## 评估口径
 
-- 数据：`data/npy/CT_Abd`（FLARE22，40 例独立测试集）
+- 数据：`data/npy/CT_Abd`（FLARE22，40 个预处理病例的内部同口径评估）
 - 指标：DSC / HD95 / ASD
 - 脚本：`eval_medsam_npz.py`
 - 结果来源：`work_dir/eval_metrics/*_summary.json`
@@ -29,7 +29,7 @@
 | **B1** | Attention-only (dicece) | 0.943297 | 3.602789 | 0.437852 | Attention独立基线 |
 | **C1** | Attention + A3R3 | 0.942719 | 4.417467 | 0.501330 | 退化 → 废弃Attention |
 | **C2** | LoRA (r=4) + A3R3 | 0.879610 | 7.754797 | 0.996511 | 灾难退化 → 消融反证 |
-| **C3** | LG-Adapter + A3R3 | **0.961958** | 2.914536 | 0.538947 | **全局最优 DSC** |
+| **C3** | LG-Adapter + A3R3 | **0.962000** | **2.083400** | **0.227100** | **综合最优** |
 
 ---
 
@@ -97,7 +97,7 @@
 - Config: `loss_type=balance(A3R3), use_lg_adapter=true`
 - 日志: `work_dir/exp_logs/C3_train.log`
 - Eval JSON: `work_dir/eval_metrics/C3_summary.json`
-- 结论: **全局最优 DSC=0.9620**
+- 结论: **综合指标最优（DSC=0.9620）**
 
 ---
 

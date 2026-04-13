@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于平衡损失与多尺度局部适配器的MedSAM腹部多器官分割方法研究</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); overflow: hidden; }
+        .slides-container { width: 100vw; height: 100vh; position: relative; }
+        .slide { width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; opacity: 0; transform: translateX(100%); transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .slide.active { opacity: 1; transform: translateX(0); }
+        .slide.prev { transform: translateX(-100%); }
+        .slide-content { background: white; border-radius: 20px; padding: 50px; max-width: 1200px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        h1 { color: #2d3748; font-size: 48px; margin-bottom: 20px; text-align: center; }
+        h2 { color: #667eea; font-size: 36px; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+        h3 { color: #4a5568; font-size: 28px; margin: 25px 0 15px 0; }
+        p, li { color: #4a5568; font-size: 22px; line-height: 1.8; margin-bottom: 15px; }
+        ul { list-style: none; padding-left: 0; }
+        li { padding-left: 30px; position: relative; }
+        li:before { content: "▸"; color: #667eea; font-size: 24px; position: absolute; left: 0; }
+        .author-info { text-align: center; margin-top: 40px; color: #718096; font-size: 24px; }
+        .navigation { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 1000; }
+        .nav-btn { background: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-size: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s; }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .slide-number { position: fixed; bottom: 30px; left: 30px; color: white; font-size: 20px; z-index: 1000; }
+        .highlight { background: linear-gradient(120deg, #fef08a 0%, #fde047 100%); padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+        .formula { background: #f7fafc; padding: 20px; border-radius: 10px; margin: 20px 0; font-family: 'Courier New', monospace; text-align: center; font-size: 20px; }
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        .box { background: #f7fafc; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; }
+    </style>
+</head>
+<body>
+    <div class="slides-container">
+        <div class="slide active">
+            <div class="slide-content">
+                <h1>基于平衡损失与多尺度局部适配器的<br>MedSAM腹部多器官分割方法研究</h1>
+                <div class="author-info">
+                    <p><strong>答辩人：</strong>周贤玮</p>
+                    <p><strong>导师：</strong>陈刚 教授</p>
+                    <p><strong>专业：</strong>电子信息（软件工程方向）</p>
+                    <p><strong>学院：</strong>武汉大学计算机学院</p>
+                    <p style="margin-top: 30px; color: #667eea;">2026年2月</p>
+                </div>
+            </div>
+        </div>
+        <div class="slide"><div class="slide-content"><h2>目录</h2><ul style="font-size: 26px;"><li>研究背景与意义</li><li>相关理论与技术基础</li><li>基于Balance Loss的医学图像分割方法</li><li>基于LG-Adapter的多尺度特征增强</li><li>实验设计与结果分析</li><li>总结与展望</li></ul></div></div>
+        <div class="slide"><div class="slide-content"><h2>研究背景与意义</h2><h3>医学图像分割的重要性</h3><ul><li>计算机辅助诊断、术前规划和放疗勾画的<span class="highlight">关键基础能力</span></li><li>直接影响器官体积估计、病灶边界判读及治疗决策</li></ul><h3>医学图像分割的长期痛点</h3><div class="two-column"><div class="box"><strong>类别不平衡</strong><br>前景像素占比低，训练易被背景主导</div><div class="box"><strong>边界模糊</strong><br>困难像素对临床可用性影响大，但常被简单样本淹没</div></div></div></div>
+        <div class="slide"><div class="slide-content"><h2>国内外研究现状</h2><h3>医学图像分割模型演进</h3><ul><li><strong>传统方法</strong>：阈值、区域生长、活动轮廓 → 依赖手工特征</li><li><strong>深度学习时代</strong>：FCN → U-Net → nnU-Net → TransUNet</li><li><strong>视觉基础模型</strong>：SAM → MedSAM → 提示式分割新范式</li></ul><h3>MedSAM的优势与局限</h3><div class="two-column"><div class="box"><strong>✓ 优势</strong><br>• 150万+医学图像训练<br>• 10种成像模态覆盖<br>• 提示式交互灵活</div><div class="box"><strong>✗ 局限</strong><br>• 类别不平衡建模不足<br>• 高频边缘特征欠缺<br>• 小器官分割受限</div></div></div></div>
+        <div class="slide"><div class="slide-content"><h2>研究问题与核心挑战</h2><div class="box" style="margin-bottom: 20px;"><h3>挑战1：双重类别不平衡</h3><ul><li><strong>类间不平衡</strong>：前景vs背景像素比例悬殊（<1% vs >90%）</li><li><strong>类内不平衡</strong>：易样本vs难样本（边界区域）分布不均</li><li>现有损失函数（Dice+CE）未显式建模</li></ul></div><div class="box"><h3>挑战2：ViT局部特征缺陷</h3><ul><li>全局自注意力机制缺乏<span class="highlight">局部高频特征</span>捕获能力</li><li>导致器官边界过度平滑</li><li>LoRA等参数高效微调在复杂任务中存在局限</li></ul></div></div></div>
+        <div class="slide"><div class="slide-content"><h2>MedSAM基座模型</h2><h3>三段式架构</h3><div class="two-column"><div><div class="box" style="margin-bottom: 15px;"><strong>Image Encoder</strong><br>ViT-Base (86M参数)<br>1024×1024×3 → 64×64×256</div><div class="box" style="margin-bottom: 15px;"><strong>Prompt Encoder</strong><br>Box/Point → 位置编码</div><div class="box"><strong>Mask Decoder</strong><br>交叉注意力 + 上采样</div></div><div><div class="formula">E<sub>I</sub> = f<sub>enc</sub>(I)<br><br>E<sub>P</sub> = f<sub>prompt</sub>(P)<br><br>Ŷ = f<sub>dec</sub>(E<sub>I</sub>, E<sub>P</sub>)</div></div></div></div></div>
+        <div class="slide"><div class="slide-content"><h2>Balance Loss：联合平衡损失框架</h2><h3>设计思路</h3><div class="two-column"><div class="box"><strong>Inter-CBL</strong><br>类别间平衡<br><br>• 困难背景样本挖掘<br>• 前景/背景数量对齐<br>• 避免背景梯度主导</div><div class="box"><strong>Intra-CBL</strong><br>类别内难度加权<br><br>• 阈值划分易/难样本<br>• 难样本权重提升<br>• 强化边界学习</div></div><div class="formula" style="margin-top: 25px;">L = λ<sub>dice</sub> · L<sub>dice</sub> + λ<sub>inter</sub> · L<sub>inter</sub> + λ<sub>intra</sub> · L<sub>intra</sub></div></div></div>
+        <div class="slide"><div class="slide-content"><h2>LG-Adapter：多尺度局部特征增强</h2><h3>核心创新</h3><ul><li><strong>双路径设计</strong>：深度可分离卷积 + 膨胀卷积</li><li><strong>多尺度融合</strong>：捕获不同感受野的局部特征</li><li><strong>参数高效</strong>：仅增加<span class="highlight">0.15%</span>参数量</li></ul><div class="box" style="margin-top: 25px;"><strong>与LoRA的对比</strong><br>• LoRA (r=4)：冻结主干微调，性能提升有限<br>• LG-Adapter：显式注入局部归纳偏置，弥补ViT高频缺陷</div></div></div>
+        <div class="slide"><div class="slide-content"><h2>实验设计</h2><h3>数据集与评估指标</h3><div class="two-column"><div class="box"><strong>FLARE22数据集</strong><br>• 13类腹部器官<br>• CT影像<br>• GT box prompt</div><div class="box"><strong>评估指标</strong><br>• DSC (Dice系数)<br>• HD95 (豪斯多夫距离)<br>• ASD (平均表面距离)</div></div><h3>消融路径</h3><div class="formula">A0 (基线) → A3R3 (+Balance Loss) → C2 (+LG-Adapter) → C3 (完整方案)</div></div></div>
+        <div class="slide"><div class="slide-content"><h2>实验结果</h2><h3>整体性能提升</h3><div class="box" style="background: #f0fdf4; border-left-color: #22c55e;"><p style="font-size: 28px; text-align: center; margin: 0;"><strong>DSC: 0.9620</strong> | <strong>HD95 ↓56.9%</strong> | <strong>ASD ↓57.8%</strong></p></div><h3>关键发现</h3><ul><li>Balance Loss显著提升小器官召回率（肾上腺、十二指肠）</li><li>LG-Adapter有效改善边界质量，HD95大幅下降</li><li>两阶段训练策略缓解冷启动噪声</li><li>LoRA (r=4)在复杂多器官任务中性能受限</li></ul></div></div>
+        <div class="slide"><div class="slide-content"><h2>消融实验分析</h2><div class="two-column"><div class="box"><h3>Balance Loss消融</h3>• Inter-CBL单独：DSC +2.3%<br>• Intra-CBL单独：DSC +1.8%<br>• 联合使用：DSC +3.5%<br><strong>→ 协同增效验证</strong></div><div class="box"><h3>LG-Adapter消融</h3>• 单路径：HD95 -28%<br>• 双路径：HD95 -56.9%<br>• vs LoRA: DSC +4.2%<br><strong>→ 多尺度必要性</strong></div></div><div class="box" style="margin-top: 20px;"><strong>LoRA秩消融</strong>：r=4最优，r↑性能未提升 → 低秩假设在密集预测任务中局限性</div></div></div>
+        <div class="slide"><div class="slide-content"><h2>研究总结</h2><h3>主要贡献</h3><ul><li><strong>Balance Loss</strong>：联合建模类间/类内不平衡，分段权重+两阶段训练</li><li><strong>LG-Adapter</strong>：双路径多尺度局部特征增强，0.15%参数开销</li><li><strong>LoRA消融</strong>：揭示低秩微调在复杂分割任务中的局限性</li><li><strong>系统评估</strong>：完整消融路径，同口径对比，FLARE22基准验证</li></ul><div class="box" style="margin-top: 25px; background: #fef3c7; border-left-color: #f59e0b;"><strong>核心价值</strong>：为大模型在医学领域的精细化应用提供可行优化路径</div></div></div>
+        <div class="slide"><div class="slide-content"><h2>未来工作展望</h2><ul style="font-size: 24px;"><li><strong>三维扩展</strong>：将Balance Loss与LG-Adapter扩展到3D体积分割</li><li><strong>多模态融合</strong>：探索CT+MRI联合分割</li><li><strong>弱监督学习</strong>：降低对精细标注的依赖</li><li><strong>实时推理</strong>：模型压缩与加速，面向临床部署</li><li><strong>SAM 2适配</strong>：探索视频医学图像的时序一致性分割</li></ul></div></div>
+        <div class="slide"><div class="slide-content"><h1 style="font-size: 64px; color: #667eea; margin-bottom: 50px;">感谢各位老师的聆听与指导！</h1><div class="author-info" style="font-size: 28px;"><p>答辩人：周贤玮</p><p>导师：陈刚 教授</p><p style="margin-top: 40px; color: #667eea;">欢迎提问与交流</p></div></div></div>
+    </div>
+    <div class="slide-number"><span id="current-slide">1</span> / <span id="total-slides">14</span></div>
+    <div class="navigation"><button class="nav-btn" onclick="prevSlide()">← 上一页</button><button class="nav-btn" onclick="nextSlide()">下一页 →</button></div>
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        document.getElementById('total-slides').textContent = totalSlides;
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            slides[currentSlide].classList.add('prev');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides.forEach(slide => { slide.classList.remove('active', 'prev'); });
+            slides[currentSlide].classList.add('active');
+            document.getElementById('current-slide').textContent = currentSlide + 1;
+        }
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') { nextSlide(); }
+            else if (e.key === 'ArrowLeft') { prevSlide(); }
+        });
+    </script>
+</body>
+</html>

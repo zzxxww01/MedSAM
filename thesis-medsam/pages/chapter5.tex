@@ -4,7 +4,7 @@
 
 \section{实验与评估设置}
 
-\textbf{重要说明}：本文所有实验均在真实标注边界框（GT box prompt）条件下进行评估。该提示为模型提供了精确的目标区域先验，使得模型的搜索空间被限定在已知目标区域内，因此本文结果不能与无需提示的全自动分割方法（如 nnU-Net）进行严格的横向对比。本文纳入全自动方法仅作为辅助参考点，用于帮助读者定位本文方案的大致性能区间。
+\textbf{应用场景定位与评估协议说明}：本文的目标场景为\textbf{交互式临床分割工作流}——医生或影像技师先提供粗定位框（bounding box），模型在该感兴趣区域（ROI）内完成精细掩码预测。该流程与 MedSAM 的提示式范式一致\cite{ma2024medsam}，强调人机协同下的效率与可控性。在此定位下，本文所有实验均在真实标注边界框（GT box prompt）条件下进行评估，该提示为模型提供了精确的目标区域先验。GT box 评估不仅用于控制提示变量以保证方案间公平比较，也可视为交互上限条件下的能力评估基线。因此，本文结果应理解为统一内部评估协议下的比较结果，不能与无需提示的全自动分割方法（如 nnU-Net）进行严格的横向对比。本文纳入全自动方法仅作为辅助参考点，用于帮助读者定位本文方案的大致性能区间。
 
 \subsection{数据集与预处理}
 
@@ -52,7 +52,7 @@
 
 训练阶段对每个样本进行在线数据增强：以 0.5 概率进行随机水平翻转、以 0.5 概率进行随机垂直翻转，并从 $\{0°, 90°, 180°, 270°\}$ 中均匀采样进行随机旋转，图像与掩码同步变换。此外，训练阶段对 GT box 的四条边各施加 $[0, 20]$ 像素的随机外扩作为提示扰动，以增强模型对提示噪声的鲁棒性；推理阶段使用无扰动的 GT box。BL 及其后续方案统一采用第3章确定的损失配置：$\alpha = 0.5$，$\beta = 1.0$，$\gamma = 1.0$，$T_1 = 50$，$\tau = 0.9$，$w_h = 2.0$，$\text{neg\_ratio}=3.0$。
 
-需要强调的是，本文所有实验在推理阶段均使用真实标注导出的 bounding box 作为提示（GT box prompt）。因此，本文结果应理解为统一内部评估协议下的比较结果，而不能与无需提示的全自动方法做严格横向对比。这一设定的选择理由在于：GT box prompt 能够最大程度地控制提示变量，使不同方案之间的性能差异更直接地反映损失设计与结构增强本身的贡献，而非被提示质量差异所掩盖。关于提示鲁棒性的初步验证，本文在训练阶段已通过对 GT box 施加 $[0, 20]$ 像素的随机外扩扰动来增强模型的提示噪声容忍能力，但推理阶段系统性的提示扰动实验尚未开展，这是本文的局限之一。
+需要强调的是，本文所有实验在推理阶段均使用真实标注导出的边界框作为提示（GT box prompt）。这一设定的选择理由在于：GT box prompt 能够最大程度地控制提示变量，使不同方案之间的性能差异更直接地反映损失设计与结构增强本身的贡献，而非被提示质量差异所掩盖。在实际临床工作流中，该提示可由医生或影像技师通过简单交互提供（如鼠标拖拽框选目标器官），模型随后在该感兴趣区域内完成精细分割，从而实现“粗定位 + 精细分割”的人机协同模式。关于提示鲁棒性的初步验证，本文在训练阶段已通过对 GT box 施加 $[0, 20]$ 像素的随机外扩扰动来增强模型的提示噪声容忍能力，但推理阶段系统性的提示扰动实验（如模拟自动检测框的噪声分布）尚未开展，这是后续工作的重要方向。
 
 \subsection{训练开销}
 
@@ -137,9 +137,9 @@
 
 从表~\ref{tab:wilcoxon}可以看出，Baseline 与 BL 之间在三项指标上均具有高度显著性（DSC $p=1.2\times10^{-4}$，HD95 $p=2.4\times10^{-4}$，ASD $p=3.1\times10^{-4}$），均远低于 Bonferroni 校正阈值，说明 Balance Loss 带来的增益并非由少数样本偶然驱动。Baseline 与 BL+MSL 的全程对比同样在三项指标上高度显著。BL 与 BL+MSL 之间的差异在校正前达到常规 $0.05$ 显著性水平，但在 Bonferroni 校正后未通过 $0.0167$ 的阈值，因此在当前样本量下不能认为该差异具有统计显著性。
 
-为补充 $p$ 值在小样本条件下的信息局限性，本文进一步计算了 Cohen's $d$ 效应量。对于 Baseline 与 BL 的 DSC 对比，Cohen's $d = 0.87$（大效应），表明 Balance Loss 带来的整体提升幅度在实践意义上同样显著。对于 BL 与 BL+MSL 的 DSC 对比，Cohen's $d = 0.19$（小效应），这与 $p$ 值分析的结论一致：局部适配器的增益虽然方向稳定，但绝对幅度有限，更多体现为边界层面的定向补强而非大幅整体跃升。Baseline 与 BL+MSL 的全程对比 Cohen's $d = 1.12$（大效应），进一步确认两步优化路径的整体收益具有实质性意义。
+为补充 $p$ 值在小样本条件下的信息局限性，本文进一步计算了 Cohen's $d$ 效应量。对于 Baseline 与 BL 的 DSC 对比，Cohen's $d = 0.87$（大效应），表明 Balance Loss 带来的整体提升幅度在实践意义上同样显著。对于 BL 与 BL+MSL 的 DSC 对比，Cohen's $d = 0.19$（小效应）。需要指出的是，BL+MSL 相对于 BL 的改善未通过 Bonferroni 校正后的显著性阈值，因此 MSL-Adapter 的贡献应理解为方向稳定但幅度有限的局部边界补强，其核心价值在于验证了“损失优化之后，局部结构增强是可行的改进方向”。Baseline 与 BL+MSL 的全程对比 Cohen's $d = 1.12$（大效应），进一步确认两步优化路径的整体收益具有实质性意义。
 
-BL 与 BL+MSL 之间差异的统计不显著性需要从多个角度理解。首先，从样本量角度看，15 个测试病例的统计功效（statistical power）有限，对于小效应量（Cohen's $d=0.19$）的检测能力不足，这是当前评估规模的固有局限。其次，从方法设计角度看，MSL-Adapter 是在 BL 已经取得显著改善（DSC 0.9538）的高性能基线上进行增量优化，此时模型的主要瓶颈已从“训练信号分配”转变为“局部细节捕捉”，而单个轻量级适配器（136K 参数，仅占总参数的 0.15\%）的容量有限，只能在边界层面提供定向补强，难以带来统计显著的整体跃升。第三，从实践意义角度看，虽然统计检验未通过严格阈值，但 MSL-Adapter 在边界指标上的改善方向一致（HD95 和 ASD 在所有困难器官上均有降低），且在困难切片上的 HD95 降低 9.7\%，这表明其贡献虽小但稳定，具有一定的实践价值。因此，MSL-Adapter 的意义更应理解为“验证了局部结构增强的可行性”，而非“带来了统计显著的性能跃升”。
+综合来看，Balance Loss 负责主要性能提升（训练信号重构），MSL-Adapter 在此基础上提供边界细节的稳定补强，二者构成“主增益 + 定向增强”的组合。MSL-Adapter 虽为轻量级模块（136K 参数，仅占总参数的 0.15\%），但在边界指标上的改善方向一致（HD95 和 ASD 在所有困难器官上均有降低），且在困难切片上的 HD95 降低 9.7\%，验证了局部结构增强的可行性。
 
 \section{逐器官结果分析}
 
@@ -321,34 +321,48 @@ BL+MSL 的进一步增益主要集中于食管、十二指肠、胰腺和肾上�
 
 \subsection{对比结果}
 
+表~\ref{tab:comparison_prompt}给出了本文方案与已有提示式分割方法的对比结果，表~\ref{tab:comparison_auto}给出了全自动分割方法的性能参考。需要强调的是，表~\ref{tab:comparison_prompt}和表~\ref{tab:comparison_auto}中的两类方法解决的任务本质不同，不可进行严格横向比较。
+
 \begin{table}[htbp]
   \centering
-  \caption{与已有方法的横向对比（15 个测试病例，提示式方法与全自动方法仅供参考性对照）}
-  \label{tab:comparison}
+  \caption{与已有提示式分割方法的对比（15 个测试病例，统一使用 GT box prompt）}
+  \label{tab:comparison_prompt}
   \small
-  \begin{tabular}{llcccc}
+  \begin{tabular}{lcccc}
     \hline
-    方法 & 类型 & 提示条件 & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
+    方法 & 类型 & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
     \hline
-    \multicolumn{6}{l}{\textit{提示式分割方法（GT box prompt）}} \\
-    SAMed\cite{zhang2024samed}            & LoRA 微调 SAM     & GT box & 0.9435 & 4.0523 & 0.4536 \\
-    Med SAM Adapter\cite{wu2023medsamadapter} & 适配器增强 SAM & GT box & 0.9478 & 3.5217 & 0.3948 \\
-    Baseline（MedSAM 基线）               & 全参微调 MedSAM    & GT box & 0.9411 & 4.7816 & 0.5514 \\
-    BL（Balance Loss）                    & 本文损失优化       & GT box & 0.9538 & 3.2419 & 0.3716 \\
-    BL+MSL（本文最终方案）                 & 本文损失+局部适配   & GT box & \textbf{0.9562} & \textbf{3.0127} & \textbf{0.3418} \\
-    \hline
-    \multicolumn{6}{l}{\textit{全自动分割方法（无提示）}} \\
-    nnU-Net 2D\cite{isensee2021nnunet}    & 任务专用 2D 模型  & 无 & 0.9451 & 3.8124 & 0.4237 \\
-    nnU-Net 3D\cite{isensee2021nnunet}    & 任务专用 3D 模型  & 无 & 0.9538 & 3.1253 & 0.3487 \\
+    SAMed\cite{zhang2024samed}            & LoRA 微调 SAM     & 0.9435 & 4.0523 & 0.4536 \\
+    Med SAM Adapter\cite{wu2023medsamadapter} & 适配器增强 SAM & 0.9478 & 3.5217 & 0.3948 \\
+    Baseline（MedSAM 基线）               & 全参微调 MedSAM    & 0.9411 & 4.7816 & 0.5514 \\
+    BL（Balance Loss）                    & 本文损失优化       & 0.9538 & 3.2419 & 0.3716 \\
+    BL+MSL（本文最终方案）                 & 本文损失+局部适配   & \textbf{0.9562} & \textbf{3.0127} & \textbf{0.3418} \\
     \hline
   \end{tabular}
   \vspace{2pt}
-  \parbox{\textwidth}{\footnotesize 注：上半部分为提示式分割方法，均使用 GT box prompt，在已知目标区域内进行二值分割；下半部分为全自动多类别分割方法，不使用任何提示。两类方法的任务定义不同（提示式二值分割 vs 全自动多类别分割），GT box prompt 为提示式方法提供了目标区域先验，天然降低了分割难度，因此两组之间的数值不宜做严格横向比较。SAMed 与 Medical SAM Adapter 在本文相同数据与评估协议下重新训练。nnU-Net 使用相同训练病例独立训练与评估。所有方法均在相同 15 个测试病例上评估。}
+  \parbox{\textwidth}{\footnotesize 注：所有方法均使用 GT box prompt，在已知目标区域内进行二值分割。SAMed 与 Medical SAM Adapter 在本文相同数据与评估协议下重新训练，采用各自论文推荐的默认超参数。所有方法均在相同 15 个测试病例上评估。}
+\end{table}
+
+\begin{table}[htbp]
+  \centering
+  \caption{全自动分割方法性能参考（跨范式对照，不可直接比较）}
+  \label{tab:comparison_auto}
+  \small
+  \begin{tabular}{lcccc}
+    \hline
+    方法 & 类型 & DSC $\uparrow$ & HD95 $\downarrow$ & ASD $\downarrow$ \\
+    \hline
+    nnU-Net 2D\cite{isensee2021nnunet}    & 任务专用 2D 模型  & 0.9451 & 3.8124 & 0.4237 \\
+    nnU-Net 3D\cite{isensee2021nnunet}    & 任务专用 3D 模型  & 0.9538 & 3.1253 & 0.3487 \\
+    \hline
+  \end{tabular}
+  \vspace{2pt}
+  \parbox{\textwidth}{\footnotesize 注：nnU-Net 为全自动多类别分割方法，不使用任何提示信息，与表~\ref{tab:comparison_prompt}中提示式方法解决的任务本质不同。GT box prompt 为提示式方法提供了目标区域先验，天然降低了分割难度。本表仅作为辅助参考点，用于帮助读者定位本文方案的大致性能区间，两类方法的数值差异不能被解读为模型能力的直接比较。nnU-Net 使用相同 60 个训练病例独立训练，在相同 15 个测试病例上评估。}
 \end{table}
 
 \subsection{对比分析}
 
-从表~\ref{tab:comparison}可得以下结论：
+从表~\ref{tab:comparison_prompt}和表~\ref{tab:comparison_auto}可得以下结论：
 
 \textbf{与 SAM 适配方法的对比}。SAMed（DSC 0.9435）和 Medical SAM Adapter（DSC 0.9478）均低于本文 BL（DSC 0.9538）和 BL+MSL（DSC 0.9562）。为理解这一差异的来源，本文进一步将 BL+MSL 相比 SAMed 的 DSC 增益（+0.0127，即 1.27 个百分点）分解为两部分：（1）从 Baseline 到 BL 的增益为 +0.0127，（2）从 BL 到 BL+MSL 的增益为 +0.0024。由于 SAMed 与 Baseline 的性能接近（0.9435 vs 0.9411），这表明本文方案的性能优势主要来自训练信号重构（Balance Loss），而非结构适配（MSL-Adapter）。
 
@@ -358,7 +372,7 @@ Medical SAM Adapter 优于 SAMed（DSC 0.9478 vs 0.9435，HD95 为 3.52 mm vs 4.
 
 值得注意的是，Medical SAM Adapter 在编码器内部插入适配器模块，而本文 MSL-Adapter 插入在编码器与解码器之间的桥接位置。两种插入策略的差异可能影响性能：桥接位置插入只在特征传递的唯一通路上进行一次局部增强，对预训练权重的干扰最小；而编码器内部插入需要在多个 Transformer Block 之间分散插入，可能对预训练特征分布造成更大干扰。不过，由于两种方法的适配器设计细节（卷积核大小、通道数、激活函数等）也存在差异，当前对比尚不足以完全分离“插入位置”与“模块设计”的独立贡献，可作为未来工作的探索方向。
 
-\textbf{与 nnU-Net 的对比（跨范式参考）}。nnU-Net 为全自动多类别分割方法，不使用任何提示信息，而本文 MedSAM 系列方法在 GT box prompt 约束下进行二值分割——该提示将模型的搜索空间限定在已知目标区域内，天然降低了分割难度。因此，两类方法解决的并非同一任务，数值差异不能被简单解读为模型能力的直接比较。本文纳入 nnU-Net 仅作为辅助参考点，用于帮助读者定位本文方案的大致性能区间。从数值上看，BL+MSL（DSC 0.9562）高于 nnU-Net 3D（DSC 0.9538），但这一差异应主要归因于 GT box prompt 所提供的目标区域先验。
+\textbf{与 nnU-Net 的对比（跨范式参考）}。如表~\ref{tab:comparison_auto}所示，nnU-Net 为全自动多类别分割方法，不使用任何提示信息，而本文 MedSAM 系列方法在 GT box prompt 约束下进行二值分割——该提示将模型的搜索空间限定在已知目标区域内，天然降低了分割难度。因此，两类方法解决的并非同一任务，数值差异不能被简单解读为模型能力的直接比较。本文纳入 nnU-Net 仅作为辅助参考点，用于帮助读者定位本文方案的大致性能区间。从数值上看，BL+MSL（DSC 0.9562）高于 nnU-Net 3D（DSC 0.9538），但这一差异应主要归因于 GT box prompt 所提供的目标区域先验，不能说明本文方法在绝对性能上优于 nnU-Net。
 
 \section{讨论与局限性}
 

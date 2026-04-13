@@ -41,15 +41,13 @@ E_I = f_{enc}(I), \quad E_P = f_{prompt}(P), \quad \hat{Y}=f_{dec}(E_I,E_P)
 
 \subsection{有效样本数与长尾重加权}
 
-Class-Balanced Loss\cite{cui2019classbalanced}指出，样本数量并不等价于信息量，提出有效样本数定义：
-\begin{equation}
-E_n = \frac{1-\beta^n}{1-\beta}
-\end{equation}
-其中 \(n\) 为样本数，\(\beta \in [0,1)\)。当 \(n\) 很大时，\(E_n\) 增长趋缓，反映多数类信息冗余。
+Class-Balanced Loss\cite{cui2019classbalanced}指出，样本数量并不等价于信息量。当某类样本数量很大时，新增样本带来的信息增益递减，反映多数类信息冗余。
 
 对于医学分割像素级任务，背景像素数量常远大于前景像素数量。若不进行再平衡，多数类将持续主导梯度方向，使模型更偏向背景预测。有效样本数理论为“削弱冗余背景影响”提供了数学依据。第 3 章中 Inter-CBL 的困难背景挖掘可以看作该思想在像素级的操作性实现：直接丢弃信息冗余度最高的简单背景像素，仅保留与前景数量对齐的困难背景子集参与梯度计算。
 
 \subsection{困难样本挖掘}
+
+Class-Balanced Loss 主要解决类别间的样本数量失衡，而在同一类别内部，困难样本与易分样本的学习难度差异同样需要关注。为此，困难样本挖掘（Hard Example Mining）策略应运而生。
 
 OHEM（Online Hard Example Mining）\cite{shrivastava2016ohem}通过在每个前向传播中计算所有候选样本的损失值，按损失降序选取 top-$k$ 样本参与反向传播。Focal Loss\cite{lin2017focal}则采用连续调制因子 $-(1-p_t)^\gamma \log(p_t)$ 实现对困难样本的软聚焦。
 
@@ -100,7 +98,7 @@ Dice Loss 从全局重叠度角度优化，其梯度包含归一化项 $(|Y|+|\h
 
 \subsection{Focal Loss 失效的理论分析}
 
-Focal Loss 在目标检测任务中表现优异，但在本文任务中未能带来提升（详见第3章实验：Baseline-Focal DSC 0.9398 vs Baseline 0.9411）。这一失效现象可从双层不平衡的角度理解。
+Focal Loss 在目标检测任务中表现优异，但在本文任务中未能带来改善（详见第3章实验：Baseline-Focal DSC 0.9398 vs Baseline 0.9411）。这一现象可从双层不平衡的角度理解。
 
 Focal Loss 的连续调制因子 $(1-p_t)^\gamma$ 对所有像素施加统一形式的难度加权，不区分困难像素的来源。在本文任务中，困难像素可能来自两个不同层面：类别间的困难背景（与前景边界接近的背景像素）和类别内的困难前景（边界、低对比区域）。Focal Loss 的统一调制无法针对性地处理这两类困难样本——它既不能像 Inter-CBL 那样选择性地保留困难背景，也不能像 Intra-CBL 那样对前景内部的困难像素施加更强的权重。
 

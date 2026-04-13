@@ -47,12 +47,15 @@ academic-title-outer = {校外导师职称},
 
 ### 2. 编写论文内容
 
+- `pages/abstract.tex` - 中文摘要正文（由模板自动读取）
+- `pages/enabstract.tex` - 英文摘要正文（由模板自动读取）
 - `pages/chapter1.tex` - 绪论
 - `pages/chapter2.tex` - 相关理论与技术
 - `pages/chapter3.tex` - Balance Loss 方法与实验
-- `pages/chapter4.tex` - 跨病例注意力融合机制
-- `pages/chapter5.tex` - 综合实验设计与结果组织
+- `pages/chapter4.tex` - LoRA 消融验证与局部特征适配器设计
+- `pages/chapter5.tex` - 综合实验与结果分析
 - `pages/chapter6.tex` - 总结与展望
+- `pages/appendix.tex` - 附录正文（主文件中使用 `\appendix` 后再 `\include`，此文件内不再手动写 `\chapter{附录}`）
 
 ### 3. 添加参考文献
 
@@ -80,18 +83,24 @@ latexmk -xelatex thesis
 2. 上传到 Overleaf
 3. 设置编译器为 **XeLaTeX**
 4. 设置主文件为 **thesis.tex**
-5. **重要**：修改 `thesis.tex` 第 20 行的中文字体设置：
+5. 将 `thesis.tex` 中的中文字体设置改为：
    ```latex
-   cjk-font = fandol,  % Overleaf 必须使用 fandol
+   cjk-font = fandol,
    ```
 
 ## ⚙️ 中文字体配置
 
-在 `thesis.tex` 第 20 行根据您的平台选择：
+在 `thesis.tex` 的 `style` 配置中根据平台选择：
 
+- **Windows（当前本地环境默认）**: `cjk-font = windows`
 - **Overleaf/Linux**: `cjk-font = fandol`
-- **Windows**: `cjk-font = windows`
 - **Mac**: `cjk-font = mac`
+
+## 📄 摘要、附录与参考文献说明
+
+- 中文摘要由模板自动读取 `pages/abstract.tex`，英文摘要由模板自动读取 `pages/enabstract.tex`；主文件中无需手动再插入摘要章节。
+- 当前主文件采用 `\appendix` 后再 `\include{pages/appendix.tex}` 的方式组织附录，因此 `pages/appendix.tex` 中应直接书写附录内容，不再手动添加 `\chapter{附录}`。
+- 当前模板配置使用 `bib-backend = bibtex` 与 `bib-style = numerical`，全文说明与最终输出均以顺序编码制为准。
 
 ## 📌 与完整版的区别
 

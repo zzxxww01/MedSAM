@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.patches import Patch
 
-matplotlib.rcParams['font.family'] = 'Times New Roman'
+matplotlib.rcParams['font.family'] = ['Times New Roman', 'SimSun', 'serif']
+plt.rcParams["mathtext.fontset"] = "stix"
 
 # 13类器官的颜色映射 (与你的可视化脚本中的 colormap 保持一致)
 # 如果你用的是不同的颜色方案, 请替换下面的颜色值
@@ -99,3 +100,4 @@ plt.subplots_adjust(bottom=0.08)  # 给图例留空间
 if __name__ == '__main__':
     generate_standalone_legend()
     show_how_to_add_to_existing_script()
+

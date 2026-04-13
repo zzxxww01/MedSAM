@@ -21,7 +21,8 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
 from skimage import measure
 
-plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.family"] = ["Times New Roman", "SimSun", "serif"]
+plt.rcParams["mathtext.fontset"] = "stix"
 plt.rcParams["axes.unicode_minus"] = False
 
 # ═══════════════════════════════════════════
@@ -303,3 +304,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

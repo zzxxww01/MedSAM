@@ -53,7 +53,7 @@
 
 | 路径 | 内容 |
 |------|------|
-| `../thesis-medsam/thesis.pdf` | 编译后的论文 PDF（51页） |
+| `../thesis-medsam/thesis.pdf` | 编译后的论文 PDF |
 | `../thesis-medsam/pages/chapter*.tex` | 各章节 LaTeX 源文件 |
 | `../thesis-medsam/ref/references.bib` | 参考文献（30篇） |
 | `../models/medsam_fss.py` | LoRA + LG-Adapter 代码 |
@@ -65,8 +65,8 @@
 ## ✅ 当前状态
 
 - ✅ 全部 11 组实验完成
-- ✅ 代码冻结
-- ✅ 论文骨架完成（51页，~30,000字）
+- ✅ 代码主体已定型（如需复现实验，优先以 `work_dir/eval_metrics/*_summary.json` 和论文正文当前版本为准）
+- ✅ 论文主体已完成并完成一轮口径核对
 - ✅ 参考文献扩充至 30 篇
 - ⏳ **待制作 8 幅图片**（详见 TODO.md）
 - ⏳ 论文细节打磨

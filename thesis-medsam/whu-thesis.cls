@@ -1197,7 +1197,7 @@
         { supervisor } { 校内导师姓名、职称 } { Supervisor },
         { supervisor_outer } { 校外导师姓名、职称 } { Supervisor Outside },
         { major } { 专业名称 } { Major },
-        { research_area  } { 研究方向 } { Speciality },
+        { research_area  } { 研究方向 } { Specialty },
         { abstract } { 摘 \hspace{2em} 要 } { ABSTRACT },
         { keywords } { 关键词 } { Keywords },
       }
@@ -1663,7 +1663,7 @@
         \begin{tabular}{c}
           \includegraphics[width=4cm]{./logo/whu-logo.pdf} \\[3pt]
           \zihao{4}\l__whu_info_department_en_tl \\[3pt]
-          \zihao{4}\textsc{Wuhan~University}
+          \zihao{4}Wuhan~University
         \end{tabular}
       };
   }

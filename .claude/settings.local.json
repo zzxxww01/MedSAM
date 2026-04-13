@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(xelatex:*)",
+      "Bash(bibtex thesis:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "WebSearch",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:scholar.google.com)",
+      "WebFetch(domain:flare22.grand-challenge.org)",
+      "WebFetch(domain:www.sciencedirect.com)",
+      "Bash(ssh:*)",
+      "Bash(ssh-add:*)",
+      "Bash(icacls:*)",
+      "Bash(where:*)",
+      "Bash(pdflatex:*)",
+      "Bash(latexmk -xelatex thesis)",
+      "Bash(pdfinfo thesis.pdf)",
+      "Bash(tectonic:*)",
+      "Bash(bash \"/c/Users/DELL/.claude/skills/kimi-pdf/scripts/pdf.sh\" check)",
+      "Bash(bash \"/c/Users/DELL/.claude/skills/kimi-pdf/scripts/pdf.sh\" fix)",
+      "Bash(latexmk -xelatex -interaction=nonstopmode -file-line-error thesis.tex)",
+      "Bash(latexmk -xelatex -interaction=nonstopmode -file-line-error -cd \"C:/Users/DELL/Desktop/MedSAM/thesis-medsam/thesis.tex\")",
+      "Bash(\"C:/Users/DELL/Desktop/MedSAM/thesis-medsam/compile_check.log\")",
+      "Bash(latexmk -xelatex -interaction=nonstopmode -file-line-error \"thesis-medsam/thesis.tex\")",
+      "Bash(latexmk -xelatex -interaction=nonstopmode -file-line-error \"C:/Users/DELL/Desktop/MedSAM/thesis-medsam/thesis.tex\")",
+      "Bash(latexmk:*)"
+    ]
+  }
+}

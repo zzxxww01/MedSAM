@@ -16,7 +16,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
-plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.family"] = ["Times New Roman", "SimSun", "serif"]
+plt.rcParams["mathtext.fontset"] = "stix"
 plt.rcParams["axes.unicode_minus"] = False
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
@@ -31,7 +32,7 @@ SEARCH_PATTERNS = [
 ]
 
 EXPERIMENTS = ["A0", "A3R3", "C2", "C3"]
-TITLES = ["Ground Truth", "A0 Baseline", "A3R3 Balance", "C2 LoRA", "C3 LG-Adapter"]
+TITLES = ["真值标注", "Baseline", "Balance Loss", "LoRA", "MSL-Adapter"]
 
 # 为 13 个器官类别定义颜色映射
 ORGAN_COLORS = [
@@ -156,7 +157,7 @@ def main():
     col = 0
     if gt_mask is not None:
         axes[col].imshow(colorize_mask(gt_mask))
-        axes[col].set_title("Ground Truth", fontsize=11, fontweight="bold")
+        axes[col].set_title("真值标注", fontsize=11, fontweight="bold")
         axes[col].axis("off")
         col += 1
 
@@ -164,16 +165,16 @@ def main():
         if name in masks:
             axes[col].imshow(colorize_mask(masks[name]))
             label = {
-                "A0": "A0 Baseline\nDSC=0.941",
-                "A3R3": "A3R3 Balance\nDSC=0.960",
-                "C2": "C2 LoRA\nDSC=0.879",
-                "C3": "C3 LG-Adapter\nDSC=0.962",
+                "A0": "Baseline\nDSC=0.9407",
+                "A3R3": "Balance Loss\nDSC=0.9543",
+                "C2": "LoRA\nDSC=0.9312",
+                "C3": "MSL-Adapter\nDSC=0.9571",
             }.get(name, name)
             axes[col].set_title(label, fontsize=10, fontweight="bold")
             axes[col].axis("off")
             col += 1
 
-    fig.suptitle("Prediction Mask Comparison", fontsize=14, fontweight="bold", y=1.02)
+    fig.suptitle("预测掩码对比", fontsize=14, fontweight="bold", y=1.02)
     fig.tight_layout()
 
     out_path = os.path.join(OUT_DIR, "mask_comparison.pdf")
@@ -184,3 +185,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

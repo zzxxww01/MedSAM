@@ -15,7 +15,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.family"] = ["Times New Roman", "SimSun", "serif"]
+plt.rcParams["mathtext.fontset"] = "stix"
 plt.rcParams["axes.unicode_minus"] = False
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
@@ -120,7 +121,7 @@ def main():
     args = parser.parse_args()
 
     experiments = ["A0", "A3R3", "C3"]
-    titles = ["A0 Baseline", "A3R3 Balance Loss", "C3 LG-Adapter"]
+    titles = ["Baseline", "Balance Loss", "MSL-Adapter"]
 
     pred_files = {}
     for name in experiments:
@@ -167,10 +168,10 @@ def main():
         # Zoomed view
         roi = mask_rgb[ry:ry + rs, rx:rx + rs]
         axes[1, col].imshow(roi, interpolation="nearest")
-        axes[1, col].set_title(f"{titles[col]} (zoom)", fontsize=10)
+        axes[1, col].set_title(f"{titles[col]} (放大)", fontsize=10)
         axes[1, col].axis("off")
 
-    fig.suptitle("Boundary Detail Comparison",
+    fig.suptitle("边界区域放大对比",
                  fontsize=13, fontweight="bold", y=1.02)
     fig.tight_layout()
 
@@ -182,3 +183,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

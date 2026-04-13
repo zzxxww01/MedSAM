@@ -49,7 +49,9 @@ WINDOW_LEVEL = 40  # only for CT images
 WINDOW_WIDTH = 400  # only for CT images
 
 # %% save preprocessed images and masks as npz files
-for name in tqdm(names[:40]):  # use the remaining 10 cases for validation
+# Current project usage keeps the first 40 FLARE22 cases in this directory.
+# The saved outputs are later reused for training slices and internal case-level evaluation.
+for name in tqdm(names[:40]):
     image_name = name.split(gt_name_suffix)[0] + img_name_suffix
     gt_name = name
     gt_sitk = sitk.ReadImage(join(gt_path, gt_name))

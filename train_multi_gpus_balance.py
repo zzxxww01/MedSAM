@@ -88,7 +88,10 @@ class NpyDataset(Dataset):
             self.gt_path_files[index], "r", allow_pickle=True
         )
         assert img_name == os.path.basename(self.gt_path_files[index]), (
-            "img gt name error" + self.gt_path_files[index] + self.npy_files[index]
+            "img gt name error: "
+            + img_name
+            + " vs "
+            + os.path.basename(self.gt_path_files[index])
         )
         label_ids = np.unique(gt)[1:]
         gt2D = np.uint8(gt == random.choice(label_ids.tolist()))
@@ -425,7 +428,7 @@ def main_worker(gpu, ngpus_per_node, args):
             iter_num += 1
 
         # Epoch结束处理
-        epoch_loss /= step
+        epoch_loss /= max(1, len(train_dataloader))
         losses.append(epoch_loss)
 
         if args.use_wandb:

@@ -1,0 +1,1124 @@
+[
+  {
+    "key": "ma2024medsam",
+    "type": "article",
+    "title": "Segment Anything in Medical Images",
+    "year": "2024",
+    "doi": "10.1038/s41467-024-44824-z",
+    "best": {
+      "source": "doi",
+      "title": "Segment anything in medical images",
+      "year": 2024,
+      "doi": "10.1038/s41467-024-44824-z",
+      "type": "journal-article",
+      "container": "Nature Communications"
+    },
+    "issues": []
+  },
+  {
+    "key": "kirillov2023segment",
+    "type": "inproceedings",
+    "title": "Segment Anything",
+    "year": "2023",
+    "doi": "10.1109/ICCV51070.2023.00371",
+    "best": {
+      "source": "doi",
+      "title": "Segment Anything",
+      "year": 2023,
+      "doi": "10.1109/iccv51070.2023.00371",
+      "type": "proceedings-article",
+      "container": "2023 IEEE/CVF International Conference on Computer Vision (ICCV)"
+    },
+    "issues": []
+  },
+  {
+    "key": "ravi2024sam2",
+    "type": "inproceedings",
+    "title": "SAM 2: Segment Anything in Images and Videos",
+    "year": "2024",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.694"
+    ]
+  },
+  {
+    "key": "dosovitskiy2021vit",
+    "type": "inproceedings",
+    "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale",
+    "year": "2021",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.634"
+    ]
+  },
+  {
+    "key": "ronneberger2015unet",
+    "type": "inproceedings",
+    "title": "U-Net: Convolutional Networks for Biomedical Image Segmentation",
+    "year": "2015",
+    "doi": "10.1007/978-3-319-24574-4_28",
+    "best": {
+      "source": "doi",
+      "title": "U-Net: Convolutional Networks for Biomedical Image Segmentation",
+      "year": 2015,
+      "doi": "10.1007/978-3-319-24574-4_28",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "isensee2021nnunet",
+    "type": "article",
+    "title": "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation",
+    "year": "2021",
+    "doi": "10.1038/s41592-020-01008-z",
+    "best": {
+      "source": "doi",
+      "title": "nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation",
+      "year": 2021,
+      "doi": "10.1038/s41592-020-01008-z",
+      "type": "journal-article",
+      "container": "Nature Methods"
+    },
+    "issues": []
+  },
+  {
+    "key": "chen2021transunet",
+    "type": "inproceedings",
+    "title": "TransUNet: Transformers Make Strong Encoders for Medical Image Segmentation",
+    "year": "2021",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.715"
+    ]
+  },
+  {
+    "key": "cao2022swinunet",
+    "type": "inproceedings",
+    "title": "Swin-Unet: Unet-like Pure Transformer for Medical Image Segmentation",
+    "year": "2022",
+    "doi": "10.1007/978-3-031-25066-8_9",
+    "best": {
+      "source": "doi",
+      "title": "Swin-Unet: Unet-Like Pure Transformer for Medical Image Segmentation",
+      "year": 2023,
+      "doi": "10.1007/978-3-031-25066-8_9",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": [
+      "year_mismatch:2022!=2023"
+    ]
+  },
+  {
+    "key": "zhang2024samed",
+    "type": "inproceedings",
+    "title": "SAMed: A General and Efficient Medical Image Segmentation Framework Based on Segment Anything Model",
+    "year": "2024",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.537"
+    ]
+  },
+  {
+    "key": "wei2024imedsam",
+    "type": "inproceedings",
+    "title": "I-MedSAM: Implicit Medical Image Segmentation with Segment Anything",
+    "year": "2024",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "I-MedSAM: Implicit Medical Image Segmentation with Segment Anything",
+      "year": 2025,
+      "doi": "10.1007/978-3-031-72684-2_6",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science",
+      "score": 0.985
+    },
+    "issues": [
+      "year_mismatch:2024!=2025",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "wu2023medsamadapter",
+    "type": "article",
+    "title": "Medical SAM Adapter: Adapting Segment Anything Model for Medical Image Segmentation",
+    "year": "2025",
+    "doi": "10.1016/j.media.2025.103547",
+    "best": {
+      "source": "doi",
+      "title": "Medical SAM adapter: Adapting segment anything model for medical image segmentation",
+      "year": 2025,
+      "doi": "10.1016/j.media.2025.103547",
+      "type": "journal-article",
+      "container": "Medical Image Analysis"
+    },
+    "issues": []
+  },
+  {
+    "key": "cui2019classbalanced",
+    "type": "inproceedings",
+    "title": "Class-Balanced Loss Based on Effective Number of Samples",
+    "year": "2019",
+    "doi": "10.1109/CVPR.2019.00949",
+    "best": {
+      "source": "doi",
+      "title": "Class-Balanced Loss Based on Effective Number of Samples",
+      "year": 2019,
+      "doi": "10.1109/cvpr.2019.00949",
+      "type": "proceedings-article",
+      "container": "2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)"
+    },
+    "issues": []
+  },
+  {
+    "key": "shrivastava2016ohem",
+    "type": "inproceedings",
+    "title": "Training Region-Based Object Detectors with Online Hard Example Mining",
+    "year": "2016",
+    "doi": "10.1109/CVPR.2016.89",
+    "best": {
+      "source": "doi",
+      "title": "Training Region-Based Object Detectors with Online Hard Example Mining",
+      "year": 2016,
+      "doi": "10.1109/cvpr.2016.89",
+      "type": "proceedings-article",
+      "container": "2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)"
+    },
+    "issues": []
+  },
+  {
+    "key": "lin2017focal",
+    "type": "inproceedings",
+    "title": "Focal Loss for Dense Object Detection",
+    "year": "2017",
+    "doi": "10.1109/ICCV.2017.324",
+    "best": {
+      "source": "doi",
+      "title": "Focal Loss for Dense Object Detection",
+      "year": 2017,
+      "doi": "10.1109/iccv.2017.324",
+      "type": "proceedings-article",
+      "container": "2017 IEEE International Conference on Computer Vision (ICCV)"
+    },
+    "issues": []
+  },
+  {
+    "key": "milletari2016vnet",
+    "type": "inproceedings",
+    "title": "V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation",
+    "year": "2016",
+    "doi": "10.1109/3DV.2016.79",
+    "best": {
+      "source": "doi",
+      "title": "V-Net: Fully Convolutional Neural Networks for Volumetric Medical Image Segmentation",
+      "year": 2016,
+      "doi": "10.1109/3dv.2016.79",
+      "type": "proceedings-article",
+      "container": "2016 Fourth International Conference on 3D Vision (3DV)"
+    },
+    "issues": []
+  },
+  {
+    "key": "vaswani2017attention",
+    "type": "inproceedings",
+    "title": "Attention Is All You Need",
+    "year": "2017",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "Attention Is All You Need",
+      "year": 2025,
+      "doi": "10.65215/nxvz2v36",
+      "type": "posted-content",
+      "container": "",
+      "score": 1.0
+    },
+    "issues": [
+      "year_mismatch:2017!=2025",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "wang2019panet",
+    "type": "inproceedings",
+    "title": "PANet: Few-Shot Image Semantic Segmentation With Prototype Alignment",
+    "year": "2019",
+    "doi": "10.1109/ICCV.2019.00929",
+    "best": {
+      "source": "doi",
+      "title": "PANet: Few-Shot Image Semantic Segmentation With Prototype Alignment",
+      "year": 2019,
+      "doi": "10.1109/iccv.2019.00929",
+      "type": "proceedings-article",
+      "container": "2019 IEEE/CVF International Conference on Computer Vision (ICCV)"
+    },
+    "issues": []
+  },
+  {
+    "key": "hu2022lora",
+    "type": "inproceedings",
+    "title": "LoRA: Low-Rank Adaptation of Large Language Models",
+    "year": "2022",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "DenseLoRA: Dense Low-Rank Adaptation of Large Language Models",
+      "year": 2025,
+      "doi": "10.18653/v1/2025.acl-long.503",
+      "type": "proceedings-article",
+      "container": "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+      "score": 0.901
+    },
+    "issues": [
+      "year_mismatch:2022!=2025",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "houlsby2019adapter",
+    "type": "inproceedings",
+    "title": "Parameter-Efficient Transfer Learning for NLP",
+    "year": "2019",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "Parameter-Efficient Transfer Learning with Diff Pruning",
+      "year": 2021,
+      "doi": "10.18653/v1/2021.acl-long.378",
+      "type": "proceedings-article",
+      "container": "Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers)",
+      "score": 0.82
+    },
+    "issues": [
+      "title_mismatch:0.82",
+      "year_mismatch:2019!=2021",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "howard2017mobilenets",
+    "type": "article",
+    "title": "MobileNets: Efficient Convolutional Neural Networks for Mobile Vision Applications",
+    "year": "2017",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "Efficient Convolutional Neural Networks for Image Processing Applications",
+      "year": 2025,
+      "doi": "10.12794/metadc1986970",
+      "type": "dissertation",
+      "container": "",
+      "score": 0.813
+    },
+    "issues": [
+      "title_mismatch:0.813",
+      "year_mismatch:2017!=2025",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "chen2018deeplabv3plus",
+    "type": "inproceedings",
+    "title": "Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation",
+    "year": "2018",
+    "doi": "10.1007/978-3-030-01234-2_49",
+    "best": {
+      "source": "doi",
+      "title": "Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation",
+      "year": 2018,
+      "doi": "10.1007/978-3-030-01234-2_49",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "ma2022flare",
+    "type": "article",
+    "title": "Fast and Low-GPU-memory Abdomen Segmentation: The FLARE Challenge",
+    "year": "2022",
+    "doi": "10.1016/j.media.2022.102616",
+    "best": {
+      "source": "doi",
+      "title": "Fast and Low-GPU-memory abdomen CT organ segmentation: The FLARE challenge",
+      "year": 2022,
+      "doi": "10.1016/j.media.2022.102616",
+      "type": "journal-article",
+      "container": "Medical Image Analysis"
+    },
+    "issues": []
+  },
+  {
+    "key": "loshchilov2019adamw",
+    "type": "inproceedings",
+    "title": "Decoupled Weight Decay Regularization",
+    "year": "2019",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.53"
+    ]
+  },
+  {
+    "key": "litjens2017survey",
+    "type": "article",
+    "title": "A survey on deep learning in medical image analysis",
+    "year": "2017",
+    "doi": "10.1016/j.media.2017.07.005",
+    "best": {
+      "source": "doi",
+      "title": "A survey on deep learning in medical image analysis",
+      "year": 2017,
+      "doi": "10.1016/j.media.2017.07.005",
+      "type": "journal-article",
+      "container": "Medical Image Analysis"
+    },
+    "issues": []
+  },
+  {
+    "key": "hesamian2019survey",
+    "type": "article",
+    "title": "Deep Learning Techniques for Medical Image Segmentation: Achievements and Challenges",
+    "year": "2019",
+    "doi": "10.1007/s10278-019-00227-x",
+    "best": {
+      "source": "doi",
+      "title": "Deep Learning Techniques for Medical Image Segmentation: Achievements and Challenges",
+      "year": 2019,
+      "doi": "10.1007/s10278-019-00227-x",
+      "type": "journal-article",
+      "container": "Journal of Digital Imaging"
+    },
+    "issues": []
+  },
+  {
+    "key": "wang2022medseg_survey",
+    "type": "article",
+    "title": "Medical image segmentation using deep learning: A survey",
+    "year": "2022",
+    "doi": "10.1049/ipr2.12419",
+    "best": {
+      "source": "doi",
+      "title": "Medical image segmentation using deep learning: A survey",
+      "year": 2022,
+      "doi": "10.1049/ipr2.12419",
+      "type": "journal-article",
+      "container": "IET Image Processing"
+    },
+    "issues": []
+  },
+  {
+    "key": "he2016resnet",
+    "type": "inproceedings",
+    "title": "Deep Residual Learning for Image Recognition",
+    "year": "2016",
+    "doi": "10.1109/CVPR.2016.90",
+    "best": {
+      "source": "doi",
+      "title": "Deep Residual Learning for Image Recognition",
+      "year": 2016,
+      "doi": "10.1109/cvpr.2016.90",
+      "type": "proceedings-article",
+      "container": "2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)"
+    },
+    "issues": []
+  },
+  {
+    "key": "long2015fcn",
+    "type": "article",
+    "title": "Fully Convolutional Networks for Semantic Segmentation",
+    "year": "2017",
+    "doi": "10.1109/TPAMI.2016.2572683",
+    "best": {
+      "source": "doi",
+      "title": "Fully Convolutional Networks for Semantic Segmentation",
+      "year": 2017,
+      "doi": "10.1109/tpami.2016.2572683",
+      "type": "journal-article",
+      "container": "IEEE Transactions on Pattern Analysis and Machine Intelligence"
+    },
+    "issues": []
+  },
+  {
+    "key": "taha2015metrics",
+    "type": "article",
+    "title": "Metrics for evaluating 3D medical image segmentation: analysis, selection, and tool",
+    "year": "2015",
+    "doi": "10.1186/s12880-015-0068-x",
+    "best": {
+      "source": "doi",
+      "title": "Metrics for evaluating 3D medical image segmentation: analysis, selection, and tool",
+      "year": 2015,
+      "doi": "10.1186/s12880-015-0068-x",
+      "type": "journal-article",
+      "container": "BMC Medical Imaging"
+    },
+    "issues": []
+  },
+  {
+    "key": "yu2016dilated",
+    "type": "inproceedings",
+    "title": "Multi-Scale Context Aggregation by Dilated Convolutions",
+    "year": "2016",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.623"
+    ]
+  },
+  {
+    "key": "dai2021coatnet",
+    "type": "inproceedings",
+    "title": "CoAtNet: Marrying Convolution and Attention for All Data Sizes",
+    "year": "2021",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.707"
+    ]
+  },
+  {
+    "key": "zhou2018unetpp",
+    "type": "inproceedings",
+    "title": "UNet++: A Nested U-Net Architecture for Medical Image Segmentation",
+    "year": "2018",
+    "doi": "10.1007/978-3-030-00889-5_1",
+    "best": {
+      "source": "doi",
+      "title": "UNet++: A Nested U-Net Architecture for Medical Image Segmentation",
+      "year": 2018,
+      "doi": "10.1007/978-3-030-00889-5_1",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "oktay2018attention",
+    "type": "inproceedings",
+    "title": "Attention U-Net: Learning Where to Look for the Pancreas",
+    "year": "2018",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.564"
+    ]
+  },
+  {
+    "key": "cicek20163dunet",
+    "type": "inproceedings",
+    "title": "3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation",
+    "year": "2016",
+    "doi": "10.1007/978-3-319-46723-8_49",
+    "best": {
+      "source": "doi",
+      "title": "3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation",
+      "year": 2016,
+      "doi": "10.1007/978-3-319-46723-8_49",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "zheng2021setr",
+    "type": "inproceedings",
+    "title": "Rethinking Semantic Segmentation from a Sequence-to-Sequence Perspective with Transformers",
+    "year": "2021",
+    "doi": "10.1109/CVPR46437.2021.00681",
+    "best": {
+      "source": "doi",
+      "title": "Rethinking Semantic Segmentation from a Sequence-to-Sequence Perspective with Transformers",
+      "year": 2021,
+      "doi": "10.1109/cvpr46437.2021.00681",
+      "type": "proceedings-article",
+      "container": "2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)"
+    },
+    "issues": []
+  },
+  {
+    "key": "xie2021segformer",
+    "type": "inproceedings",
+    "title": "SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers",
+    "year": "2021",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.582"
+    ]
+  },
+  {
+    "key": "hatamizadeh2022unetr",
+    "type": "inproceedings",
+    "title": "UNETR: Transformers for 3D Medical Image Segmentation",
+    "year": "2022",
+    "doi": "10.1109/WACV51458.2022.00181",
+    "best": {
+      "source": "doi",
+      "title": "UNETR: Transformers for 3D Medical Image Segmentation",
+      "year": 2022,
+      "doi": "10.1109/wacv51458.2022.00181",
+      "type": "proceedings-article",
+      "container": "2022 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)"
+    },
+    "issues": []
+  },
+  {
+    "key": "cheng2023sammed2d",
+    "type": "article",
+    "title": "SAM-Med2D",
+    "year": "2023",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.234"
+    ]
+  },
+  {
+    "key": "wang2023sammed3d",
+    "type": "article",
+    "title": "SAM-Med3D: A Vision Foundation Model for General-Purpose Segmentation on Volumetric Medical Images",
+    "year": "2025",
+    "doi": "10.1109/TNNLS.2025.3586694",
+    "best": {
+      "source": "doi",
+      "title": "SAM-Med3D: A Vision Foundation Model for General-Purpose Segmentation on Volumetric Medical Images",
+      "year": 2025,
+      "doi": "10.1109/tnnls.2025.3586694",
+      "type": "journal-article",
+      "container": "IEEE Transactions on Neural Networks and Learning Systems"
+    },
+    "issues": []
+  },
+  {
+    "key": "mazurowski2023sam_survey",
+    "type": "article",
+    "title": "Segment Anything Model for Medical Image Analysis: An Experimental Study",
+    "year": "2023",
+    "doi": "10.1016/j.media.2023.102918",
+    "best": {
+      "source": "doi",
+      "title": "Segment anything model for medical image analysis: An experimental study",
+      "year": 2023,
+      "doi": "10.1016/j.media.2023.102918",
+      "type": "journal-article",
+      "container": "Medical Image Analysis"
+    },
+    "issues": []
+  },
+  {
+    "key": "yeung2022unified",
+    "type": "article",
+    "title": "Unified Focal Loss: Generalising Dice and Cross Entropy-based Losses to Handle Class Imbalanced Medical Image Segmentation",
+    "year": "2022",
+    "doi": "10.1016/j.compmedimag.2021.102026",
+    "best": {
+      "source": "doi",
+      "title": "Unified Focal loss: Generalising Dice and cross entropy-based losses to handle class imbalanced medical image segmentation",
+      "year": 2022,
+      "doi": "10.1016/j.compmedimag.2021.102026",
+      "type": "journal-article",
+      "container": "Computerized Medical Imaging and Graphics"
+    },
+    "issues": []
+  },
+  {
+    "key": "salehi2017tversky",
+    "type": "inproceedings",
+    "title": "Tversky Loss Function for Image Segmentation Using 3D Fully Convolutional Deep Networks",
+    "year": "2017",
+    "doi": "10.1007/978-3-319-67389-9_44",
+    "best": {
+      "source": "doi",
+      "title": "Tversky Loss Function for Image Segmentation Using 3D Fully Convolutional Deep Networks",
+      "year": 2017,
+      "doi": "10.1007/978-3-319-67389-9_44",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "berman2018lovasz",
+    "type": "inproceedings",
+    "title": "The Lov\\'asz-Softmax Loss: A Tractable Surrogate for the Optimization of the Intersection-over-Union Measure in Neural Networks",
+    "year": "2018",
+    "doi": "10.1109/CVPR.2018.00464",
+    "best": {
+      "source": "doi",
+      "title": "The Lovasz-Softmax Loss: A Tractable Surrogate for the Optimization of the Intersection-Over-Union Measure in Neural Networks",
+      "year": 2018,
+      "doi": "10.1109/cvpr.2018.00464",
+      "type": "proceedings-article",
+      "container": "2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition"
+    },
+    "issues": []
+  },
+  {
+    "key": "li2019ghm",
+    "type": "inproceedings",
+    "title": "Gradient Harmonizing Mechanism for Single-stage Detector",
+    "year": "2019",
+    "doi": "10.1609/aaai.v33i01.33018577",
+    "best": {
+      "source": "doi",
+      "title": "Gradient Harmonized Single-Stage Detector",
+      "year": 2019,
+      "doi": "10.1609/aaai.v33i01.33018577",
+      "type": "journal-article",
+      "container": "Proceedings of the AAAI Conference on Artificial Intelligence"
+    },
+    "issues": [
+      "title_mismatch:0.825"
+    ]
+  },
+  {
+    "key": "chen2022adaptformer",
+    "type": "inproceedings",
+    "title": "AdaptFormer: Adapting Vision Transformers for Scalable Visual Recognition",
+    "year": "2022",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "AdaptFormer: Adapting Vision Transformers for Scalable Visual Recognition",
+      "year": 2022,
+      "doi": "10.52202/068431-1212",
+      "type": "proceedings-article",
+      "container": "Advances in Neural Information Processing Systems 35",
+      "score": 1.0
+    },
+    "issues": [
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "jia2022vpt",
+    "type": "inproceedings",
+    "title": "Visual Prompt Tuning",
+    "year": "2022",
+    "doi": "10.1007/978-3-031-19827-4_41",
+    "best": {
+      "source": "doi",
+      "title": "Visual Prompt Tuning",
+      "year": 2022,
+      "doi": "10.1007/978-3-031-19827-4_41",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "ji2022amos",
+    "type": "inproceedings",
+    "title": "AMOS: A Large-Scale Abdominal Multi-Organ Benchmark for Versatile Medical Image Segmentation",
+    "year": "2022",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "AMOS: A Large-Scale Abdominal Multi-Organ Benchmark for Versatile Medical Image Segmentation",
+      "year": 2022,
+      "doi": "10.52202/068431-2661",
+      "type": "proceedings-article",
+      "container": "Advances in Neural Information Processing Systems 35",
+      "score": 1.0
+    },
+    "issues": [
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "wasserthal2023totalsegmentator",
+    "type": "article",
+    "title": "TotalSegmentator: Robust Segmentation of 104 Anatomic Structures in CT Images",
+    "year": "2023",
+    "doi": "10.1148/ryai.230024",
+    "best": {
+      "source": "doi",
+      "title": "TotalSegmentator: Robust Segmentation of 104 Anatomic Structures in CT Images",
+      "year": 2023,
+      "doi": "10.1148/ryai.230024",
+      "type": "journal-article",
+      "container": "Radiology: Artificial Intelligence"
+    },
+    "issues": []
+  },
+  {
+    "key": "huang2017densenet",
+    "type": "inproceedings",
+    "title": "Densely Connected Convolutional Networks",
+    "year": "2017",
+    "doi": "10.1109/CVPR.2017.243",
+    "best": {
+      "source": "doi",
+      "title": "Densely Connected Convolutional Networks",
+      "year": 2017,
+      "doi": "10.1109/cvpr.2017.243",
+      "type": "proceedings-article",
+      "container": "2017 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)"
+    },
+    "issues": []
+  },
+  {
+    "key": "zhao2017pspnet",
+    "type": "inproceedings",
+    "title": "Pyramid Scene Parsing Network",
+    "year": "2017",
+    "doi": "10.1109/CVPR.2017.660",
+    "best": {
+      "source": "doi",
+      "title": "Pyramid Scene Parsing Network",
+      "year": 2017,
+      "doi": "10.1109/cvpr.2017.660",
+      "type": "proceedings-article",
+      "container": "2017 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)"
+    },
+    "issues": []
+  },
+  {
+    "key": "chen2017deeplabv3",
+    "type": "inproceedings",
+    "title": "Rethinking Atrous Convolution for Semantic Image Segmentation",
+    "year": "2017",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.775"
+    ]
+  },
+  {
+    "key": "kervadec2019boundary",
+    "type": "inproceedings",
+    "title": "Boundary Loss for Highly Unbalanced Segmentation",
+    "year": "2019",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "Boundary loss for highly unbalanced segmentation",
+      "year": 2021,
+      "doi": "10.1016/j.media.2020.101851",
+      "type": "journal-article",
+      "container": "Medical Image Analysis",
+      "score": 1.0
+    },
+    "issues": [
+      "year_mismatch:2019!=2021",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "chen2024masam",
+    "type": "article",
+    "title": "MA-SAM: Modality-agnostic SAM Adaptation for 3D Medical Image Segmentation",
+    "year": "2024",
+    "doi": "10.1016/j.media.2024.103310",
+    "best": {
+      "source": "doi",
+      "title": "MA-SAM: Modality-agnostic SAM adaptation for 3D medical image segmentation",
+      "year": 2024,
+      "doi": "10.1016/j.media.2024.103310",
+      "type": "journal-article",
+      "container": "Medical Image Analysis"
+    },
+    "issues": []
+  },
+  {
+    "key": "goodfellow2016deeplearning",
+    "type": "book",
+    "title": "Deep Learning",
+    "year": "2016",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "Deep Learning",
+      "year": 2023,
+      "doi": "10.1007/978-3-658-41689-8_4",
+      "type": "book-chapter",
+      "container": "Knowledge Science – Grundlagen",
+      "score": 1.0
+    },
+    "issues": [
+      "year_mismatch:2016!=2023",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "wu2021cvt",
+    "type": "inproceedings",
+    "title": "CvT: Introducing Convolutions to Vision Transformers",
+    "year": "2021",
+    "doi": "10.1109/ICCV48922.2021.00009",
+    "best": {
+      "source": "doi",
+      "title": "CvT: Introducing Convolutions to Vision Transformers",
+      "year": 2021,
+      "doi": "10.1109/iccv48922.2021.00009",
+      "type": "proceedings-article",
+      "container": "2021 IEEE/CVF International Conference on Computer Vision (ICCV)"
+    },
+    "issues": []
+  },
+  {
+    "key": "li2021localvit",
+    "type": "article",
+    "title": "LocalViT: Bringing Locality to Vision Transformers",
+    "year": "2021",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "LocalViT: Analyzing Locality in Vision Transformers",
+      "year": 2023,
+      "doi": "10.1109/iros55552.2023.10342025",
+      "type": "proceedings-article",
+      "container": "2023 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)",
+      "score": 0.871
+    },
+    "issues": [
+      "year_mismatch:2021!=2023",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "zhu2024medsam2",
+    "type": "article",
+    "title": "Medical SAM 2: Segment Medical Images As Video Via Segment Anything Model 2",
+    "year": "2024",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.494"
+    ]
+  },
+  {
+    "key": "chen2023sam_survey_med",
+    "type": "article",
+    "title": "SAM Fails to Segment Anything? -- SAM-Adapter: Adapting SAM in Underperformed Scenes",
+    "year": "2023",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.667"
+    ]
+  },
+  {
+    "key": "wang2022activeboundaryloss",
+    "type": "inproceedings",
+    "title": "Active Boundary Loss for Semantic Segmentation",
+    "year": "2022",
+    "doi": "10.1609/aaai.v36i2.20139",
+    "best": {
+      "source": "doi",
+      "title": "Active Boundary Loss for Semantic Segmentation",
+      "year": 2022,
+      "doi": "10.1609/aaai.v36i2.20139",
+      "type": "journal-article",
+      "container": "Proceedings of the AAAI Conference on Artificial Intelligence"
+    },
+    "issues": []
+  },
+  {
+    "key": "ding2022peftsurvey",
+    "type": "article",
+    "title": "Parameter-Efficient Fine-Tuning of Large-Scale Pre-Trained Language Models",
+    "year": "2023",
+    "doi": "10.1038/s42256-023-00626-4",
+    "best": {
+      "source": "doi",
+      "title": "Parameter-efficient fine-tuning of large-scale pre-trained language models",
+      "year": 2023,
+      "doi": "10.1038/s42256-023-00626-4",
+      "type": "journal-article",
+      "container": "Nature Machine Intelligence"
+    },
+    "issues": []
+  },
+  {
+    "key": "roy2023mednext",
+    "type": "inproceedings",
+    "title": "MedNeXt: Transformer-driven Scaling of ConvNets for Medical Image Segmentation",
+    "year": "2023",
+    "doi": "10.1007/978-3-031-43901-8_39",
+    "best": {
+      "source": "doi",
+      "title": "MedNeXt: Transformer-Driven Scaling of ConvNets for Medical Image Segmentation",
+      "year": 2023,
+      "doi": "10.1007/978-3-031-43901-8_39",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "butoi2023universeg",
+    "type": "inproceedings",
+    "title": "UniverSeg: Universal Medical Image Segmentation",
+    "year": "2023",
+    "doi": "10.1109/ICCV51070.2023.01961",
+    "best": {
+      "source": "doi",
+      "title": "MRM: Masked Relation Modeling for Medical Image Pre-Training with Genetics",
+      "year": 2023,
+      "doi": "10.1109/iccv51070.2023.01961",
+      "type": "proceedings-article",
+      "container": "2023 IEEE/CVF International Conference on Computer Vision (ICCV)"
+    },
+    "issues": [
+      "title_mismatch:0.446"
+    ]
+  },
+  {
+    "key": "wong2024scribbleprompt",
+    "type": "inproceedings",
+    "title": "ScribblePrompt: Fast and Flexible Interactive Segmentation for Any Biomedical Image",
+    "year": "2024",
+    "doi": "10.1007/978-3-031-73661-2_12",
+    "best": {
+      "source": "doi",
+      "title": "ScribblePrompt: Fast and Flexible Interactive Segmentation for Any Biomedical Image",
+      "year": 2025,
+      "doi": "10.1007/978-3-031-73661-2_12",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": [
+      "year_mismatch:2024!=2025"
+    ]
+  },
+  {
+    "key": "taghanaki2019combo",
+    "type": "article",
+    "title": "Combo Loss: Handling Input and Output Imbalance in Multi-Organ Segmentation",
+    "year": "2019",
+    "doi": "10.1016/j.compmedimag.2019.04.005",
+    "best": {
+      "source": "doi",
+      "title": "Combo loss: Handling input and output imbalance in multi-organ segmentation",
+      "year": 2019,
+      "doi": "10.1016/j.compmedimag.2019.04.005",
+      "type": "journal-article",
+      "container": "Computerized Medical Imaging and Graphics"
+    },
+    "issues": []
+  },
+  {
+    "key": "sudre2017generalised",
+    "type": "inproceedings",
+    "title": "Generalised Dice Overlap as a Deep Learning Loss Function for Highly Unbalanced Segmentations",
+    "year": "2017",
+    "doi": "10.1007/978-3-319-67558-9_28",
+    "best": {
+      "source": "doi",
+      "title": "Generalised Dice Overlap as a Deep Learning Loss Function for Highly Unbalanced Segmentations",
+      "year": 2017,
+      "doi": "10.1007/978-3-319-67558-9_28",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science"
+    },
+    "issues": []
+  },
+  {
+    "key": "paranjape2024adaptivesam",
+    "type": "article",
+    "title": "Adaptivesam: Towards Efficient Tuning of SAM for Surgical Scene Segmentation",
+    "year": "2023",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "AdaptiveSAM: Towards Efficient Tuning of SAM for Surgical Scene Segmentation",
+      "year": 2024,
+      "doi": "10.1007/978-3-031-66958-3_14",
+      "type": "book-chapter",
+      "container": "Lecture Notes in Computer Science",
+      "score": 1.0
+    },
+    "issues": [
+      "year_mismatch:2023!=2024",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "shaharabany2023autosam",
+    "type": "article",
+    "title": "AutoSAM: Adapting SAM to Medical Images by Overloading the Prompt Encoder",
+    "year": "2023",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.553"
+    ]
+  },
+  {
+    "key": "moor2023foundation",
+    "type": "article",
+    "title": "Foundation Models for Generalist Medical Artificial Intelligence",
+    "year": "2023",
+    "doi": "10.1038/s41586-023-05881-4",
+    "best": {
+      "source": "doi",
+      "title": "Foundation models for generalist medical artificial intelligence",
+      "year": 2023,
+      "doi": "10.1038/s41586-023-05881-4",
+      "type": "journal-article",
+      "container": "Nature"
+    },
+    "issues": []
+  },
+  {
+    "key": "bommasani2021foundation",
+    "type": "article",
+    "title": "On the Opportunities and Risks of Foundation Models",
+    "year": "2021",
+    "doi": "",
+    "best": null,
+    "issues": [
+      "no_confident_match:0.694"
+    ]
+  },
+  {
+    "key": "demsar2006statistical",
+    "type": "article",
+    "title": "Statistical Comparisons of Classifiers over Multiple Data Sets",
+    "year": "2006",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "Statistical comparisons of active learning strategies over multiple datasets",
+      "year": 2018,
+      "doi": "10.1016/j.knosys.2018.01.033",
+      "type": "journal-article",
+      "container": "Knowledge-Based Systems",
+      "score": 0.826
+    },
+    "issues": [
+      "title_mismatch:0.826",
+      "year_mismatch:2006!=2018",
+      "missing_doi"
+    ]
+  },
+  {
+    "key": "zhang2023customized",
+    "type": "inproceedings",
+    "title": "Customized Segment Anything Model for Medical Image Segmentation",
+    "year": "2023",
+    "doi": "",
+    "best": {
+      "source": "title",
+      "title": "Review on Segment Anything Model for Medical Image Segmentation",
+      "year": 2025,
+      "doi": "10.23919/ccc64809.2025.11178681",
+      "type": "proceedings-article",
+      "container": "2025 44th Chinese Control Conference (CCC)",
+      "score": 0.866
+    },
+    "issues": [
+      "year_mismatch:2023!=2025",
+      "missing_doi"
+    ]
+  }
+]

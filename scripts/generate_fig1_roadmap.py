@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
-plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.family"] = ["Times New Roman", "SimSun", "serif"]
+plt.rcParams["mathtext.fontset"] = "stix"
 plt.rcParams["axes.unicode_minus"] = False
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
@@ -51,27 +52,27 @@ def main():
 
     # Top: MedSAM base
     c_base = draw_box(ax, (3.5, 5.8), 4.5, 0.8,
-                       "MedSAM Base Model\n(ViT-Base + Mask Decoder)", "#2C3E50", 11)
+                       "MedSAM 基座模型\n(ViT-Base + Mask Decoder)", "#2C3E50", 11)
 
     # Three-pillar title
-    ax.text(5.75, 5.05, "Three-Pillar Technical Roadmap", ha="center", va="center",
+    ax.text(5.75, 5.05, "三支柱技术路线", ha="center", va="center",
             fontsize=14, fontweight="bold", color="#2C3E50",
             bbox=dict(boxstyle="round,pad=0.3", facecolor="#ECF0F1",
                       edgecolor="#2C3E50", linewidth=1.5))
 
     # Pillar 1: Loss Layer
     c1 = draw_box(ax, (0.2, 3.2), 3.2, 1.2,
-                  "Pillar 1: Loss Layer\n----------\nBalance Loss\n(Inter-CBL + Intra-CBL\n+ Dice + Two-Stage)",
+                  "支柱1：损失层\n----------\nBalance Loss\n(Inter-CBL + Intra-CBL\n+ Dice + 两阶段训练)",
                   "#E74C3C", 9)
 
-    # Pillar 2: Ablation
+    # Pillar 2: Route Selection
     c2 = draw_box(ax, (4.15, 3.2), 3.2, 1.2,
-                  "Pillar 2: Ablation\n----------\nLoRA (r=4) Frozen Backbone\n-> DSC 0.879\n-> Full FT is necessary",
+                  "支柱2：路线筛选\n----------\nLoRA (r=4) 冻结主干\n→ DSC 0.9312\n→ 全参微调不可省略",
                   "#3498DB", 9)
 
     # Pillar 3: Feature Layer
     c3 = draw_box(ax, (8.1, 3.2), 3.2, 1.2,
-                  "Pillar 3: Feature Layer\n----------\nLG-Adapter\n(Dual-Path DWConv\n+ Dilated Conv + Residual)",
+                  "支柱3：特征层\n----------\nMSL-Adapter\n(双路径深度可分离卷积\n+ 空洞卷积 + 残差注入)",
                   "#27AE60", 9)
 
     # Arrows: base -> three pillars
@@ -81,10 +82,10 @@ def main():
 
     # Bottom: ablation chain
     steps = [
-        ("A0\nBaseline\nDSC 0.941", "#95A5A6", 0.3),
-        ("A3R3\nBalance Loss\nDSC 0.960", "#E74C3C", 3.0),
-        ("C2\nLoRA\nDSC 0.879", "#3498DB", 5.7),
-        ("C3\nLG-Adapter\nDSC 0.962", "#27AE60", 8.4),
+        ("Baseline\nDSC 0.9407", "#95A5A6", 0.3),
+        ("Balance Loss\nDSC 0.9543", "#E74C3C", 3.0),
+        ("LoRA-r4\n(冻结主干)\nDSC 0.9312", "#3498DB", 5.7),
+        ("MSL-Adapter\nDSC 0.9571", "#27AE60", 8.4),
     ]
     for text, color, x in steps:
         draw_box(ax, (x, 0.8), 2.3, 1.0, text, color, 9)
@@ -94,7 +95,7 @@ def main():
     draw_arrow(ax, (5.3, 1.3), (5.7, 1.3), "#555")
     draw_arrow(ax, (8.0, 1.3), (8.4, 1.3), "#555")
 
-    ax.text(5.75, 0.3, "Ablation Path: A0 -> A3R3 -> C2 (counter-evidence) -> C3 (optimal)",
+    ax.text(5.75, 0.3, "筛选路径：Baseline → Balance Loss → LoRA（反面证据）→ MSL-Adapter（最终方案）",
             ha="center", fontsize=10, fontstyle="italic", color="#7F8C8D")
 
     fig.tight_layout()
@@ -106,3 +107,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

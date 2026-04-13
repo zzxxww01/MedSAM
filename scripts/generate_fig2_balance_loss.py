@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
-plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.family"] = ["Times New Roman", "SimSun", "serif"]
+plt.rcParams["mathtext.fontset"] = "stix"
 plt.rcParams["axes.unicode_minus"] = False
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
@@ -122,3 +123,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
