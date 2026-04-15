@@ -1887,10 +1887,6 @@
     license .initial:n = true,
     license .default:n = true,
   }
-\AtEndDocument{
-  \bool_if:NT \l__whu_license_output_bool
-    \__whu_master_doctor_license_agreement:
-}
 %endregion 硕博使用授权协议书
 
 %tag 博士论文创新点
@@ -1983,9 +1979,9 @@
         {
           \file_input:n { pages/enabstract.tex }
         }
-      \__whu_abstract_keywords_zh_vsep_set:
+      \__whu_abstract_keywords_en_vsep_set:
       {\textbf { \c__whu_name_keywords_en_tl :} ~}
-      \clist_use:Nn \l__whu_info_keywords_en_clist {;~}
+      \clist_use:Nn \l__whu_info_keywords_en_clist {,~}
       \newpage
     \group_end:
   }
@@ -2051,9 +2047,9 @@
         {
           \file_input:n { pages/enabstract.tex }
         }
-      \__whu_abstract_keywords_zh_vsep_set:
+      \__whu_abstract_keywords_en_vsep_set:
       {\textbf { \c__whu_name_keywords_en_tl :} ~}
-      \clist_use:Nn \l__whu_info_keywords_en_clist {;~}
+      \clist_use:Nn \l__whu_info_keywords_en_clist {,~}
       \newpage
     \group_end:
   }
@@ -2140,6 +2136,11 @@
     \__whu_master_cover_ii:
     \__whu_new_blank_page:
     \__whu_master_statement:
+    \bool_if:NT \l__whu_license_output_bool
+      {
+        \newpage
+        \__whu_master_doctor_license_agreement:
+      }
     \newpage
     \frontmatter
     \pagestyle{ master-frontmatter }

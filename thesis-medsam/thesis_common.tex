@@ -1,47 +1,76 @@
 \documentclass[type = master, class = professional]{whu-thesis}
 
+\newif\ifthesisblindreview
+\thesisblindreviewfalse
+\ifdefined\BlindReviewMode
+  \thesisblindreviewtrue
+\fi
+
+\newcommand{\thesistitlepage}{%
+  \clearpage
+  \thispagestyle{empty}
+  \vspace*{\fill}
+  \begin{center}
+    {\heiti\zihao{0} 学生类型：专硕}
+  \end{center}
+  \vspace*{\fill}
+  \clearpage
+}
+
+\makeatletter
+\ifthesisblindreview
+\ExplSyntaxOn
+\cs_set_protected:Npn \__whu_master_frontmatter_output:
+  {
+    \frontmatter
+    \pagestyle{ master-frontmatter }
+    \pagenumbering{Roman}
+    \__whu_master_abstract_output:
+    \newpage
+    \__whu_master_abstract_en_output:
+    \newpage
+  }
+\ExplSyntaxOff
+\fi
+\makeatother
+
 % 论文信息设置
 \whusetup{
   info = {
-    title      = {基于平衡损失与局部适配的医学图像分割}, % 中文标题，可使用 \\ 手动换行
-    title*     = {Medical Image Segmentation with Balance Loss and Local Adaptation}, % 英文标题
-    department  = {国家网络安全学院},
-    department* = {School of Cyber Science and Engineering},
-    author     = {周贤玮},
-    author*    = {Zhou Xianwei},
-    student-id = {2024282210310},
-    supervisor  = {陈刚},
-    supervisor* = {Chen Gang},
-    academic-title  = {教授}, % 导师职称
-    academic-title* = {Professor},
-    % supervisor-outer = {校外导师}, % 专业学位可能需要校外导师
-    % academic-title-outer = {高级工程师},
+    title      = {基于平衡损失与局部适配的医学图像分割},
+    title*     = {Medical Image Segmentation with Balance Loss and Local Adaptation},
+    department  = {\ifthesisblindreview \else 国家网络安全学院\fi},
+    department* = {\ifthesisblindreview \else School of Cyber Science and Engineering\fi},
+    author     = {\ifthesisblindreview \else 周贤玮\fi},
+    author*    = {\ifthesisblindreview \else Zhou Xianwei\fi},
+    student-id = {\ifthesisblindreview \else 2024282210310\fi},
+    supervisor  = {\ifthesisblindreview \else 陈刚\fi},
+    supervisor* = {\ifthesisblindreview \else Chen Gang\fi},
+    academic-title  = {\ifthesisblindreview \else 教授\fi},
+    academic-title* = {\ifthesisblindreview \else Professor\fi},
     major   = {电子信息},
     major*  = {Electronic Information},
     research-area  = {医学图像分割},
     research-area* = {Medical Image Segmentation},
     year = 2026,
     month = 4,
-    keywords  = {医学图像分割, 平衡损失, 局部适配器, 提示式分割, 腹部器官分割}, % 中文关键词
-    keywords* = {MedSAM, Balance Loss, MSL-Adapter, prompt-based segmentation, abdominal organ segmentation}, % 英文关键词
+    keywords  = {医学图像分割, 平衡损失, 局部适配器, 提示式分割, 腹部器官分割},
+    keywords* = {MedSAM, Balance Loss, MSL-Adapter, prompt-based segmentation, abdominal organ segmentation},
   },
   style = {
-    % 字体设置
-    font = termes, % 西文字体
-    math-font = termes, % 数学字体
-    cjk-font = windows, % 当前本地 Windows 环境使用 windows；Overleaf/Linux 请改为 fandol
+    font = termes,
+    math-font = termes,
+    cjk-font = windows,
     chapter-page-header = true,
-    library = true, % 电子版去除封面与扉页后的空白页
-    % 参考文献设置
+    library = true,
     bib-backend = bibtex,
-    bib-style = numerical, % 使用顺序编码制(数字编号)
-    bib-resource = {ref/references.bib}, % 参考文献数据库
+    bib-style = numerical,
+    bib-resource = {ref/references.bib},
   }
 }
 
 \hypersetup{hidelinks, hypertexnames=false}
 
-% 代码排版
 \usepackage{listings}
 \lstset{
   language=Python,
@@ -57,17 +86,20 @@
   showstringspaces=false
 }
 
+\makeatletter
+\let\cleardoublepage\clearpage
+\makeatother
+
 \begin{document}
 \raggedbottom
 
-% 目录显示到 subsection 层级，满足三级目录要求
+\thesistitlepage
+
 \setcounter{tocdepth}{2}
 \tableofcontents
 
-% 正文开始
 \mainmatter
 
-% 引入各章节
 \include{pages/chapter1.tex}
 \include{pages/chapter2.tex}
 \include{pages/chapter3.tex}
@@ -75,10 +107,9 @@
 \include{pages/chapter5.tex}
 \include{pages/chapter6.tex}
 
-% 参考文献
 \printbibliography
 
-% 致谢
+\ifthesisblindreview\else
 \begin{acknowledgements}
 行文至此，论文终于完成。回望这两年的研究生生涯，从刚入学时的迷茫，到遇到挫折时的焦虑，再到收获结果时的欣喜，每一个阶段都离不开许多人的帮助与支持。站在即将告别校园、结束十余年求学生涯的时刻，我想借这段文字，认真感谢所有陪我走过这段旅程、照亮过我的人。
 
@@ -100,9 +131,15 @@
 
 千言万语，最终还是想说一声谢谢。谢谢所有曾经帮助过我、相信过我、陪伴过我的人，也谢谢这些年的经历，让我一点一点走到了今天。往后的人生还很长，我会带着一路走来收获的勇气与底气，去开启人生的新篇章，去拥抱更多的可能，也在不断探索与经历之中，慢慢创造属于自己的意义。
 \end{acknowledgements}
+\fi
 
-% 附录
 \appendix
-\include{pages/appendix.tex}
+\ifthesisblindreview\else
+\include{pages/appendix_resume.tex}
+\fi
+\ifthesisblindreview
+\setcounter{chapter}{1}
+\fi
+\include{pages/appendix_supplement.tex}
 
 \end{document}

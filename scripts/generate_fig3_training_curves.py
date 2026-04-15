@@ -29,9 +29,11 @@ plt.rcParams["axes.unicode_minus"] = False
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "thesis-medsam", "figures")
 os.makedirs(OUT_DIR, exist_ok=True)
 
-LOG_PATTERN = re.compile(
-    r"Epoch:\s*(\d+),\s*Loss:\s*([\d.]+)"
-)
+LOG_PATTERNS = [
+    re.compile(r"Epoch:\s*(\d+),\s*Loss:\s*([0-9]*\.?[0-9]+)"),
+    re.compile(r"Epoch\s+(\d+)(?:/\d+)?[,:\s]+Loss:\s*([0-9]*\.?[0-9]+)"),
+    re.compile(r"epoch\s*[=:]?\s*(\d+).{0,40}?loss\s*[=:]\s*([0-9]*\.?[0-9]+)", re.IGNORECASE),
+]
 
 
 def parse_log(path):
@@ -39,10 +41,12 @@ def parse_log(path):
     epochs, losses = [], []
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         for line in f:
-            m = LOG_PATTERN.search(line)
-            if m:
-                epochs.append(int(m.group(1)))
-                losses.append(float(m.group(2)))
+            for pattern in LOG_PATTERNS:
+                m = pattern.search(line)
+                if m:
+                    epochs.append(int(m.group(1)))
+                    losses.append(float(m.group(2)))
+                    break
     if not epochs:
         print(f"[WARN] No valid entries found in {path}", file=sys.stderr)
     return epochs, losses
